@@ -1,0 +1,69 @@
+{
+  "companies": [
+    {
+      "name": "Miro",
+      "tagline": "Məhsul, growth və dizayn komandalarında gənclər üçün açıq yol.",
+      "sector": "Collaboration SaaS",
+      "size": "1.001-5.000 əməkdaş",
+      "location": "Amsterdam, Niderland",
+      "logo": "https://cdn.simpleicons.org/miro/ffd02f",
+      "cover": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      "website": "https://miro.com",
+      "about": "Miro paylanmış komandalar üçün əməkdaşlıq platformasıdır və intern, junior və trainee rolları üçün strukturlaşdırılmış onboarding verir.",
+      "focusAreas": [
+        "Product design",
+        "Growth operations",
+        "Customer education"
+      ],
+      "youthOffer": [
+        "Mentor dəstəkli internship",
+        "Yeni məzun onboarding track",
+        "Portfolio review sessiyaları"
+      ],
+      "benefits": [
+        "Hibrid iş modeli",
+        "Təlim büdcəsi",
+        "Mentorluq"
+      ],
+      "featured": true,
+      "createdAt": "2026-03-18",
+      "slug": "miro"
+    }
+  ],
+  "jobs": [
+    {
+      "title": "Product Design Intern",
+      "companySlug": "miro",
+      "city": "Amsterdam",
+      "workModel": "Hibrid",
+      "level": "Təcrübə",
+      "category": "Product design",
+      "postedAt": "2026-03-18",
+      "deadline": "2026-04-12",
+      "summary": "Design feedback və onboarding axınları üzərində işləyərək məhsul komandası üçün ilkin UI həlləri hazırlayacaqsan.",
+      "responsibilities": [
+        "Wireframe və ekran axınları hazırlamaq",
+        "İstifadəçi feedback-lərini strukturlaşdırmaq",
+        "Design system komponentlərini sənədləşdirmək"
+      ],
+      "requirements": [
+        "Portfolio və ya tələbə layihələri",
+        "Figma ilə işləmək bacarığı",
+        "Feedback əsasında iterasiya etmək"
+      ],
+      "benefits": [
+        "Mentorluq",
+        "Hibrid rejim",
+        "Portfolio üçün real layihə"
+      ],
+      "tags": [
+        "Figma",
+        "Intern",
+        "Product design"
+      ],
+      "createdAt": "2026-03-18",
+      "slug": "product-design-intern-miro",
+      "featured": true
+    }
+  ]
+}

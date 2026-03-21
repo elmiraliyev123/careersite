@@ -1,0 +1,153 @@
+"use client";
+
+import Link from "next/link";
+import { Globe, MapPin, Users } from "lucide-react";
+
+import { CompanyLogoImage } from "@/components/company-logo-image";
+import { JobCard } from "@/components/job-card";
+import { useI18n } from "@/components/i18n-provider";
+import { VerifiedBadge } from "@/components/verified-badge";
+import type { Company, Job } from "@/data/platform";
+import { translateSector } from "@/lib/i18n";
+import { getLocalizedCompany } from "@/lib/platform-localization";
+
+type CompanyDetailPageClientProps = {
+  company: Company;
+  jobs: Job[];
+};
+
+export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClientProps) {
+  const { locale, t } = useI18n();
+  const localizedCompany = getLocalizedCompany(company, locale);
+
+  return (
+    <main className="section">
+      <div className="shell stack-lg">
+        <div className="breadcrumb">
+          <Link href="/">{t("nav.home")}</Link>
+          <span>/</span>
+          <Link href="/jobs">{t("nav.jobs")}</Link>
+          <span>/</span>
+          <Link href="/companies">{t("nav.companies")}</Link>
+          <span>/</span>
+          <span>{localizedCompany.name}</span>
+        </div>
+
+        <section className="detail-hero">
+          <div className="detail-hero__content">
+            <div className="company-profile__brand">
+              <span className="company-profile__logo">
+                <CompanyLogoImage
+                  name={localizedCompany.name}
+                  website={localizedCompany.website}
+                  logo={localizedCompany.logo}
+                  size={56}
+                />
+              </span>
+              <div className="stack-sm">
+                <div className="company-profile__title">
+                  <h1>{localizedCompany.name}</h1>
+                  <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                </div>
+                <p className="detail-hero__summary">{localizedCompany.tagline}</p>
+              </div>
+            </div>
+
+            <div className="detail-hero__meta">
+              <span>
+                <Users size={16} />
+                {company.size}
+              </span>
+              <span>
+                <MapPin size={16} />
+                {company.location}
+              </span>
+              <span>
+                <Globe size={16} />
+                {company.website.replace("https://", "")}
+              </span>
+            </div>
+          </div>
+
+          <div className="detail-hero__actions">
+            <a href={company.website} target="_blank" rel="noreferrer" className="button button--primary">
+              {t("actions.officialSite")}
+            </a>
+            <Link href="/jobs" className="button button--ghost">
+              {t("actions.backToJobs")}
+            </Link>
+          </div>
+        </section>
+
+        <div className="detail-grid">
+          <section className="detail-panel">
+            <p className="eyebrow">{t("companyPage.aboutEyebrow")}</p>
+            <h2>{t("companyPage.aboutTitle")}</h2>
+            <p className="info-copy">{localizedCompany.about}</p>
+          </section>
+
+          <section className="detail-panel">
+            <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
+            <h2>{t("companyPage.overviewTitle")}</h2>
+            <p className="info-copy">{t("companyPage.overviewPlaceholder")}</p>
+          </section>
+
+          <section className="detail-panel">
+            <p className="eyebrow">{t("companyPage.focusEyebrow")}</p>
+            <h2>{t("companyPage.focusTitle")}</h2>
+            <ul className="bullet-list">
+              {company.focusAreas.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="detail-panel">
+            <p className="eyebrow">{t("companyPage.youthOfferEyebrow")}</p>
+            <h2>{t("companyPage.youthOfferTitle")}</h2>
+            <ul className="bullet-list">
+              {company.youthOffer.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+
+          <aside className="detail-panel detail-panel--sticky">
+            <p className="eyebrow">{t("companyPage.openRolesEyebrow")}</p>
+            <h2>{t("labels.openRoles", { count: jobs.length })}</h2>
+            <div className="chip-row">
+              <span className="chip chip--accent">{translateSector(locale, company.sector)}</span>
+              {company.benefits.map((item) => (
+                <span key={item} className="chip">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        <section className="stack-md">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">{t("companyPage.jobsEyebrow")}</p>
+              <h2>{t("companyPage.jobsTitle", { name: localizedCompany.name })}</h2>
+            </div>
+          </div>
+
+          {jobs.length === 0 ? (
+            <div className="empty-state empty-state--large">
+              <h3>{t("companyPage.emptyTitle")}</h3>
+              <p>{t("companyPage.emptyCopy")}</p>
+            </div>
+          ) : (
+            <div className="card-grid card-grid--jobs">
+              {jobs.map((job) => (
+                <JobCard key={job.slug} job={job} company={company} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}

@@ -1,0 +1,49 @@
+import { NextResponse } from "next/server";
+
+import { createJob, listCompanies, listJobs } from "@/lib/platform-database";
+import { hasAdminSession } from "@/lib/session";
+import { validateJobInput } from "@/lib/platform-validation";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const jobs = listJobs().map((job) => {
+    const { salary: _salary, ...rest } = job;
+    return rest;
+  });
+
+  return NextResponse.json({
+    total: jobs.length,
+    items: jobs,
+    featuredCompanyTotal: listCompanies().filter((company) => company.featured).length
+  });
+}
+
+export async function POST(request: Request) {
+  if (!(await hasAdminSession())) {
+    return NextResponse.json({ message: "Bu əməliyyat üçün admin girişi tələb olunur." }, { status: 401 });
+  }
+
+  const payload = validateJobInput(await request.json());
+
+  if (!payload.ok) {
+    return NextResponse.json({ message: payload.message }, { status: 400 });
+  }
+
+  const job = createJob(payload.data);
+
+  if (!job) {
+    return NextResponse.json({ message: "Seçilən şirkət tapılmadı." }, { status: 404 });
+  }
+
+  return NextResponse.json(
+    {
+      message: job.featured
+        ? "Vakansiya əlavə olundu və featured listings axınına düşdü."
+        : "Vakansiya əlavə olundu. Featured listings üçün şirkəti featured etməlisən.",
+      item: job
+    },
+    { status: 201 }
+  );
+}

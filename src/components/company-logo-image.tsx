@@ -1,0 +1,73 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type CompanyLogoImageProps = {
+  name: string;
+  website?: string;
+  logo?: string;
+  size?: number;
+  className?: string;
+};
+
+function getClearbitLogoUrl(website?: string) {
+  if (!website) {
+    return null;
+  }
+
+  try {
+    const hostname = new URL(website).hostname.replace(/^www\./, "");
+    return hostname ? `https://logo.clearbit.com/${hostname}` : null;
+  } catch {
+    return null;
+  }
+}
+
+export function CompanyLogoImage({
+  name,
+  website,
+  logo,
+  size = 40,
+  className
+}: CompanyLogoImageProps) {
+  const sources = useMemo(() => {
+    const unique = [getClearbitLogoUrl(website), logo].filter(
+      (candidate, index, values): candidate is string =>
+        typeof candidate === "string" && candidate.length > 0 && values.indexOf(candidate) === index
+    );
+
+    return unique;
+  }, [logo, website]);
+
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const source = sources[sourceIndex];
+
+  if (!source) {
+    return (
+      <span
+        className={className}
+        style={{ width: size, height: size }}
+        aria-hidden="true"
+      >
+        <span className="company-logo-fallback">{name.charAt(0).toUpperCase()}</span>
+      </span>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={source}
+      alt={name}
+      width={size}
+      height={size}
+      loading="lazy"
+      className={className}
+      onError={() => {
+        if (sourceIndex < sources.length - 1) {
+          setSourceIndex((current) => current + 1);
+        }
+      }}
+    />
+  );
+}

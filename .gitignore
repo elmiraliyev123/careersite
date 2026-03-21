@@ -1,0 +1,9 @@
+.next
+node_modules
+__pycache__
+*.pyc
+data/careerapple.sqlite
+data/careerapple.sqlite-*
+.env
+.env.local
+.venv
