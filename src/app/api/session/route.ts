@@ -7,10 +7,15 @@ import {
   isAdminAuthConfigured,
   verifyAdminPassword
 } from "@/lib/session";
+import { hasTrustedOrigin } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (!hasTrustedOrigin(request)) {
+    return NextResponse.json({ message: "Sorğunun origin-i doğrulanmadı." }, { status: 403 });
+  }
+
   const payload = await request.json();
   const password = typeof payload?.password === "string" ? payload.password : "";
 
@@ -39,7 +44,11 @@ export async function POST(request: Request) {
   return response;
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  if (!hasTrustedOrigin(request)) {
+    return NextResponse.json({ message: "Sorğunun origin-i doğrulanmadı." }, { status: 403 });
+  }
+
   const response = NextResponse.json({ message: "Sessiya bağlandı." });
 
   response.cookies.set(getClearedSessionCookieConfig());

@@ -5,6 +5,7 @@ export type Company = {
   name: string;
   tagline: string;
   sector: string;
+  industryTags?: string[];
   size: string;
   location: string;
   logo: string;
@@ -39,6 +40,7 @@ export type Job = {
   featured?: boolean;
   sourceName?: string;
   sourceUrl?: string;
+  applyUrl?: string;
   directCompanyUrl?: string;
   createdAt?: string;
 };
@@ -329,6 +331,42 @@ export const companies: Company[] = [
   }
 ];
 
+export const jobApplyUrlOverrides: Record<string, string> = {
+  "product-design-intern-miro": "https://boards.greenhouse.io/miro/jobs/7426153002",
+  "data-analyst-intern-notion": "https://boards.greenhouse.io/notion/jobs/7432001002",
+  "junior-ui-ux-designer-figma": "https://job-boards.greenhouse.io/figma/jobs/5239012004",
+  "marketing-trainee-revolut": "https://www.revolut.com/careers/position/marketing-trainee-8123417002/",
+  "operations-intern-shopify": "https://www.shopify.com/careers/operations-intern-2026-4412081",
+  "risk-operations-junior-wise": "https://jobs.ashbyhq.com/wise/91d3fd14-8e93-4e64-8a0b-1bde7ca0d101",
+  "product-ops-trainee-notion": "https://boards.greenhouse.io/notion/jobs/7432001027",
+  "ux-research-assistant-figma": "https://job-boards.greenhouse.io/figma/jobs/5239012198",
+  "business-analyst-trainee-revolut": "https://www.revolut.com/careers/position/business-analyst-trainee-8123491044/",
+  "customer-success-intern-shopify": "https://www.shopify.com/careers/customer-success-intern-2026-4412194",
+  "ecosystem-analytics-intern-bir-ecosystem-kapital-bank-life":
+    "https://careers.birbank.business/en/vacancies/ecosystem-analytics-intern-4385673176",
+  "system-elma-development-intern-kapital-bank-life":
+    "https://careers.birbank.business/en/vacancies/system-elma-development-intern-4385670391",
+  "marketing-intern-coca-cola-cci": "https://careers.cci.com.tr/en/job/marketing-intern-4379846606",
+  "system-elma-development-intern-kapital-bank":
+    "https://careers.kapitalbank.az/en/vacancies/system-elma-development-intern-6852",
+  "frontend-developer-internship-kapital-bank":
+    "https://careers.kapitalbank.az/en/vacancies/frontend-developer-internship-6841",
+  "backend-intern-kapital-bank":
+    "https://careers.kapitalbank.az/en/vacancies/backend-intern-6840",
+  "aktuari-uzr-t-crub-ci-pasha-insurance-world":
+    "https://careers.pasha-insurance.az/en/job/aktuari-uzre-tecrubeci-4378651632",
+  "ai-engineer-data-scientist-intern-kapital-bank":
+    "https://careers.kapitalbank.az/en/vacancies/ai-engineer-data-scientist-intern-6730",
+  "data-scientist-ai-engineer-intern-kapital-bank":
+    "https://careers.kapitalbank.az/en/vacancies/data-scientist-ai-engineer-intern-6717",
+  "ecosystem-analytics-intern-bir-ecosystem-kapital-bank":
+    "https://careers.kapitalbank.az/en/vacancies/ecosystem-analytics-intern-bir-ecosystem-6562",
+  "emerging-talent-field-service-engineering-intern-2026-opportunities-azerbaijan-baker-hughes":
+    "https://careers.bakerhughes.com/global/en/job/R145321/emerging-talent-field-service-engineering-intern-2026-azerbaijan",
+  "intern-c-developer-design-development-department-portbim":
+    "https://careers.portbim.com/jobs/intern-c-developer-design-development-department-4349446063"
+};
+
 export const jobs: Job[] = [
   {
     slug: "data-analyst-intern-notion",
@@ -350,6 +388,7 @@ export const jobs: Job[] = [
       "You will analyze product usage and engagement metrics and build dashboards for the growth team.",
       "Ты будешь анализировать продуктовые метрики и готовить дашборды для growth-команды."
     ),
+    applyUrl: jobApplyUrlOverrides["data-analyst-intern-notion"],
     directCompanyUrl: "https://www.notion.so/careers",
     responsibilities: [
       "SQL və spreadsheet ilə performans hesabatları qurmaq",
@@ -385,6 +424,7 @@ export const jobs: Job[] = [
       "You will work on design systems and onboarding flows and turn user problems into polished visual solutions.",
       "Ты будешь работать над design systems и onboarding-потоками, превращая пользовательские задачи в визуальные решения."
     ),
+    applyUrl: jobApplyUrlOverrides["junior-ui-ux-designer-figma"],
     directCompanyUrl: "https://www.figma.com/careers/",
     responsibilities: [
       "Wireframe və hi-fi ekranlar hazırlamaq",
@@ -420,6 +460,7 @@ export const jobs: Job[] = [
       "You will support the growth team by tracking campaign performance, creator partnerships, and CRM flows.",
       "Ты будешь помогать growth-команде, отслеживая кампании, creator-партнерства и CRM-потоки."
     ),
+    applyUrl: jobApplyUrlOverrides["marketing-trainee-revolut"],
     directCompanyUrl: "https://www.revolut.com/careers/",
     responsibilities: [
       "Kampaniya nəticələrini toplamaq və təqdim etmək",
@@ -455,6 +496,7 @@ export const jobs: Job[] = [
       "You will support the commerce operations team by tracking merchant onboarding and day-to-day quality signals.",
       "Ты будешь поддерживать commerce operations, отслеживая onboarding мерчантов и показатели качества."
     ),
+    applyUrl: jobApplyUrlOverrides["operations-intern-shopify"],
     directCompanyUrl: "https://www.shopify.com/careers",
     responsibilities: [
       "Şəhər performans dashboard-larını yeniləmək",
@@ -489,6 +531,7 @@ export const jobs: Job[] = [
       "You will review risk signals and user transactions and deliver first-pass analysis to the compliance team.",
       "Ты будешь проверять риск-сигналы и транзакции пользователей, передавая команде compliance первичный анализ."
     ),
+    applyUrl: jobApplyUrlOverrides["risk-operations-junior-wise"],
     directCompanyUrl: "https://wise.jobs",
     responsibilities: [
       "Gündəlik risk queue-larını idarə etmək",
@@ -523,6 +566,7 @@ export const jobs: Job[] = [
       "You will work on release planning, feedback intake, and internal knowledge base structure across product operations.",
       "Ты будешь работать над release-планированием, сбором feedback и структурой внутренней базы знаний."
     ),
+    applyUrl: jobApplyUrlOverrides["product-ops-trainee-notion"],
     directCompanyUrl: "https://www.notion.so/careers",
     responsibilities: [
       "Feature launch checklist-lərini yeniləmək",
@@ -557,6 +601,7 @@ export const jobs: Job[] = [
       "You will turn interview notes and usability observations into structured insight packs for the design team.",
       "Ты будешь превращать заметки интервью и usability-тестов в структурированные insight-пакеты для дизайн-команды."
     ),
+    applyUrl: jobApplyUrlOverrides["ux-research-assistant-figma"],
     directCompanyUrl: "https://www.figma.com/careers/",
     responsibilities: [
       "Research note-ları təmizləyib tematikləşdirmək",
@@ -591,6 +636,7 @@ export const jobs: Job[] = [
       "You will run first-pass analysis on go-to-market, funnel performance, and KPI reporting to speed up decisions.",
       "Ты будешь проводить первичный анализ go-to-market, воронки и KPI, чтобы ускорять принятие решений."
     ),
+    applyUrl: jobApplyUrlOverrides["business-analyst-trainee-revolut"],
     directCompanyUrl: "https://www.revolut.com/careers/",
     responsibilities: [
       "Weekly business review fayllarını hazırlamaq",
@@ -625,6 +671,7 @@ export const jobs: Job[] = [
       "You will analyze merchant request patterns and help the customer success team improve support quality.",
       "Ты будешь анализировать обращения мерчантов и помогать команде customer success улучшать качество поддержки."
     ),
+    applyUrl: jobApplyUrlOverrides["customer-success-intern-shopify"],
     directCompanyUrl: "https://www.shopify.com/careers",
     responsibilities: [
       "Sorğu etiketlərini və trend-ləri izləmək",

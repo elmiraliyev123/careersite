@@ -5,7 +5,7 @@ import {
   findCompanyBySlug,
   updateCompany
 } from "@/lib/platform-database";
-import { hasAdminSession } from "@/lib/session";
+import { requireAdminMutation } from "@/lib/request-security";
 import { validateCompanyInput } from "@/lib/platform-validation";
 
 export const runtime = "nodejs";
@@ -27,8 +27,10 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  if (!(await hasAdminSession())) {
-    return NextResponse.json({ message: "Bu əməliyyat üçün admin girişi tələb olunur." }, { status: 401 });
+  const authError = await requireAdminMutation(request);
+
+  if (authError) {
+    return authError;
   }
 
   const { slug } = await context.params;
@@ -50,9 +52,11 @@ export async function PUT(request: Request, context: RouteContext) {
   });
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  if (!(await hasAdminSession())) {
-    return NextResponse.json({ message: "Bu əməliyyat üçün admin girişi tələb olunur." }, { status: 401 });
+export async function DELETE(request: Request, context: RouteContext) {
+  const authError = await requireAdminMutation(request);
+
+  if (authError) {
+    return authError;
   }
 
   const { slug } = await context.params;

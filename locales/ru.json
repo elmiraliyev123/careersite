@@ -1,8 +1,10 @@
 {
   "nav": {
     "home": "Главная",
+    "discover": "Поиск",
     "jobs": "Вакансии",
     "companies": "Компании",
+    "saved": "Сохранено",
     "students": "Студентам",
     "careerTips": "Карьерные советы",
     "employers": "Работодателям",
@@ -21,6 +23,8 @@
     "viewAllJobs": "Все вакансии",
     "viewDetails": "Подробнее",
     "applyNow": "Откликнуться",
+    "applyLinkInactive": "Ссылка для отклика недоступна",
+    "applyLinkInactiveShort": "Ссылка недоступна",
     "applied": "Отклик отправлен",
     "saveJob": "Сохранить",
     "saved": "Сохранено",
@@ -29,6 +33,7 @@
     "originalListing": "Открыть оригинал вакансии",
     "officialSite": "Официальный сайт",
     "requestDemo": "Запросить демо",
+    "goBack": "Назад",
     "backHome": "Главная",
     "backToJobs": "Назад к вакансиям",
     "openFreshListings": "Открыть свежие вакансии",
@@ -142,10 +147,19 @@
     "matchingTags": "Теги, подходящие для этой роли",
     "nextRolesTitle": "Роли, которые стоит посмотреть дальше",
     "companyOverview": "Кратко о компании",
-    "aiPromptEyebrow": "AI utility",
-    "aiPromptTitle": "✨ AI Cover Letter Prompt",
-    "aiPromptCopy": "Вставь этот текст в ChatGPT, чтобы получить более точный черновик cover letter под конкретную роль.",
-    "aiPromptHint": "Промпт уже заполнен текущим названием роли, summary и ключевыми требованиями."
+    "aiSummaryEyebrow": "AI utility",
+    "aiSummaryTitle": "✨ AI Job Summary (TL;DR)",
+    "aiSummaryCopy": "Быстро считай главные сигналы роли и реши, стоит ли идти глубже.",
+    "aiSummaryMission": "Core Mission",
+    "aiSummaryDealbreaker": "Dealbreaker Skill",
+    "aiSummaryCulture": "Culture Vibe",
+    "aiSummaryCultureFallback": "{company} ожидает в этой роли {workModel}-ритм и высокую степень самостоятельности."
+  },
+  "savedPage": {
+    "title": "Держи сохраненные роли в одном месте",
+    "copy": "Интересные вакансии остаются здесь, чтобы ты мог вернуться, сравнить и откликнуться позже.",
+    "emptyTitle": "Сохраненных ролей пока нет",
+    "emptyCopy": "Нажми Save на карточке вакансии, и она появится здесь."
   },
   "outbound": {
     "eyebrow": "Безопасный переход",

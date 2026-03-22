@@ -109,7 +109,7 @@ export function JobsPageClient({
             <p>{t("jobsPage.emptyCopy")}</p>
           </div>
         ) : (
-          <div className="card-grid card-grid--jobs">
+          <div className="card-grid card-grid--jobs mobile-snap-row">
             {jobs.map(({ job, company }) => (
               <JobCard key={job.slug} job={job} company={company} sourcePath="/jobs" />
             ))}

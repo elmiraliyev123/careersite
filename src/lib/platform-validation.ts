@@ -1,5 +1,6 @@
 import type { Company, Job } from "@/data/platform";
 import { normalizeLocalizedText, normalizeLocalizedTextList } from "@/lib/localized-content";
+import { sanitizeText, sanitizeTextList } from "@/lib/text-sanitizer";
 
 export type CompanyInput = Omit<Company, "slug">;
 export type JobInput = Omit<Job, "slug" | "featured">;
@@ -20,7 +21,7 @@ const jobLevels = new Set<Job["level"]>(["Təcrübə", "Junior", "Trainee", "Yen
 const workModels = new Set<Job["workModel"]>(["Ofisdən", "Hibrid", "Uzaqdan"]);
 
 function getTrimmedString(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
+  return typeof value === "string" ? sanitizeText(value, { multiline: false }) : "";
 }
 
 function isHttpUrl(value: string) {
@@ -38,13 +39,14 @@ function isIsoDate(value: string) {
 
 function normalizeList(value: unknown) {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => getTrimmedString(item))
-      .filter(Boolean);
+    return sanitizeTextList(
+      value.map((item) => getTrimmedString(item)),
+      { multiline: false }
+    );
   }
 
   if (typeof value === "string") {
-    return value
+    return sanitizeText(value, { multiline: true })
       .split(/\n|,/)
       .map((item) => item.trim())
       .filter(Boolean);
@@ -158,6 +160,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
 
   const benefits = requiredList(record.benefits, "Üstünlüklər");
   if (!Array.isArray(benefits)) return { ok: false, message: benefits };
+  const industryTags = normalizeList(record.industryTags);
 
   if (!isHttpUrl(logo) || !isHttpUrl(cover) || !isHttpUrl(website)) {
     return { ok: false, message: "Logo, cover və website sahələri keçərli URL olmalıdır." };
@@ -184,6 +187,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
       focusAreas,
       youthOffer,
       benefits,
+      industryTags: industryTags.length > 0 ? industryTags : [sector],
       featured: Boolean(record.featured),
       createdAt: normalizedCreatedAt(record.createdAt)
     }
@@ -267,12 +271,19 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
       requirements,
       benefits,
       tags,
+      applyUrl:
+        typeof record.applyUrl === "string" && isHttpUrl(record.applyUrl)
+          ? record.applyUrl.trim()
+          : undefined,
       directCompanyUrl:
         typeof record.directCompanyUrl === "string" && isHttpUrl(record.directCompanyUrl)
           ? record.directCompanyUrl.trim()
           : undefined,
       sourceName: getTrimmedString(record.sourceName) || undefined,
-      sourceUrl: getTrimmedString(record.sourceUrl) || undefined,
+      sourceUrl:
+        typeof record.sourceUrl === "string" && isHttpUrl(record.sourceUrl)
+          ? record.sourceUrl.trim()
+          : undefined,
       createdAt: normalizedCreatedAt(record.createdAt)
     }
   };

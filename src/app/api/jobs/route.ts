@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createJob, listCompanies, listJobs } from "@/lib/platform-database";
-import { hasAdminSession } from "@/lib/session";
+import { requireAdminMutation } from "@/lib/request-security";
 import { validateJobInput } from "@/lib/platform-validation";
 
 export const runtime = "nodejs";
@@ -21,8 +21,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await hasAdminSession())) {
-    return NextResponse.json({ message: "Bu əməliyyat üçün admin girişi tələb olunur." }, { status: 401 });
+  const authError = await requireAdminMutation(request);
+
+  if (authError) {
+    return authError;
   }
 
   const payload = validateJobInput(await request.json());

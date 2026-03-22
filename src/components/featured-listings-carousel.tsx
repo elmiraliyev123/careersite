@@ -59,22 +59,24 @@ export function FeaturedListingsCarousel({ items }: FeaturedListingsCarouselProp
                   <div className="featured-banner__shade" />
 
                   <div className="featured-banner__content">
-                    <div className="chip-row">
-                      <span className="chip chip--accent">{translateLevel(locale, job.level)}</span>
-                      <span className="chip">{localizedCompany.name}</span>
-                      <span className="chip">{translateWorkModel(locale, job.workModel)}</span>
-                    </div>
-
-                    <div className="featured-banner__copy">
-                      <div className="featured-banner__company-row">
-                        <p className="featured-banner__company">{localizedCompany.name}</p>
-                        <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                    <div className="featured-banner__lead">
+                      <div className="chip-row">
+                        <span className="chip chip--accent">{translateLevel(locale, job.level)}</span>
+                        <span className="chip">{localizedCompany.name}</span>
+                        <span className="chip">{translateWorkModel(locale, job.workModel)}</span>
                       </div>
-                      <p className="featured-banner__sector">
-                        {translateSector(locale, company.sector)}
-                      </p>
-                      <h3>{localizedJob.title}</h3>
-                      <p>{localizedJob.summary}</p>
+
+                      <div className="featured-banner__copy">
+                        <div className="featured-banner__company-row">
+                          <p className="featured-banner__company">{localizedCompany.name}</p>
+                          <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                        </div>
+                        <p className="featured-banner__sector">
+                          {translateSector(locale, company.sector)}
+                        </p>
+                        <h3>{localizedJob.title}</h3>
+                        <p>{localizedJob.summary}</p>
+                      </div>
                     </div>
 
                     <div className="featured-banner__meta">

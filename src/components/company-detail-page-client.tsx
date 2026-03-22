@@ -102,13 +102,13 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             <h2>{t("companyPage.overviewTitle")}</h2>
             <div className="stack-sm">
               <p className="info-copy">
-                {company.wikipediaSummary ?? t("companyPage.overviewPlaceholder")}
+                {localizedCompany.wikipediaSummary ?? t("companyPage.overviewPlaceholder")}
               </p>
               {company.wikipediaSourceUrl ? (
                 <a
                   href={company.wikipediaSourceUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="text-link"
                 >
                   {t("companyPage.wikipediaSource")} <ExternalLink size={15} />
@@ -121,7 +121,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             <p className="eyebrow">{t("companyPage.focusEyebrow")}</p>
             <h2>{t("companyPage.focusTitle")}</h2>
             <ul className="bullet-list">
-              {company.focusAreas.map((item) => (
+              {localizedCompany.focusAreas.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -131,7 +131,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             <p className="eyebrow">{t("companyPage.youthOfferEyebrow")}</p>
             <h2>{t("companyPage.youthOfferTitle")}</h2>
             <ul className="bullet-list">
-              {company.youthOffer.map((item) => (
+              {localizedCompany.youthOffer.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -142,7 +142,12 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             <h2>{t("labels.openRoles", { count: jobs.length })}</h2>
             <div className="chip-row">
               <span className="chip chip--accent">{translateSector(locale, company.sector)}</span>
-              {company.benefits.map((item) => (
+              {(localizedCompany.industryTags ?? []).map((item) => (
+                <span key={item} className="chip">
+                  {item}
+                </span>
+              ))}
+              {localizedCompany.benefits.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
@@ -165,7 +170,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
               <p>{t("companyPage.emptyCopy")}</p>
             </div>
           ) : (
-            <div className="card-grid card-grid--jobs">
+            <div className="card-grid card-grid--jobs mobile-snap-row">
               {jobs.map((job) => (
                 <JobCard
                   key={job.slug}

@@ -1,8 +1,10 @@
 {
   "nav": {
     "home": "Ana səhifə",
+    "discover": "Axtarış",
     "jobs": "Vakansiyalar",
     "companies": "Şirkətlər",
+    "saved": "Yadda saxla",
     "students": "Tələbələr",
     "careerTips": "Karyera məsləhətləri",
     "employers": "İşəgötürənlər üçün",
@@ -21,6 +23,8 @@
     "viewAllJobs": "Bütün vakansiyalar",
     "viewDetails": "Ətraflı bax",
     "applyNow": "İndi müraciət et",
+    "applyLinkInactive": "Müraciət linki aktiv deyil",
+    "applyLinkInactiveShort": "Link aktiv deyil",
     "applied": "Müraciət edilib",
     "saveJob": "Yadda saxla",
     "saved": "Yadda saxlanıb",
@@ -29,6 +33,7 @@
     "originalListing": "Orijinal elana keç",
     "officialSite": "Rəsmi sayt",
     "requestDemo": "Demo istəyi",
+    "goBack": "Geri",
     "backHome": "Ana səhifə",
     "backToJobs": "Vakansiyalara qayıt",
     "openFreshListings": "Fresh elanları aç",
@@ -67,10 +72,10 @@
   },
   "home": {
     "eyebrow": "Azərbaycan üçün gənc karyera platforması",
-    "title": "Təcrübə, trainee və junior rolları bir mərkəzdə topla.",
+    "title": "Təcrübə və başlanğıc səviyyəli rolları bir yerdə topla.",
     "copy": "CareerApple təsdiqlənmiş işəgötürən profilləri və LinkedIn, HelloJob kimi mənbələrdən gələn yeni elanları gənclər üçün təmizlənmiş lentdə birləşdirir. Auto-swipe banner axınından keç, filtrlə və uyğun rolları daha sürətli tap.",
     "featuredJobsEyebrow": "Seçilmiş elanlar",
-    "featuredJobsTitle": "Ən yeni internship elanları davamlı banner axınında",
+    "featuredJobsTitle": "ən yeni təcrübə elanları",
     "featuredCompaniesEyebrow": "Seçilmiş şirkətlər",
     "featuredCompaniesTitle": "Təsdiqlənmiş işəgötürənlər və aktiv youth-role axını",
     "platformSignalsEyebrow": "Platforma siqnalları",
@@ -142,10 +147,19 @@
     "matchingTags": "Bu rola uyğun tag-lər",
     "nextRolesTitle": "Növbəti baxa biləcəyin rollar",
     "companyOverview": "Şirkət haqqında qısa qeyd",
-    "aiPromptEyebrow": "AI utility",
-    "aiPromptTitle": "✨ AI Cover Letter Prompt",
-    "aiPromptCopy": "Bu promptu ChatGPT-yə yapışdırıb rola uyğun, daha spesifik cover letter skeleti əldə et.",
-    "aiPromptHint": "Prompt cari vakansiyanın başlığı, summary-si və əsas tələbləri ilə əvvəlcədən doldurulub."
+    "aiSummaryEyebrow": "AI utility",
+    "aiSummaryTitle": "✨ AI Job Summary (TL;DR)",
+    "aiSummaryCopy": "Vakansiyanın əsas siqnallarını sürətli şəkildə oxu və rola uyğunluğunu bir baxışda yoxla.",
+    "aiSummaryMission": "Core Mission",
+    "aiSummaryDealbreaker": "Dealbreaker Skill",
+    "aiSummaryCulture": "Culture Vibe",
+    "aiSummaryCultureFallback": "{company} bu rolda {workModel} ritmi və yüksək ownership gözləntisi ilə hərəkət edir."
+  },
+  "savedPage": {
+    "title": "Yadda saxladığın rolları bir yerdə izlə",
+    "copy": "Maraqlı gördüyün vakansiyalar burada qalır. Sonradan müqayisə et, aç və müraciət et.",
+    "emptyTitle": "Hələ yadda saxlanmış vakansiya yoxdur",
+    "emptyCopy": "Vakansiya kartlarında Yadda saxla düyməsinə toxun və bura əlavə et."
   },
   "outbound": {
     "eyebrow": "Təhlükəsiz keçid",

@@ -43,7 +43,7 @@ export function CompaniesPageClient({ companies, selectedCategory = "" }: Compan
             <p>{t("companiesPage.emptyCopy")}</p>
           </div>
         ) : (
-          <div className="card-grid card-grid--companies">
+          <div className="card-grid card-grid--companies mobile-snap-row">
             {companies.map(({ company, openRoles }) => (
               <CompanyCard key={company.slug} company={company} openRoles={openRoles} />
             ))}

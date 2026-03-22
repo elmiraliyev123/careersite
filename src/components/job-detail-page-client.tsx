@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, ExternalLink, MapPin } from "lucide-react";
 
-import { AiCoverLetterPrompt } from "@/components/ai-cover-letter-prompt";
+import { AiJobSummaryCard } from "@/components/ai-job-summary-card";
 import { ApplyJobButton } from "@/components/apply-job-button";
 import { JobCard } from "@/components/job-card";
 import { SaveJobButton } from "@/components/save-job-button";
@@ -94,13 +94,15 @@ export function JobDetailPageClient({
           </div>
 
           <div className="detail-hero__actions">
-            <ApplyJobButton
-              slug={job.slug}
-              href={job.directCompanyUrl ?? company?.website ?? job.sourceUrl ?? `/jobs/${job.slug}`}
-              companyName={localizedCompany?.name ?? job.companySlug}
-              companyLogo={company?.logo}
-              sourcePath={sourcePath}
-            />
+            <div className="detail-hero__desktop-apply">
+              <ApplyJobButton
+                slug={job.slug}
+                href={job.applyUrl ?? ""}
+                companyName={localizedCompany?.name ?? job.companySlug}
+                companyLogo={company?.logo}
+                sourcePath={sourcePath}
+              />
+            </div>
             <SaveJobButton job={job} company={company} />
             {originalListingHref ? (
               <Link href={originalListingHref} prefetch={false} className="button button--ghost">
@@ -111,14 +113,23 @@ export function JobDetailPageClient({
           </div>
         </section>
 
-        <AiCoverLetterPrompt
-          jobTitle={localizedJob.title}
+        <div className="job-detail__mobile-apply">
+          <ApplyJobButton
+            slug={job.slug}
+            href={job.applyUrl ?? ""}
+            companyName={localizedCompany?.name ?? job.companySlug}
+            companyLogo={company?.logo}
+            sourcePath={sourcePath}
+            className="button--full"
+          />
+        </div>
+
+        <AiJobSummaryCard
           companyName={localizedCompany?.name ?? job.companySlug}
           summary={localizedJob.summary}
-          responsibilities={job.responsibilities}
-          requirements={job.requirements}
-          benefits={job.benefits}
-          city={translateCity(locale, job.city)}
+          requirements={localizedJob.requirements}
+          benefits={localizedJob.benefits}
+          responsibilities={localizedJob.responsibilities}
           workModel={translateWorkModel(locale, job.workModel)}
         />
 
@@ -127,7 +138,7 @@ export function JobDetailPageClient({
             <p className="eyebrow">{t("labels.responsibilities")}</p>
             <h2>{t("jobDetail.whatYouWillDo")}</h2>
             <ul className="bullet-list">
-              {job.responsibilities.map((item) => (
+              {localizedJob.responsibilities.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -137,7 +148,7 @@ export function JobDetailPageClient({
             <p className="eyebrow">{t("labels.requirements")}</p>
             <h2>{t("jobDetail.whatIsExpected")}</h2>
             <ul className="bullet-list">
-              {job.requirements.map((item) => (
+              {localizedJob.requirements.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -147,7 +158,7 @@ export function JobDetailPageClient({
             <p className="eyebrow">{t("labels.benefits")}</p>
             <h2>{t("jobDetail.whatYouGain")}</h2>
             <ul className="bullet-list">
-              {job.benefits.map((item) => (
+              {localizedJob.benefits.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -187,7 +198,7 @@ export function JobDetailPageClient({
             </Link>
           </div>
 
-          <div className="card-grid card-grid--jobs">
+          <div className="card-grid card-grid--jobs mobile-snap-row">
             {recommendations.map((item) => (
               <JobCard
                 key={item.job.slug}

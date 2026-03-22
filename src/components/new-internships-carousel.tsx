@@ -9,7 +9,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import { formatLocalizedDate, translateLevel, translateWorkModel } from "@/lib/i18n";
-import { buildOutboundHref } from "@/lib/outbound";
+import { buildOutboundHref, isSafeExternalUrl } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
 
 type NewInternshipsCarouselProps = {
@@ -64,13 +64,16 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
       {items.map(({ job, company }) => {
         const localizedJob = getLocalizedJob(job, locale);
         const localizedCompany = getLocalizedCompany(company, locale);
-        const applyHref = buildOutboundHref({
-          targetUrl: job.directCompanyUrl ?? company.website ?? job.sourceUrl ?? `/jobs/${job.slug}`,
-          companyName: localizedCompany.name,
-          logoUrl: company.logo,
-          sourcePath: "/jobs",
-          fallbackHref: `/jobs/${job.slug}`
-        });
+        const applyHref = isSafeExternalUrl(job.applyUrl?.trim() ?? "") ? job.applyUrl!.trim() : "";
+        const outboundApplyHref = applyHref
+          ? buildOutboundHref({
+              targetUrl: applyHref,
+              companyName: localizedCompany.name,
+              logoUrl: company.logo,
+              sourcePath: "/jobs",
+              fallbackHref: `/jobs/${job.slug}`
+            })
+          : "";
 
         return (
           <article key={job.slug} className="internship-card" data-internship-slide="true">
@@ -106,8 +109,10 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
                 </span>
               </div>
 
-              <h3>{localizedJob.title}</h3>
-              <p>{localizedJob.summary}</p>
+              <div className="internship-card__copy">
+                <h3>{localizedJob.title}</h3>
+                <p>{localizedJob.summary}</p>
+              </div>
             </div>
 
             <div className="internship-card__foot">
@@ -116,10 +121,22 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
                 {t("labels.deadline")}: {formatLocalizedDate(job.deadline, locale)}
               </span>
 
-              <Link href={applyHref} prefetch={false} className="internship-card__apply">
-                <span>{t("actions.applyNow")}</span>
-                <ArrowUpRight size={15} />
-              </Link>
+              {applyHref ? (
+                <Link
+                  href={outboundApplyHref}
+                  prefetch={false}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="internship-card__apply"
+                >
+                  <span>{t("actions.applyNow")}</span>
+                  <ArrowUpRight size={15} />
+                </Link>
+              ) : (
+                <span className="internship-card__apply internship-card__apply--disabled" aria-disabled="true">
+                  <span>{t("actions.applyLinkInactiveShort")}</span>
+                </span>
+              )}
             </div>
           </article>
         );

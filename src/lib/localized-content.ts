@@ -1,5 +1,7 @@
 export type SupportedLocaleCode = "az" | "en" | "ru";
 
+import { sanitizeText, sanitizeLocalizedText } from "@/lib/text-sanitizer";
+
 export type LocalizedText = Partial<Record<SupportedLocaleCode, string>>;
 export type LocalizedContentValue = string | LocalizedText;
 
@@ -28,11 +30,12 @@ export function normalizeLocalizedText(
   defaultLocale: SupportedLocaleCode = "az"
 ): LocalizedText {
   if (isLocalizedText(value)) {
-    return value;
+    return sanitizeLocalizedText(value);
   }
 
   if (typeof value === "string" && value.trim()) {
-    return { [defaultLocale]: value.trim() };
+    const sanitized = sanitizeText(value);
+    return sanitized ? { [defaultLocale]: sanitized } : {};
   }
 
   return {};
@@ -47,7 +50,7 @@ function normalizeLocalizedContentEntry(
   defaultLocale: SupportedLocaleCode = "az"
 ): LocalizedContentValue | null {
   if (typeof value === "string") {
-    const trimmedValue = value.trim();
+    const trimmedValue = sanitizeText(value);
     return trimmedValue ? trimmedValue : null;
   }
 
@@ -107,14 +110,14 @@ export function getLocalizedText(
   const directValue = value[locale];
 
   if (typeof directValue === "string" && directValue.trim()) {
-    return directValue;
+    return sanitizeText(directValue);
   }
 
   for (const fallbackLocale of fallbackOrder) {
     const fallbackValue = value[fallbackLocale];
 
     if (typeof fallbackValue === "string" && fallbackValue.trim()) {
-      return fallbackValue;
+      return sanitizeText(fallbackValue);
     }
   }
 
@@ -122,7 +125,7 @@ export function getLocalizedText(
     (candidate): candidate is string => typeof candidate === "string" && candidate.trim().length > 0
   );
 
-  return firstValue ?? "";
+  return sanitizeText(firstValue ?? "");
 }
 
 export function getPrimaryLocalizedText(value: LocalizedContentValue | null | undefined) {

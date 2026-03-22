@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasAdminSession } from "@/lib/session";
+import { requireAdminMutation } from "@/lib/request-security";
 import { scrapeSources } from "@/lib/scrape-config";
 import { syncScrapedJobs } from "@/lib/scrape-sync";
 
@@ -18,8 +19,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await hasAdminSession())) {
-    return NextResponse.json({ message: "Bu əməliyyat üçün admin girişi tələb olunur." }, { status: 401 });
+  const authError = await requireAdminMutation(request);
+
+  if (authError) {
+    return authError;
   }
 
   const payload = await request.json().catch(() => ({}));

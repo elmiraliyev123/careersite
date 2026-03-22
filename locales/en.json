@@ -1,8 +1,10 @@
 {
   "nav": {
     "home": "Home",
+    "discover": "Discover",
     "jobs": "Jobs",
     "companies": "Companies",
+    "saved": "Saved",
     "students": "Students",
     "careerTips": "Career tips",
     "employers": "For employers",
@@ -21,6 +23,8 @@
     "viewAllJobs": "All jobs",
     "viewDetails": "View details",
     "applyNow": "Apply now",
+    "applyLinkInactive": "Application link unavailable",
+    "applyLinkInactiveShort": "Link unavailable",
     "applied": "Applied",
     "saveJob": "Save job",
     "saved": "Saved",
@@ -29,6 +33,7 @@
     "originalListing": "Open original listing",
     "officialSite": "Official website",
     "requestDemo": "Request demo",
+    "goBack": "Back",
     "backHome": "Home",
     "backToJobs": "Back to jobs",
     "openFreshListings": "Open fresh listings",
@@ -142,10 +147,19 @@
     "matchingTags": "Tags that fit this role",
     "nextRolesTitle": "Roles you can explore next",
     "companyOverview": "Quick company overview",
-    "aiPromptEyebrow": "AI utility",
-    "aiPromptTitle": "✨ AI Cover Letter Prompt",
-    "aiPromptCopy": "Paste this into ChatGPT to get a tighter, more role-specific cover letter draft.",
-    "aiPromptHint": "The prompt is prefilled with the current job title, summary, and key requirements."
+    "aiSummaryEyebrow": "AI utility",
+    "aiSummaryTitle": "✨ AI Job Summary (TL;DR)",
+    "aiSummaryCopy": "Read the role’s main signals fast and decide whether it is worth a deeper look.",
+    "aiSummaryMission": "Core Mission",
+    "aiSummaryDealbreaker": "Dealbreaker Skill",
+    "aiSummaryCulture": "Culture Vibe",
+    "aiSummaryCultureFallback": "{company} expects a {workModel} rhythm with strong ownership from this role."
+  },
+  "savedPage": {
+    "title": "Keep your saved roles in one place",
+    "copy": "Roles you want to revisit stay here so you can compare, reopen, and apply when you are ready.",
+    "emptyTitle": "No saved roles yet",
+    "emptyCopy": "Tap Save on a job card and it will appear here."
   },
   "outbound": {
     "eyebrow": "Safe transition",

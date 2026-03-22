@@ -17,7 +17,7 @@ import {
   translateSector,
   translateWorkModel
 } from "@/lib/i18n";
-import { buildOutboundHref } from "@/lib/outbound";
+import { buildOutboundHref, isSafeExternalUrl } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
 
 type JobCardProps = {
@@ -40,18 +40,21 @@ function getWorkModelIcon(workModel: Job["workModel"]) {
   return <Sparkles size={14} />;
 }
 
-export function JobCard({ job, company, sourcePath = "/jobs" }: JobCardProps) {
+export function JobCard({ job, company, sourcePath }: JobCardProps) {
   const { locale, t } = useI18n();
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const companyLinkRef = useRef<HTMLAnchorElement | null>(null);
-  const applyHref = buildOutboundHref({
-    targetUrl: job.directCompanyUrl ?? company?.website ?? job.sourceUrl ?? `/jobs/${job.slug}`,
-    companyName: localizedCompany?.name ?? job.companySlug,
-    logoUrl: company?.logo,
-    sourcePath,
-    fallbackHref: `/jobs/${job.slug}`
-  });
+  const applyHref = isSafeExternalUrl(job.applyUrl?.trim() ?? "") ? job.applyUrl!.trim() : "";
+  const outboundApplyHref = applyHref
+    ? buildOutboundHref({
+        targetUrl: applyHref,
+        companyName: localizedCompany?.name ?? job.companySlug,
+        logoUrl: company?.logo,
+        sourcePath,
+        fallbackHref: sourcePath ?? `/jobs/${job.slug}`
+      })
+    : "";
   const visibleTags = localizedJob.tags.slice(0, 3);
 
   return (
@@ -139,15 +142,25 @@ export function JobCard({ job, company, sourcePath = "/jobs" }: JobCardProps) {
           {t("actions.viewDetails")}
         </Link>
 
-        <Link
-          href={applyHref}
-          prefetch={false}
-          className="job-card__apply"
-        >
-          <span className="job-card__apply-icon">⚡</span>
-          <span className="job-card__apply-label">{t("actions.applyNow")}</span>
-          <ArrowUpRight size={16} />
-        </Link>
+        {applyHref ? (
+          <Link
+            href={outboundApplyHref}
+            prefetch={false}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="job-card__apply"
+          >
+            <span className="job-card__apply-icon">⚡</span>
+            <span className="job-card__apply-label">{t("actions.applyNow")}</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        ) : (
+          <span className="job-card__apply job-card__apply--disabled" aria-disabled="true">
+            <span className="job-card__apply-label job-card__apply-label--visible">
+              {t("actions.applyLinkInactiveShort")}
+            </span>
+          </span>
+        )}
       </div>
     </article>
   );

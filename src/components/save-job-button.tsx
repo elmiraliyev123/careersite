@@ -66,7 +66,7 @@ export function SaveJobButton({ job, company, flyFromRef }: SaveJobButtonProps) 
       companySlug: job.companySlug,
       companyName: company?.name ?? job.companySlug,
       companyLogo: company?.logo ?? "",
-      sourceUrl: job.directCompanyUrl ?? job.sourceUrl
+      sourceUrl: job.applyUrl ?? job.directCompanyUrl ?? job.sourceUrl
     });
 
     if (!wasSaved && company?.logo) {

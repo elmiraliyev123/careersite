@@ -64,6 +64,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
       name: String(formData.get("name") ?? "").trim(),
       tagline: String(formData.get("tagline") ?? "").trim(),
       sector: String(formData.get("sector") ?? "").trim(),
+      industryTags: splitTextarea(String(formData.get("industryTags") ?? "")),
       size: String(formData.get("size") ?? "").trim(),
       location: String(formData.get("location") ?? "").trim(),
       logo: String(formData.get("logo") ?? "").trim(),
@@ -127,6 +128,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
       requirements: splitTextarea(String(formData.get("requirements") ?? "")),
       benefits: splitTextarea(String(formData.get("benefits") ?? "")),
       tags: splitTextarea(String(formData.get("tags") ?? "")),
+      applyUrl: String(formData.get("applyUrl") ?? "").trim(),
       createdAt: editingJob?.createdAt ?? todayValue()
     };
 
@@ -222,7 +224,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
 
   return (
     <div className="admin-management-grid">
-      <section className="detail-panel admin-section">
+      <section id="admin-companies" className="detail-panel admin-section">
         <div className="admin-panel-header">
           <div>
             <p className="eyebrow">Şirkət idarəsi</p>
@@ -283,7 +285,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
 
           <div className="grid-two">
             <label className="field">
-              <span>Sektor</span>
+              <span>Primary industry</span>
               <input
                 name="sector"
                 type="text"
@@ -304,6 +306,16 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
               />
             </label>
           </div>
+
+          <label className="field">
+            <span>Industry tags</span>
+            <textarea
+              name="industryTags"
+              rows={3}
+              defaultValue={editingCompany ? (editingCompany.industryTags ?? [editingCompany.sector]).join("\n") : ""}
+              placeholder={"SaaS\nFintex\nProductivity"}
+            />
+          </label>
 
           <div className="grid-two">
             <label className="field">
@@ -330,7 +342,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
           </div>
 
           <label className="field">
-            <span>Logo URL</span>
+            <span>Logo URL override</span>
             <input
               name="logo"
               type="url"
@@ -352,7 +364,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
           </label>
 
           <label className="field">
-            <span>Haqqında</span>
+            <span>Description override</span>
             <textarea
               name="about"
               rows={4}
@@ -416,7 +428,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
         </form>
       </section>
 
-      <section className="detail-panel admin-section">
+      <section id="admin-jobs" className="detail-panel admin-section">
         <div className="admin-panel-header">
           <div>
             <p className="eyebrow">Vakansiya idarəsi</p>
@@ -556,6 +568,16 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
           </label>
 
           <label className="field">
+            <span>Apply URL override</span>
+            <input
+              name="applyUrl"
+              type="url"
+              defaultValue={editingJob?.applyUrl ?? editingJob?.directCompanyUrl ?? ""}
+              placeholder="https://company.com/careers/apply-role"
+            />
+          </label>
+
+          <label className="field">
             <span>Qısa xülasə</span>
             <textarea
               name="summary"
@@ -648,7 +670,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
                     <VerifiedBadge compact />
                   </strong>
                   <span>
-                    {company.sector} • {company.location}
+                    {[company.sector, ...(company.industryTags ?? [])].join(" • ")} • {company.location}
                   </span>
                 </div>
                 <div className="admin-inline-actions">
@@ -700,6 +722,7 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
                     <span>
                       {company?.name ?? job.companySlug} • {job.city} • {job.deadline}
                     </span>
+                    <span>{job.applyUrl ?? job.directCompanyUrl ?? "Apply URL təyin edilməyib"}</span>
                   </div>
                   <div className="admin-inline-actions">
                     <button

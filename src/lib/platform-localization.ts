@@ -1,6 +1,7 @@
 import type { Company, Job } from "@/data/platform";
 import type { Locale } from "@/lib/i18n";
 import { getLocalizedText, getLocalizedTextList } from "@/lib/localized-content";
+import { sanitizeText, sanitizeTextList } from "@/lib/text-sanitizer";
 
 type LocalizedValue = Partial<Record<Locale, string>>;
 
@@ -130,8 +131,18 @@ export function getLocalizedCompany(company: Company, locale: Locale): Localized
 
   return {
     ...company,
-    tagline: resolveLocalizedContent(locale, company.tagline, localized?.tagline),
-    about: resolveLocalizedContent(locale, company.about, localized?.about)
+    name: sanitizeText(company.name),
+    sector: sanitizeText(company.sector),
+    location: sanitizeText(company.location),
+    tagline: sanitizeText(resolveLocalizedContent(locale, company.tagline, localized?.tagline)),
+    about: sanitizeText(resolveLocalizedContent(locale, company.about, localized?.about), {
+      multiline: true
+    }),
+    wikipediaSummary: sanitizeText(company.wikipediaSummary, { multiline: true }) || undefined,
+    focusAreas: sanitizeTextList(company.focusAreas),
+    youthOffer: sanitizeTextList(company.youthOffer),
+    benefits: sanitizeTextList(company.benefits),
+    industryTags: sanitizeTextList(company.industryTags ?? [company.sector])
   };
 }
 
@@ -141,6 +152,12 @@ export function getLocalizedJob(job: Job, locale: Locale): LocalizedJob {
     title: getLocalizedText(job.title, locale),
     summary: getLocalizedText(job.summary, locale),
     category: getLocalizedText(job.category, locale),
-    tags: getLocalizedTextList(job.tags, locale)
+    tags: getLocalizedTextList(job.tags, locale),
+    city: sanitizeText(job.city),
+    responsibilities: sanitizeTextList(job.responsibilities, { multiline: true }),
+    requirements: sanitizeTextList(job.requirements, { multiline: true }),
+    benefits: sanitizeTextList(job.benefits, { multiline: true }),
+    applyUrl: job.applyUrl,
+    directCompanyUrl: job.directCompanyUrl
   };
 }

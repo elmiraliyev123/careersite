@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type SubmissionState = {
   kind: "error";
@@ -10,6 +10,7 @@ type SubmissionState = {
 
 export function AdminLoginPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [submissionState, setSubmissionState] = useState<SubmissionState>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState("");
@@ -34,7 +35,7 @@ export function AdminLoginPanel() {
         throw new Error(result.message ?? "Admin girişi mümkün olmadı.");
       }
 
-      router.push("/admin");
+      router.push(searchParams.get("next") || "/admin");
       router.refresh();
     } catch (error) {
       setSubmissionState({
