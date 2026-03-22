@@ -9,6 +9,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import { formatLocalizedDate, translateLevel, translateWorkModel } from "@/lib/i18n";
+import { buildOutboundHref } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
 
 type NewInternshipsCarouselProps = {
@@ -63,7 +64,13 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
       {items.map(({ job, company }) => {
         const localizedJob = getLocalizedJob(job, locale);
         const localizedCompany = getLocalizedCompany(company, locale);
-        const applyHref = job.directCompanyUrl ?? company.website ?? job.sourceUrl ?? `/jobs/${job.slug}`;
+        const applyHref = buildOutboundHref({
+          targetUrl: job.directCompanyUrl ?? company.website ?? job.sourceUrl ?? `/jobs/${job.slug}`,
+          companyName: localizedCompany.name,
+          logoUrl: company.logo,
+          sourcePath: "/jobs",
+          fallbackHref: `/jobs/${job.slug}`
+        });
 
         return (
           <article key={job.slug} className="internship-card" data-internship-slide="true">
@@ -109,10 +116,10 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
                 {t("labels.deadline")}: {formatLocalizedDate(job.deadline, locale)}
               </span>
 
-              <a href={applyHref} target="_blank" rel="noreferrer" className="internship-card__apply">
+              <Link href={applyHref} prefetch={false} className="internship-card__apply">
                 <span>{t("actions.applyNow")}</span>
                 <ArrowUpRight size={15} />
-              </a>
+              </Link>
             </div>
           </article>
         );

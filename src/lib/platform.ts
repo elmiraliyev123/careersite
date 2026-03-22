@@ -1,7 +1,12 @@
 import { unstable_noStore as noStore } from "next/cache";
 
 import { cities, type Company, type Job } from "@/data/platform";
-import { getAllLocalizedTextValues, localizedTextIncludes } from "@/lib/localized-content";
+import {
+  getAllLocalizedTextValues,
+  getAllLocalizedTextValuesFromList,
+  localizedTextIncludes
+} from "@/lib/localized-content";
+import { formatLocalizedDate } from "@/lib/i18n";
 import { findCompanyBySlug, findJobBySlug, listCompanies, listJobs } from "@/lib/platform-database";
 
 type JobFilters = {
@@ -126,7 +131,7 @@ export function filterJobs(filters: JobFilters): Job[] {
       localizedTextIncludes(job.summary, query) ||
       localizedTextIncludes(job.category, query) ||
       company?.name.toLowerCase().includes(query) ||
-      job.tags.some((tag) => tag.toLowerCase().includes(query));
+      getAllLocalizedTextValuesFromList(job.tags).some((tag) => tag.toLowerCase().includes(query));
 
     const matchesCity = !filters.city || filters.city === "Hamısı" || job.city === filters.city;
     const matchesLevel = !filters.level || filters.level === "Hamısı" || job.level === filters.level;
@@ -180,9 +185,5 @@ export function getHeroCities() {
 }
 
 export function formatAzerbaijaniDate(value: string) {
-  return new Intl.DateTimeFormat("az-AZ", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  }).format(new Date(value));
+  return formatLocalizedDate(value, "az");
 }

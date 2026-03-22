@@ -33,7 +33,10 @@
     "backToJobs": "Назад к вакансиям",
     "openFreshListings": "Открыть свежие вакансии",
     "exploreEmployers": "Перейти на страницу работодателей",
-    "learnMore": "Узнать больше"
+    "learnMore": "Узнать больше",
+    "copyPrompt": "Скопировать промпт",
+    "copyPromptCta": "✨ Скопировать промпт",
+    "copied": "Скопировано"
   },
   "labels": {
     "jobSearch": "Поиск вакансий",
@@ -111,8 +114,9 @@
   "companyPage": {
     "aboutEyebrow": "О компании",
     "aboutTitle": "Пойми early-career фокус этой команды",
-    "overviewTitle": "Резервный блок Company Overview",
+    "overviewTitle": "Краткий обзор компании из Wikipedia",
     "overviewPlaceholder": "Этот блок оставлен под динамический обзор компании, который позже будет заполнен данными из Wikipedia API и AI enrichment.",
+    "wikipediaSource": "Источник: Wikipedia",
     "focusEyebrow": "Фокус-направления",
     "focusTitle": "Где этот работодатель сейчас наиболее активен",
     "youthOfferEyebrow": "Для молодых кандидатов",
@@ -120,6 +124,14 @@
     "openRolesEyebrow": "Открытые роли",
     "jobsEyebrow": "Открытые роли",
     "jobsTitle": "Вакансии, которые сейчас открыты в команде {name}",
+    "vibeSectionEyebrow": "Team vibe",
+    "vibeSectionTitle": "Посмотри на ритм команды, инструменты и perks-карту одним взглядом",
+    "techStackEyebrow": "Tech stack",
+    "techStackTitle": "Инструменты, на которых держится повседневный ритм команды",
+    "cultureEyebrow": "Culture & perks",
+    "cultureTitle": "Сигналы, которые делают ежедневную работу комфортнее",
+    "vibeEyebrow": "Vibe",
+    "vibeTitle": "Три сигнала, которые лучше всего описывают культуру",
     "emptyTitle": "Сейчас для этой компании не видно активных ролей",
     "emptyCopy": "Когда появится новая вакансия, она отобразится на этой странице."
   },
@@ -129,7 +141,32 @@
     "whatYouGain": "Что ты получишь",
     "matchingTags": "Теги, подходящие для этой роли",
     "nextRolesTitle": "Роли, которые стоит посмотреть дальше",
-    "companyOverview": "Кратко о компании"
+    "companyOverview": "Кратко о компании",
+    "aiPromptEyebrow": "AI utility",
+    "aiPromptTitle": "✨ AI Cover Letter Prompt",
+    "aiPromptCopy": "Вставь этот текст в ChatGPT, чтобы получить более точный черновик cover letter под конкретную роль.",
+    "aiPromptHint": "Промпт уже заполнен текущим названием роли, summary и ключевыми требованиями."
+  },
+  "outbound": {
+    "eyebrow": "Безопасный переход",
+    "title": "Ты перенаправляешься на официальную страницу {company}...",
+    "copy": "Мы фиксируем этот переход и отправляем тебя на официальный источник через контролируемый redirect-слой.",
+    "secureHint": "Официальный адрес:",
+    "fallbackCta": "Если автоматического перехода нет, нажми сюда",
+    "invalidEyebrow": "Ошибка перехода",
+    "invalidTitle": "Эта outbound-ссылка недействительна",
+    "invalidCopy": "URL не прошел проверку или не использует безопасный формат. Вернись к вакансиям и запусти переход заново."
+  },
+  "playbook": {
+    "eyebrow": "Career Playbook",
+    "title": "Собери план на первую работу в коротких, точных и практичных карточках",
+    "copy": "Быстрые микро-гайды для интервью, CV, портфолио, outreach и моментов, которые реально двигают отклик вперед.",
+    "gridEyebrow": "Редакционный поток",
+    "gridTitle": "Самые полезные playbook-карточки этой недели",
+    "readTime": "{minutes} мин чтения",
+    "ctaEyebrow": "Следующий шаг",
+    "ctaTitle": "Пройди playbook, затем переходи к нужной роли",
+    "ctaCopy": "Каждая карточка написана как action-first: либо sharpen-ишь отклик, либо увереннее выбираешь следующую вакансию."
   },
   "employersPage": {
     "eyebrow": "Поток работодателя",

@@ -1,6 +1,7 @@
 export type SupportedLocaleCode = "az" | "en" | "ru";
 
 export type LocalizedText = Partial<Record<SupportedLocaleCode, string>>;
+export type LocalizedContentValue = string | LocalizedText;
 
 export function createLocalizedText(
   az: string,
@@ -37,6 +38,47 @@ export function normalizeLocalizedText(
   return {};
 }
 
+function hasLocalizedTextEntries(value: LocalizedText) {
+  return Object.values(value).some((item) => typeof item === "string" && item.trim().length > 0);
+}
+
+function normalizeLocalizedContentEntry(
+  value: unknown,
+  defaultLocale: SupportedLocaleCode = "az"
+): LocalizedContentValue | null {
+  if (typeof value === "string") {
+    const trimmedValue = value.trim();
+    return trimmedValue ? trimmedValue : null;
+  }
+
+  if (value && typeof value === "object") {
+    const normalized = normalizeLocalizedText(value as LocalizedText, defaultLocale);
+    return hasLocalizedTextEntries(normalized) ? normalized : null;
+  }
+
+  return null;
+}
+
+export function normalizeLocalizedTextList(
+  value: unknown,
+  defaultLocale: SupportedLocaleCode = "az"
+): LocalizedContentValue[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeLocalizedContentEntry(item, defaultLocale))
+      .filter((item): item is LocalizedContentValue => item !== null);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 function guessPlainTextLocale(value: string): SupportedLocaleCode {
   if (/[А-Яа-яЁё]/.test(value)) {
     return "ru";
@@ -50,7 +92,7 @@ function guessPlainTextLocale(value: string): SupportedLocaleCode {
 }
 
 export function getLocalizedText(
-  value: string | LocalizedText | null | undefined,
+  value: LocalizedContentValue | null | undefined,
   locale: SupportedLocaleCode,
   fallbackOrder: SupportedLocaleCode[] = ["az", "en", "ru"]
 ) {
@@ -83,11 +125,11 @@ export function getLocalizedText(
   return firstValue ?? "";
 }
 
-export function getPrimaryLocalizedText(value: string | LocalizedText | null | undefined) {
+export function getPrimaryLocalizedText(value: LocalizedContentValue | null | undefined) {
   return getLocalizedText(value, "az", ["az", "en", "ru"]);
 }
 
-export function getAllLocalizedTextValues(value: string | LocalizedText | null | undefined) {
+export function getAllLocalizedTextValues(value: LocalizedContentValue | null | undefined) {
   if (typeof value === "string") {
     return value ? [value] : [];
   }
@@ -105,8 +147,30 @@ export function getAllLocalizedTextValues(value: string | LocalizedText | null |
   );
 }
 
+export function getLocalizedTextList(
+  values: LocalizedContentValue[] | null | undefined,
+  locale: SupportedLocaleCode,
+  fallbackOrder: SupportedLocaleCode[] = ["az", "en", "ru"]
+) {
+  if (!values || values.length === 0) {
+    return [];
+  }
+
+  return values
+    .map((value) => getLocalizedText(value, locale, fallbackOrder))
+    .filter((value) => value.trim().length > 0);
+}
+
+export function getAllLocalizedTextValuesFromList(values: LocalizedContentValue[] | null | undefined) {
+  if (!values || values.length === 0) {
+    return [];
+  }
+
+  return Array.from(new Set(values.flatMap((value) => getAllLocalizedTextValues(value))));
+}
+
 export function localizedTextIncludes(
-  value: string | LocalizedText | null | undefined,
+  value: LocalizedContentValue | null | undefined,
   query: string
 ) {
   const normalizedQuery = query.trim().toLowerCase();
@@ -120,7 +184,7 @@ export function localizedTextIncludes(
   );
 }
 
-export function serializeLocalizedText(value: string | LocalizedText | null | undefined) {
+export function serializeLocalizedText(value: LocalizedContentValue | null | undefined) {
   const normalized = normalizeLocalizedText(value);
   return JSON.stringify(normalized);
 }
@@ -141,4 +205,30 @@ export function parseLocalizedText(value: string | null | undefined) {
   }
 
   return normalizeLocalizedText(value, guessPlainTextLocale(value));
+}
+
+export function serializeLocalizedTextList(values: LocalizedContentValue[] | null | undefined) {
+  const normalizedValues = (values ?? [])
+    .map((value) => normalizeLocalizedContentEntry(value))
+    .filter((value): value is LocalizedContentValue => value !== null);
+
+  return JSON.stringify(normalizedValues);
+}
+
+export function parseLocalizedTextList(value: string | null | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (Array.isArray(parsed)) {
+      return normalizeLocalizedTextList(parsed);
+    }
+  } catch {
+    // Fall through to plain-string normalization.
+  }
+
+  return normalizeLocalizedTextList(value);
 }

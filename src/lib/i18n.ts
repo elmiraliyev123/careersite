@@ -10,10 +10,49 @@ export const localeCookieName = "careerapple_locale";
 
 const dictionaries = { az, en, ru } as const;
 
-const localeFormats: Record<Locale, string> = {
-  az: "az-AZ",
-  en: "en-US",
-  ru: "ru-RU"
+const localizedMonthNames: Record<Locale, string[]> = {
+  az: [
+    "yanvar",
+    "fevral",
+    "mart",
+    "aprel",
+    "may",
+    "iyun",
+    "iyul",
+    "avqust",
+    "sentyabr",
+    "oktyabr",
+    "noyabr",
+    "dekabr"
+  ],
+  en: [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ],
+  ru: [
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря"
+  ]
 };
 
 const levelKeyMap: Record<string, string> = {
@@ -129,12 +168,49 @@ export function translate(locale: Locale, key: string, values?: Record<string, s
   return interpolate(localized, values);
 }
 
+function parseIsoDateParts(value: string) {
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return {
+      year: Number(year),
+      monthIndex: Number(month) - 1,
+      day: Number(day)
+    };
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  return {
+    year: parsedDate.getUTCFullYear(),
+    monthIndex: parsedDate.getUTCMonth(),
+    day: parsedDate.getUTCDate()
+  };
+}
+
 export function formatLocalizedDate(value: string, locale: Locale) {
-  return new Intl.DateTimeFormat(localeFormats[locale], {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  }).format(new Date(value));
+  const dateParts = parseIsoDateParts(value);
+
+  if (!dateParts) {
+    return value;
+  }
+
+  const monthName = localizedMonthNames[locale][dateParts.monthIndex];
+
+  if (!monthName) {
+    return value;
+  }
+
+  if (locale === "en") {
+    return `${monthName} ${dateParts.day}, ${dateParts.year}`;
+  }
+
+  return `${dateParts.day} ${monthName} ${dateParts.year}`;
 }
 
 function translateMappedValue(

@@ -1,4 +1,4 @@
-import { createLocalizedText, type LocalizedText } from "@/lib/localized-content";
+import { createLocalizedText, type LocalizedContentValue } from "@/lib/localized-content";
 
 export type Company = {
   slug: string;
@@ -11,6 +11,8 @@ export type Company = {
   cover: string;
   website: string;
   about: string;
+  wikipediaSummary?: string;
+  wikipediaSourceUrl?: string;
   focusAreas: string[];
   youthOffer: string[];
   benefits: string[];
@@ -20,20 +22,20 @@ export type Company = {
 
 export type Job = {
   slug: string;
-  title: LocalizedText;
+  title: LocalizedContentValue;
   companySlug: string;
   city: string;
   workModel: "Ofisdən" | "Hibrid" | "Uzaqdan";
   level: "Təcrübə" | "Junior" | "Trainee" | "Yeni məzun";
-  category: LocalizedText;
+  category: LocalizedContentValue;
   salary?: string;
   postedAt: string;
   deadline: string;
-  summary: LocalizedText;
+  summary: LocalizedContentValue;
   responsibilities: string[];
   requirements: string[];
   benefits: string[];
-  tags: string[];
+  tags: LocalizedContentValue[];
   featured?: boolean;
   sourceName?: string;
   sourceUrl?: string;
@@ -79,6 +81,9 @@ export const companies: Company[] = [
     website: "https://www.notion.so",
     about:
       "Notion, məhsul, data və growth komandalarında gənc mütəxəssislərə real nəticə sahibi olmaq imkanı verən qlobal proqram şirkətidir.",
+    wikipediaSummary:
+      "Notion Labs Inc. is a software company that develops a collaboration platform for notes, documents, databases, and project workflows. The product is widely used by teams to combine writing, planning, and knowledge management in one workspace.",
+    wikipediaSourceUrl: "https://en.wikipedia.org/wiki/Notion_(productivity_software)",
     focusAreas: ["Data analitikası", "Product operations", "Growth", "Research"],
     youthOffer: [
       "Mentor dəstəkli 12 həftəlik intern proqramı",
@@ -102,6 +107,9 @@ export const companies: Company[] = [
     website: "https://www.figma.com",
     about:
       "Figma məhsul dizaynı, araşdırma və istifadəçi təcrübəsi sahələrində böyümək istəyən gənclər üçün praktik öyrənmə mədəniyyəti qurur.",
+    wikipediaSummary:
+      "Figma is a collaborative interface design platform used for product design, prototyping, and developer handoff. It is known for browser-based multiplayer editing and tooling for teams building digital products together.",
+    wikipediaSourceUrl: "https://en.wikipedia.org/wiki/Figma",
     focusAreas: ["UI/UX dizayn", "UX research", "Design systems", "Content design"],
     youthOffer: [
       "Junior dizaynerlər üçün dizayn kritikləri",
@@ -280,7 +288,7 @@ export const companies: Company[] = [
     sector: "Sığorta və risk",
     size: "501-1.000 əməkdaş",
     location: "Bakı, Azərbaycan",
-    logo: "https://cdn.simpleicons.org/shield/98ff43",
+    logo: "/company-logos/pasha-insurance-world.svg",
     cover:
       "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80",
     website: "https://pasha-insurance.az",
@@ -303,7 +311,7 @@ export const companies: Company[] = [
     sector: "Enerji texnologiyaları",
     size: "10.000+ əməkdaş",
     location: "Bakı, Azərbaycan",
-    logo: "https://cdn.simpleicons.org/ge/0A7E8C",
+    logo: "/company-logos/baker-hughes.svg",
     cover:
       "https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1200&q=80",
     website: "https://www.bakerhughes.com",

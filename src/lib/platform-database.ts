@@ -7,7 +7,9 @@ import {
   getAllLocalizedTextValues,
   getPrimaryLocalizedText,
   parseLocalizedText,
-  serializeLocalizedText
+  parseLocalizedTextList,
+  serializeLocalizedText,
+  serializeLocalizedTextList
 } from "@/lib/localized-content";
 import type { CompanyInput, JobInput } from "@/lib/platform-validation";
 
@@ -22,6 +24,8 @@ type CompanyRow = {
   cover: string;
   website: string;
   about: string;
+  wikipedia_summary: string | null;
+  wikipedia_source_url: string | null;
   focus_areas: string;
   youth_offer: string;
   benefits: string;
@@ -58,6 +62,14 @@ type LegacyPlatformStore = {
   jobs?: Job[];
 };
 
+export type OutboundEventInput = {
+  targetUrl: string;
+  companyName: string;
+  sourcePath?: string | null;
+  referrer?: string | null;
+  userAgent?: string | null;
+};
+
 const databaseDirectory = path.join(process.cwd(), "data");
 const databasePath = path.join(databaseDirectory, "careerapple.sqlite");
 const legacyStorePath = path.join(databaseDirectory, "platform-store.json");
@@ -67,6 +79,10 @@ let initialized = false;
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function nowIsoTimestamp() {
+  return new Date().toISOString();
 }
 
 function ensureDatabaseDirectory() {
@@ -109,6 +125,8 @@ function setupDatabase(db: DatabaseSync) {
       cover TEXT NOT NULL,
       website TEXT NOT NULL,
       about TEXT NOT NULL,
+      wikipedia_summary TEXT,
+      wikipedia_source_url TEXT,
       focus_areas TEXT NOT NULL,
       youth_offer TEXT NOT NULL,
       benefits TEXT NOT NULL,
@@ -141,11 +159,24 @@ function setupDatabase(db: DatabaseSync) {
       FOREIGN KEY (company_slug) REFERENCES companies(slug) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS outbound_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      target_url TEXT NOT NULL,
+      company_name TEXT NOT NULL,
+      source_path TEXT,
+      referrer TEXT,
+      user_agent TEXT,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS jobs_company_slug_idx ON jobs(company_slug);
     CREATE INDEX IF NOT EXISTS jobs_deadline_idx ON jobs(deadline);
     CREATE INDEX IF NOT EXISTS companies_featured_idx ON companies(featured);
+    CREATE INDEX IF NOT EXISTS outbound_events_created_at_idx ON outbound_events(created_at);
   `);
 
+  ensureColumnExists(db, "companies", "wikipedia_summary", "TEXT");
+  ensureColumnExists(db, "companies", "wikipedia_source_url", "TEXT");
   ensureColumnExists(db, "jobs", "source_name", "TEXT");
   ensureColumnExists(db, "jobs", "source_url", "TEXT");
   ensureColumnExists(db, "jobs", "direct_company_url", "TEXT");
@@ -204,6 +235,8 @@ function mapCompanyRow(row: CompanyRow): Company {
     cover: row.cover,
     website: row.website,
     about: row.about,
+    wikipediaSummary: row.wikipedia_summary ?? undefined,
+    wikipediaSourceUrl: row.wikipedia_source_url ?? undefined,
     focusAreas: parseList(row.focus_areas),
     youthOffer: parseList(row.youth_offer),
     benefits: parseList(row.benefits),
@@ -227,7 +260,7 @@ function mapJobRow(row: JobRow): Job {
     responsibilities: parseList(row.responsibilities),
     requirements: parseList(row.requirements),
     benefits: parseList(row.benefits),
-    tags: parseList(row.tags),
+    tags: parseLocalizedTextList(row.tags),
     featured: Boolean(row.featured),
     sourceName: row.source_name ?? undefined,
     sourceUrl: row.source_url ?? undefined,
@@ -240,8 +273,8 @@ function insertCompanyRecord(db: DatabaseSync, company: Company) {
   db.prepare(
     `INSERT INTO companies (
       slug, name, tagline, sector, size, location, logo, cover, website, about,
-      focus_areas, youth_offer, benefits, featured, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
       name = excluded.name,
       tagline = excluded.tagline,
@@ -252,6 +285,8 @@ function insertCompanyRecord(db: DatabaseSync, company: Company) {
       cover = excluded.cover,
       website = excluded.website,
       about = excluded.about,
+      wikipedia_summary = excluded.wikipedia_summary,
+      wikipedia_source_url = excluded.wikipedia_source_url,
       focus_areas = excluded.focus_areas,
       youth_offer = excluded.youth_offer,
       benefits = excluded.benefits,
@@ -268,6 +303,8 @@ function insertCompanyRecord(db: DatabaseSync, company: Company) {
     company.cover,
     company.website,
     company.about,
+    company.wikipediaSummary ?? null,
+    company.wikipediaSourceUrl ?? null,
     serializeList(company.focusAreas),
     serializeList(company.youthOffer),
     serializeList(company.benefits),
@@ -317,7 +354,7 @@ function insertJobRecord(db: DatabaseSync, job: Job) {
     serializeList(job.responsibilities),
     serializeList(job.requirements),
     serializeList(job.benefits),
-    serializeList(job.tags),
+    serializeLocalizedTextList(job.tags),
     job.featured ? 1 : 0,
     job.sourceName ?? null,
     job.sourceUrl ?? null,
@@ -414,7 +451,7 @@ export function listCompanies() {
   const rows = db
     .prepare(
       `SELECT slug, name, tagline, sector, size, location, logo, cover, website, about,
-              focus_areas, youth_offer, benefits, featured, created_at, updated_at
+              wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, created_at, updated_at
        FROM companies
        ORDER BY featured DESC, created_at DESC, name ASC`
     )
@@ -444,7 +481,7 @@ export function findCompanyBySlug(slug: string) {
   const row = db
     .prepare(
       `SELECT slug, name, tagline, sector, size, location, logo, cover, website, about,
-              focus_areas, youth_offer, benefits, featured, created_at, updated_at
+              wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, created_at, updated_at
        FROM companies
        WHERE slug = ?`
     )
@@ -477,8 +514,8 @@ export function createCompany(input: CompanyInput) {
   db.prepare(
     `INSERT INTO companies (
       slug, name, tagline, sector, size, location, logo, cover, website, about,
-      focus_areas, youth_offer, benefits, featured, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     slug,
     input.name,
@@ -490,6 +527,8 @@ export function createCompany(input: CompanyInput) {
     input.cover,
     input.website,
     input.about,
+    input.wikipediaSummary ?? null,
+    input.wikipediaSourceUrl ?? null,
     serializeList(input.focusAreas),
     serializeList(input.youthOffer),
     serializeList(input.benefits),
@@ -512,7 +551,8 @@ export function updateCompany(slug: string, input: CompanyInput) {
   db.prepare(
     `UPDATE companies
      SET name = ?, tagline = ?, sector = ?, size = ?, location = ?, logo = ?, cover = ?,
-         website = ?, about = ?, focus_areas = ?, youth_offer = ?, benefits = ?, featured = ?, updated_at = ?
+         website = ?, about = ?, wikipedia_summary = ?, wikipedia_source_url = ?, focus_areas = ?, youth_offer = ?,
+         benefits = ?, featured = ?, updated_at = ?
      WHERE slug = ?`
   ).run(
     input.name,
@@ -524,6 +564,8 @@ export function updateCompany(slug: string, input: CompanyInput) {
     input.cover,
     input.website,
     input.about,
+    input.wikipediaSummary ?? null,
+    input.wikipediaSourceUrl ?? null,
     serializeList(input.focusAreas),
     serializeList(input.youthOffer),
     serializeList(input.benefits),
@@ -582,7 +624,7 @@ export function createJob(input: JobInput) {
     serializeList(input.responsibilities),
     serializeList(input.requirements),
     serializeList(input.benefits),
-    serializeList(input.tags),
+    serializeLocalizedTextList(input.tags),
     featured ? 1 : 0,
     input.sourceName ?? null,
     input.sourceUrl ?? null,
@@ -629,7 +671,7 @@ export function updateJob(slug: string, input: JobInput) {
     serializeList(input.responsibilities),
     serializeList(input.requirements),
     serializeList(input.benefits),
-    serializeList(input.tags),
+    serializeLocalizedTextList(input.tags),
     featured ? 1 : 0,
     input.sourceName ?? null,
     input.sourceUrl ?? null,
@@ -689,6 +731,23 @@ export function upsertScrapedJob(input: JobInput) {
     action: "created" as const,
     item: createJob(input)
   };
+}
+
+export function recordOutboundEvent(input: OutboundEventInput) {
+  const db = getDatabase();
+
+  db.prepare(
+    `INSERT INTO outbound_events (
+      target_url, company_name, source_path, referrer, user_agent, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(
+    input.targetUrl,
+    input.companyName,
+    input.sourcePath ?? null,
+    input.referrer ?? null,
+    input.userAgent ?? null,
+    nowIsoTimestamp()
+  );
 }
 
 export function getPlatformStorageStatus() {

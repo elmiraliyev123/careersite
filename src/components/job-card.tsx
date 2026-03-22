@@ -17,11 +17,13 @@ import {
   translateSector,
   translateWorkModel
 } from "@/lib/i18n";
+import { buildOutboundHref } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
 
 type JobCardProps = {
   job: Job;
   company?: Company | null;
+  sourcePath?: string;
 };
 
 function setSpotlightPosition(event: MouseEvent<HTMLElement>) {
@@ -38,12 +40,19 @@ function getWorkModelIcon(workModel: Job["workModel"]) {
   return <Sparkles size={14} />;
 }
 
-export function JobCard({ job, company }: JobCardProps) {
+export function JobCard({ job, company, sourcePath = "/jobs" }: JobCardProps) {
   const { locale, t } = useI18n();
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const companyLinkRef = useRef<HTMLAnchorElement | null>(null);
-  const applyHref = job.directCompanyUrl ?? company?.website ?? job.sourceUrl ?? `/jobs/${job.slug}`;
+  const applyHref = buildOutboundHref({
+    targetUrl: job.directCompanyUrl ?? company?.website ?? job.sourceUrl ?? `/jobs/${job.slug}`,
+    companyName: localizedCompany?.name ?? job.companySlug,
+    logoUrl: company?.logo,
+    sourcePath,
+    fallbackHref: `/jobs/${job.slug}`
+  });
+  const visibleTags = localizedJob.tags.slice(0, 3);
 
   return (
     <article
@@ -102,6 +111,15 @@ export function JobCard({ job, company }: JobCardProps) {
       <div className="job-card__body">
         <h3>{localizedJob.title}</h3>
         <p className="job-card__summary">{localizedJob.summary}</p>
+        {visibleTags.length > 0 ? (
+          <div className="job-card__tags" aria-label={t("jobDetail.matchingTags")}>
+            {visibleTags.map((tag) => (
+              <span key={`${job.slug}-${tag}`} className="job-card__tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="job-card__meta">
@@ -121,16 +139,15 @@ export function JobCard({ job, company }: JobCardProps) {
           {t("actions.viewDetails")}
         </Link>
 
-        <a
+        <Link
           href={applyHref}
-          target="_blank"
-          rel="noreferrer"
+          prefetch={false}
           className="job-card__apply"
         >
           <span className="job-card__apply-icon">⚡</span>
           <span className="job-card__apply-label">{t("actions.applyNow")}</span>
           <ArrowUpRight size={16} />
-        </a>
+        </Link>
       </div>
     </article>
   );

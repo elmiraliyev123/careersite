@@ -28,7 +28,7 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
           <Link href="/jobs">{t("nav.jobs")}</Link>
           <CompaniesMegaMenu categories={companyCategories} />
           <Link href="/info/students/tecrube-proqramlari">{t("nav.students")}</Link>
-          <Link href="/info/students/karyera-meslehetleri">{t("nav.careerTips")}</Link>
+          <Link href="/karyera-meslehetleri">{t("nav.careerTips")}</Link>
         </nav>
 
         <div className="site-header__actions">

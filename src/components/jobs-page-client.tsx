@@ -111,7 +111,7 @@ export function JobsPageClient({
         ) : (
           <div className="card-grid card-grid--jobs">
             {jobs.map(({ job, company }) => (
-              <JobCard key={job.slug} job={job} company={company} />
+              <JobCard key={job.slug} job={job} company={company} sourcePath="/jobs" />
             ))}
           </div>
         )}

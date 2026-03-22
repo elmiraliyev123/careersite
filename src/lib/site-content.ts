@@ -293,7 +293,7 @@ const infoSections: InfoSection[] = [
           "Məhsul dili və UX qərarları Azərbaycan bazarına uyğun saxlanılır."
         ],
         ctaLabel: "Karyera məsləhətlərini oxu",
-        ctaHref: "/info/students/karyera-meslehetleri"
+        ctaHref: "/karyera-meslehetleri"
       },
       {
         slug: "media",
@@ -323,7 +323,7 @@ const infoSections: InfoSection[] = [
           "Blog kontenti vakansiya feed-indən ayrı, amma məhsulu gücləndirən qat kimi işləməlidir."
         ],
         ctaLabel: "Karyera məsləhətlərinə keç",
-        ctaHref: "/info/students/karyera-meslehetleri"
+        ctaHref: "/karyera-meslehetleri"
       },
       {
         slug: "brend-qaydalari",
@@ -416,7 +416,10 @@ export function getFooterSections() {
     label: section.label,
     pages: section.pages.map((page) => ({
       label: page.label,
-      href: `/info/${section.slug}/${page.slug}`
+      href:
+        section.slug === "students" && page.slug === "karyera-meslehetleri"
+          ? "/karyera-meslehetleri"
+          : `/info/${section.slug}/${page.slug}`
     }))
   }));
 }

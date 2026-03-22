@@ -33,7 +33,10 @@
     "backToJobs": "Vakansiyalara qayıt",
     "openFreshListings": "Fresh elanları aç",
     "exploreEmployers": "İşəgötürən səhifəsinə keç",
-    "learnMore": "Daha çox öyrən"
+    "learnMore": "Daha çox öyrən",
+    "copyPrompt": "Promptu kopyala",
+    "copyPromptCta": "✨ Promptu Kopyala",
+    "copied": "Kopyalandı"
   },
   "labels": {
     "jobSearch": "Vakansiya axtarışı",
@@ -111,8 +114,9 @@
   "companyPage": {
     "aboutEyebrow": "Şirkət haqqında",
     "aboutTitle": "Komandanın erkən karyera fokusunu tanı",
-    "overviewTitle": "Company Overview blokunun yeri",
+    "overviewTitle": "Wikipedia-dan qısa company overview",
     "overviewPlaceholder": "Bu blok sonradan Wikipedia API və AI enrichment axınından gələn qısa company overview mətni ilə doldurulacaq.",
+    "wikipediaSource": "Mənbə: Wikipedia",
     "focusEyebrow": "Fokus sahələri",
     "focusTitle": "Bu employer hansı axınlarda daha aktivdir",
     "youthOfferEyebrow": "Gənclər üçün təklif",
@@ -120,6 +124,14 @@
     "openRolesEyebrow": "Açıq vakansiyalar",
     "jobsEyebrow": "Açıq rollar",
     "jobsTitle": "{name} komandasında hazırda açıq olan vakansiyalar",
+    "vibeSectionEyebrow": "Team vibe",
+    "vibeSectionTitle": "Komandanın ritmini, alətlərini və perks xəritəsini bir baxışda gör",
+    "techStackEyebrow": "Tech stack",
+    "techStackTitle": "Komandanın gündəlik alət ritmi",
+    "cultureEyebrow": "Culture & perks",
+    "cultureTitle": "Gündəlik təcrübəni yaxşılaşdıran siqnallar",
+    "vibeEyebrow": "Vibe",
+    "vibeTitle": "Komandanı ən yaxşı təsvir edən üç siqnal",
     "emptyTitle": "Bu şirkət üçün hazırda aktiv rol görünmür",
     "emptyCopy": "Yeni opening gələndə platformada bu səhifədə görünəcək."
   },
@@ -129,7 +141,32 @@
     "whatYouGain": "Platformanın vurğuladığı üstünlüklər",
     "matchingTags": "Bu rola uyğun tag-lər",
     "nextRolesTitle": "Növbəti baxa biləcəyin rollar",
-    "companyOverview": "Şirkət haqqında qısa qeyd"
+    "companyOverview": "Şirkət haqqında qısa qeyd",
+    "aiPromptEyebrow": "AI utility",
+    "aiPromptTitle": "✨ AI Cover Letter Prompt",
+    "aiPromptCopy": "Bu promptu ChatGPT-yə yapışdırıb rola uyğun, daha spesifik cover letter skeleti əldə et.",
+    "aiPromptHint": "Prompt cari vakansiyanın başlığı, summary-si və əsas tələbləri ilə əvvəlcədən doldurulub."
+  },
+  "outbound": {
+    "eyebrow": "Təhlükəsiz keçid",
+    "title": "Sən {company} rəsmi səhifəsinə yönləndirilirsən...",
+    "copy": "Keçidi izləyirik və səni rəsmi mənbəyə təhlükəsiz şəkildə ötürürük. Bu qısa ekran premium, izlənə bilən keçid qatıdır.",
+    "secureHint": "Rəsmi keçid:",
+    "fallbackCta": "Avtomatik yönləndirilməsən, buraya tıkla",
+    "invalidEyebrow": "Keçid xətası",
+    "invalidTitle": "Bu outbound keçid etibarlı deyil",
+    "invalidCopy": "URL yoxlanılmadı və ya təhlükəsiz formatda deyil. Vakansiyalara qayıdıb keçidi yenidən başlat."
+  },
+  "playbook": {
+    "eyebrow": "Career Playbook",
+    "title": "İlk iş oyun planını qısa, iti və praktik kartlarda topla",
+    "copy": "Müsahibə, CV, portfolio və outreach mərhələləri üçün sürətli qərar verən mikro-bələdçilər.",
+    "gridEyebrow": "Redaksiya axını",
+    "gridTitle": "Bu həftənin ən faydalı playbook kartları",
+    "readTime": "{minutes} dəq oxu",
+    "ctaEyebrow": "Növbəti addım",
+    "ctaTitle": "Playbook-u oxu, sonra uyğun rola keç",
+    "ctaCopy": "Hər kart action-first yazılıb: ya müraciətini kəskinləşdir, ya da uyğun vakansiyanı daha inamla seç."
   },
   "employersPage": {
     "eyebrow": "İşəgötürən axını",

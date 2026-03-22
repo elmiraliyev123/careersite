@@ -11,8 +11,8 @@ export function VerifiedBadge({ compact = false, label = "Verified company" }: V
       title={label}
     >
       <svg
-        width={compact ? 20 : 24}
-        height={compact ? 20 : 24}
+        width={compact ? 24 : 30}
+        height={compact ? 24 : 30}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
@@ -23,7 +23,7 @@ export function VerifiedBadge({ compact = false, label = "Verified company" }: V
         />
         <path
           d="m8.75 12.2 2.1 2.15 4.4-4.9"
-          stroke="#061106"
+          stroke="#ffffff"
           strokeWidth="2.1"
           strokeLinecap="round"
           strokeLinejoin="round"

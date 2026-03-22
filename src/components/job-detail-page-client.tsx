@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, ExternalLink, MapPin } from "lucide-react";
 
+import { AiCoverLetterPrompt } from "@/components/ai-cover-letter-prompt";
 import { ApplyJobButton } from "@/components/apply-job-button";
 import { JobCard } from "@/components/job-card";
 import { SaveJobButton } from "@/components/save-job-button";
@@ -15,6 +16,7 @@ import {
   translateLevel,
   translateWorkModel
 } from "@/lib/i18n";
+import { buildOutboundHref } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
 
 type JobDetailPageClientProps = {
@@ -31,6 +33,16 @@ export function JobDetailPageClient({
   const { locale, t } = useI18n();
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
+  const sourcePath = `/jobs/${job.slug}`;
+  const originalListingHref = job.sourceUrl
+    ? buildOutboundHref({
+        targetUrl: job.sourceUrl,
+        companyName: localizedCompany?.name ?? job.companySlug,
+        logoUrl: company?.logo,
+        sourcePath,
+        fallbackHref: sourcePath
+      })
+    : null;
 
   return (
     <main className="section">
@@ -85,16 +97,30 @@ export function JobDetailPageClient({
             <ApplyJobButton
               slug={job.slug}
               href={job.directCompanyUrl ?? company?.website ?? job.sourceUrl ?? `/jobs/${job.slug}`}
+              companyName={localizedCompany?.name ?? job.companySlug}
+              companyLogo={company?.logo}
+              sourcePath={sourcePath}
             />
             <SaveJobButton job={job} company={company} />
-            {job.sourceUrl ? (
-              <a href={job.sourceUrl} target="_blank" rel="noreferrer" className="button button--ghost">
+            {originalListingHref ? (
+              <Link href={originalListingHref} prefetch={false} className="button button--ghost">
                 <ExternalLink size={16} />
                 {t("actions.originalListing")}
-              </a>
+              </Link>
             ) : null}
           </div>
         </section>
+
+        <AiCoverLetterPrompt
+          jobTitle={localizedJob.title}
+          companyName={localizedCompany?.name ?? job.companySlug}
+          summary={localizedJob.summary}
+          responsibilities={job.responsibilities}
+          requirements={job.requirements}
+          benefits={job.benefits}
+          city={translateCity(locale, job.city)}
+          workModel={translateWorkModel(locale, job.workModel)}
+        />
 
         <div className="detail-grid">
           <section className="detail-panel">
@@ -131,7 +157,7 @@ export function JobDetailPageClient({
             <p className="eyebrow">{t("labels.skills")}</p>
             <h2>{t("jobDetail.matchingTags")}</h2>
             <div className="chip-row">
-              {job.tags.map((tag) => (
+              {localizedJob.tags.map((tag) => (
                 <span key={tag} className="chip">
                   {tag}
                 </span>
@@ -163,7 +189,12 @@ export function JobDetailPageClient({
 
           <div className="card-grid card-grid--jobs">
             {recommendations.map((item) => (
-              <JobCard key={item.job.slug} job={item.job} company={item.company} />
+              <JobCard
+                key={item.job.slug}
+                job={item.job}
+                company={item.company}
+                sourcePath={`/jobs/${job.slug}`}
+              />
             ))}
           </div>
         </section>

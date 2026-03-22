@@ -33,7 +33,10 @@
     "backToJobs": "Back to jobs",
     "openFreshListings": "Open fresh listings",
     "exploreEmployers": "Go to employer page",
-    "learnMore": "Learn more"
+    "learnMore": "Learn more",
+    "copyPrompt": "Copy prompt",
+    "copyPromptCta": "✨ Copy Prompt",
+    "copied": "Copied"
   },
   "labels": {
     "jobSearch": "Job search",
@@ -110,9 +113,10 @@
   },
   "companyPage": {
     "aboutEyebrow": "About the company",
-    "aboutTitle": "Understand the team’s early-career focus",
-    "overviewTitle": "Reserved Company Overview block",
+    "aboutTitle": "Understand the team's early-career focus",
+    "overviewTitle": "Wikipedia company snapshot",
     "overviewPlaceholder": "This block is reserved for a dynamic company overview that will later be filled with Wikipedia API and AI enrichment data.",
+    "wikipediaSource": "Source: Wikipedia",
     "focusEyebrow": "Focus areas",
     "focusTitle": "Where this employer is most active right now",
     "youthOfferEyebrow": "For young talent",
@@ -120,6 +124,14 @@
     "openRolesEyebrow": "Open roles",
     "jobsEyebrow": "Open roles",
     "jobsTitle": "Roles currently open across the {name} team",
+    "vibeSectionEyebrow": "Team vibe",
+    "vibeSectionTitle": "See the team’s rhythm, tools, and perk map at a glance",
+    "techStackEyebrow": "Tech stack",
+    "techStackTitle": "The tools shaping the team’s daily flow",
+    "cultureEyebrow": "Culture & perks",
+    "cultureTitle": "Signals that make the day-to-day feel better",
+    "vibeEyebrow": "Vibe",
+    "vibeTitle": "Three signals that define the culture best",
     "emptyTitle": "There is no active role visible for this company right now",
     "emptyCopy": "When a new opening is added, it will appear on this page."
   },
@@ -129,7 +141,32 @@
     "whatYouGain": "What you gain",
     "matchingTags": "Tags that fit this role",
     "nextRolesTitle": "Roles you can explore next",
-    "companyOverview": "Quick company overview"
+    "companyOverview": "Quick company overview",
+    "aiPromptEyebrow": "AI utility",
+    "aiPromptTitle": "✨ AI Cover Letter Prompt",
+    "aiPromptCopy": "Paste this into ChatGPT to get a tighter, more role-specific cover letter draft.",
+    "aiPromptHint": "The prompt is prefilled with the current job title, summary, and key requirements."
+  },
+  "outbound": {
+    "eyebrow": "Safe transition",
+    "title": "You are being redirected to {company}'s official page...",
+    "copy": "We are tracking this handoff and sending you to the official source through a controlled redirect layer.",
+    "secureHint": "Official destination:",
+    "fallbackCta": "If you are not redirected automatically, click here",
+    "invalidEyebrow": "Redirect error",
+    "invalidTitle": "This outbound link is not valid",
+    "invalidCopy": "The URL could not be verified or does not use a safe format. Return to jobs and start the redirect again."
+  },
+  "playbook": {
+    "eyebrow": "Career Playbook",
+    "title": "Keep your first-job game plan in sharp, practical, high-signal cards",
+    "copy": "Fast micro-guides for interviews, CVs, portfolios, outreach, and the moments that decide momentum.",
+    "gridEyebrow": "Editorial flow",
+    "gridTitle": "The most useful playbook cards this week",
+    "readTime": "{minutes} min read",
+    "ctaEyebrow": "Next step",
+    "ctaTitle": "Read the playbook, then move into the right role",
+    "ctaCopy": "Every card is written to lead into action: either sharpen the application or choose the next job with more conviction."
   },
   "employersPage": {
     "eyebrow": "Employer flow",

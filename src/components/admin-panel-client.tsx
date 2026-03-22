@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { VerifiedBadge } from "@/components/verified-badge";
 import { jobLevels, workModels, type Company, type Job } from "@/data/platform";
-import { getPrimaryLocalizedText } from "@/lib/localized-content";
+import { getPrimaryLocalizedText, type LocalizedContentValue } from "@/lib/localized-content";
 
 type AdminPanelClientProps = {
   companies: Company[];
@@ -25,8 +25,8 @@ function splitTextarea(value: string) {
     .filter(Boolean);
 }
 
-function joinTextarea(values: string[]) {
-  return values.join("\n");
+function joinTextarea(values: LocalizedContentValue[]) {
+  return values.map((value) => getPrimaryLocalizedText(value)).join("\n");
 }
 
 function todayValue() {

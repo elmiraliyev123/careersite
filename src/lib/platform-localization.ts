@@ -1,6 +1,6 @@
 import type { Company, Job } from "@/data/platform";
 import type { Locale } from "@/lib/i18n";
-import { getLocalizedText } from "@/lib/localized-content";
+import { getLocalizedText, getLocalizedTextList } from "@/lib/localized-content";
 
 type LocalizedValue = Partial<Record<Locale, string>>;
 
@@ -9,10 +9,11 @@ export type LocalizedCompany = Omit<Company, "tagline" | "about"> & {
   about: string;
 };
 
-export type LocalizedJob = Omit<Job, "title" | "summary" | "category"> & {
+export type LocalizedJob = Omit<Job, "title" | "summary" | "category" | "tags"> & {
   title: string;
   summary: string;
   category: string;
+  tags: string[];
 };
 
 const localizedCompanyContent: Record<
@@ -139,6 +140,7 @@ export function getLocalizedJob(job: Job, locale: Locale): LocalizedJob {
     ...job,
     title: getLocalizedText(job.title, locale),
     summary: getLocalizedText(job.summary, locale),
-    category: getLocalizedText(job.category, locale)
+    category: getLocalizedText(job.category, locale),
+    tags: getLocalizedTextList(job.tags, locale)
   };
 }

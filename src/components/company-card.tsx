@@ -9,6 +9,7 @@ import { useI18n } from "@/components/i18n-provider";
 import type { Company } from "@/data/platform";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { translateSector } from "@/lib/i18n";
+import { buildOutboundHref } from "@/lib/outbound";
 import { getLocalizedCompany } from "@/lib/platform-localization";
 
 type CompanyCardProps = {
@@ -19,6 +20,13 @@ type CompanyCardProps = {
 export function CompanyCard({ company, openRoles }: CompanyCardProps) {
   const { locale, t } = useI18n();
   const localizedCompany = getLocalizedCompany(company, locale);
+  const outboundWebsiteHref = buildOutboundHref({
+    targetUrl: company.website,
+    companyName: localizedCompany.name,
+    logoUrl: company.logo,
+    sourcePath: "/companies",
+    fallbackHref: `/companies/${company.slug}`
+  });
 
   return (
     <article className="company-card">
@@ -62,9 +70,9 @@ export function CompanyCard({ company, openRoles }: CompanyCardProps) {
           </span>
         </div>
 
-        <a href={company.website} target="_blank" rel="noreferrer" className="company-card__link">
+        <Link href={outboundWebsiteHref} prefetch={false} className="company-card__link">
           {t("actions.officialSite")}
-        </a>
+        </Link>
       </div>
     </article>
   );

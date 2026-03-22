@@ -8,6 +8,7 @@ type CompanyLogoImageProps = {
   logo?: string;
   size?: number;
   className?: string;
+  preferWebsiteLogo?: boolean;
 };
 
 function getClearbitLogoUrl(website?: string) {
@@ -28,16 +29,19 @@ export function CompanyLogoImage({
   website,
   logo,
   size = 40,
-  className
+  className,
+  preferWebsiteLogo = false
 }: CompanyLogoImageProps) {
   const sources = useMemo(() => {
-    const unique = [getClearbitLogoUrl(website), logo].filter(
+    const websiteLogo = getClearbitLogoUrl(website);
+    const preferredSources = preferWebsiteLogo ? [websiteLogo, logo] : [logo, websiteLogo];
+    const unique = preferredSources.filter(
       (candidate, index, values): candidate is string =>
         typeof candidate === "string" && candidate.length > 0 && values.indexOf(candidate) === index
     );
 
     return unique;
-  }, [logo, website]);
+  }, [logo, preferWebsiteLogo, website]);
 
   const [sourceIndex, setSourceIndex] = useState(0);
   const source = sources[sourceIndex];

@@ -1,5 +1,5 @@
 import type { Company, Job } from "@/data/platform";
-import { normalizeLocalizedText } from "@/lib/localized-content";
+import { normalizeLocalizedText, normalizeLocalizedTextList } from "@/lib/localized-content";
 
 export type CompanyInput = Omit<Company, "slug">;
 export type JobInput = Omit<Job, "slug" | "featured">;
@@ -90,6 +90,20 @@ function requiredList(value: unknown, label: string) {
   return normalized;
 }
 
+function requiredLocalizedList(
+  value: unknown,
+  label: string,
+  defaultLocale: "az" | "en" | "ru" = "az"
+) {
+  const normalized = normalizeLocalizedTextList(value, defaultLocale);
+
+  if (normalized.length === 0) {
+    return `${label} üçün ən azı bir dəyər daxil edilməlidir.`;
+  }
+
+  return normalized;
+}
+
 function normalizedCreatedAt(value: unknown) {
   const normalized = getTrimmedString(value);
 
@@ -133,6 +147,9 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
   const about = requiredString(record.about, "Haqqında");
   if (typeof about !== "string") return { ok: false, message: about };
 
+  const wikipediaSummary = getTrimmedString(record.wikipediaSummary) || undefined;
+  const wikipediaSourceUrl = getTrimmedString(record.wikipediaSourceUrl) || undefined;
+
   const focusAreas = requiredList(record.focusAreas, "Fokus sahələri");
   if (!Array.isArray(focusAreas)) return { ok: false, message: focusAreas };
 
@@ -144,6 +161,10 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
 
   if (!isHttpUrl(logo) || !isHttpUrl(cover) || !isHttpUrl(website)) {
     return { ok: false, message: "Logo, cover və website sahələri keçərli URL olmalıdır." };
+  }
+
+  if (wikipediaSourceUrl && !isHttpUrl(wikipediaSourceUrl)) {
+    return { ok: false, message: "Wikipedia mənbə linki keçərli URL olmalıdır." };
   }
 
   return {
@@ -158,6 +179,8 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
       cover,
       website,
       about,
+      wikipediaSummary,
+      wikipediaSourceUrl,
       focusAreas,
       youthOffer,
       benefits,
@@ -209,7 +232,7 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
   const benefits = requiredList(record.benefits, "Üstünlüklər");
   if (!Array.isArray(benefits)) return { ok: false, message: benefits };
 
-  const tags = requiredList(record.tags, "Tag-lər");
+  const tags = requiredLocalizedList(record.tags, "Tag-lər", "az");
   if (!Array.isArray(tags)) return { ok: false, message: tags };
 
   if (!workModels.has(workModel as Job["workModel"])) {

@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, MapPin, Users } from "lucide-react";
+import { ExternalLink, Globe, MapPin, Users } from "lucide-react";
 
+import { CompanyVibeGrid } from "@/components/company-vibe-grid";
 import { CompanyLogoImage } from "@/components/company-logo-image";
 import { JobCard } from "@/components/job-card";
 import { useI18n } from "@/components/i18n-provider";
 import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import { translateSector } from "@/lib/i18n";
+import { buildOutboundHref } from "@/lib/outbound";
 import { getLocalizedCompany } from "@/lib/platform-localization";
 
 type CompanyDetailPageClientProps = {
@@ -19,6 +21,13 @@ type CompanyDetailPageClientProps = {
 export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClientProps) {
   const { locale, t } = useI18n();
   const localizedCompany = getLocalizedCompany(company, locale);
+  const officialSiteHref = buildOutboundHref({
+    targetUrl: company.website,
+    companyName: localizedCompany.name,
+    logoUrl: company.logo,
+    sourcePath: `/companies/${company.slug}`,
+    fallbackHref: `/companies/${company.slug}`
+  });
 
   return (
     <main className="section">
@@ -70,14 +79,16 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
           </div>
 
           <div className="detail-hero__actions">
-            <a href={company.website} target="_blank" rel="noreferrer" className="button button--primary">
+            <Link href={officialSiteHref} prefetch={false} className="button button--primary">
               {t("actions.officialSite")}
-            </a>
+            </Link>
             <Link href="/jobs" className="button button--ghost">
               {t("actions.backToJobs")}
             </Link>
           </div>
         </section>
+
+        <CompanyVibeGrid company={company} />
 
         <div className="detail-grid">
           <section className="detail-panel">
@@ -89,7 +100,21 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
           <section className="detail-panel">
             <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
             <h2>{t("companyPage.overviewTitle")}</h2>
-            <p className="info-copy">{t("companyPage.overviewPlaceholder")}</p>
+            <div className="stack-sm">
+              <p className="info-copy">
+                {company.wikipediaSummary ?? t("companyPage.overviewPlaceholder")}
+              </p>
+              {company.wikipediaSourceUrl ? (
+                <a
+                  href={company.wikipediaSourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-link"
+                >
+                  {t("companyPage.wikipediaSource")} <ExternalLink size={15} />
+                </a>
+              ) : null}
+            </div>
           </section>
 
           <section className="detail-panel">
@@ -142,7 +167,12 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
           ) : (
             <div className="card-grid card-grid--jobs">
               {jobs.map((job) => (
-                <JobCard key={job.slug} job={job} company={company} />
+                <JobCard
+                  key={job.slug}
+                  job={job}
+                  company={company}
+                  sourcePath={`/companies/${company.slug}`}
+                />
               ))}
             </div>
           )}
