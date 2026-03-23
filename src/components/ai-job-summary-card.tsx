@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, Target, TriangleAlert, type LucideIcon } from "lucide-react";
 
 import { useI18n } from "@/components/i18n-provider";
 import { sanitizeText } from "@/lib/text-sanitizer";
@@ -47,30 +47,27 @@ export function AiJobSummaryCard({
 
   const points = [
     {
-      emoji: "🎯",
+      Icon: Target,
       title: t("jobDetail.aiSummaryMission"),
       copy: mission
     },
     {
-      emoji: "⚠️",
+      Icon: TriangleAlert,
       title: t("jobDetail.aiSummaryDealbreaker"),
       copy: dealbreaker
     },
     {
-      emoji: "💡",
+      Icon: Sparkles,
       title: t("jobDetail.aiSummaryCulture"),
       copy: cultureVibe
     }
-  ];
+  ] satisfies Array<{ Icon: LucideIcon; title: string; copy: string }>;
 
   return (
     <section className="ai-summary-card">
       <span className="ai-summary-card__glow" aria-hidden="true" />
 
       <div className="ai-summary-card__header">
-        <span className="ai-summary-card__icon">
-          <Sparkles size={18} />
-        </span>
         <div>
           <p className="eyebrow">{t("jobDetail.aiSummaryEyebrow")}</p>
           <h2>{t("jobDetail.aiSummaryTitle")}</h2>
@@ -78,17 +75,19 @@ export function AiJobSummaryCard({
         </div>
       </div>
 
-      <div className="ai-summary-card__grid">
-        {points.map((point) => (
-          <article key={point.title} className="ai-summary-card__item">
-            <p className="ai-summary-card__item-label">
-              <span>{point.emoji}</span>
-              <span>{point.title}</span>
-            </p>
-            <p className="ai-summary-card__item-copy">{point.copy}</p>
-          </article>
+      <ul className="ai-summary-card__list">
+        {points.map(({ Icon, title, copy }) => (
+          <li key={title} className="ai-summary-card__point">
+            <span className="ai-summary-card__point-icon" aria-hidden="true">
+              <Icon size={18} />
+            </span>
+            <div className="ai-summary-card__point-body">
+              <p className="ai-summary-card__point-label">{title}</p>
+              <p className="ai-summary-card__point-copy">{copy}</p>
+            </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

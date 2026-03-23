@@ -88,10 +88,8 @@ export function OutboundPageClient({
               <span className="outbound-node__logo">
                 <CompanyLogoImage
                   name={companyName}
-                  website={targetUrl}
                   logo={logoUrl ?? undefined}
                   size={58}
-                  preferWebsiteLogo
                 />
               </span>
               <span className="outbound-node__label">{companyName}</span>

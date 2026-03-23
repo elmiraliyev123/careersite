@@ -45,7 +45,7 @@ export function JobDetailPageClient({
     : null;
 
   return (
-    <main className="section">
+    <main className="section job-detail-page">
       <div className="shell stack-lg">
         <div className="breadcrumb">
           <Link href="/">{t("nav.home")}</Link>
@@ -112,17 +112,6 @@ export function JobDetailPageClient({
             ) : null}
           </div>
         </section>
-
-        <div className="job-detail__mobile-apply">
-          <ApplyJobButton
-            slug={job.slug}
-            href={job.applyUrl ?? ""}
-            companyName={localizedCompany?.name ?? job.companySlug}
-            companyLogo={company?.logo}
-            sourcePath={sourcePath}
-            className="button--full"
-          />
-        </div>
 
         <AiJobSummaryCard
           companyName={localizedCompany?.name ?? job.companySlug}
@@ -209,6 +198,17 @@ export function JobDetailPageClient({
             ))}
           </div>
         </section>
+      </div>
+
+      <div className="job-detail__mobile-apply">
+        <ApplyJobButton
+          slug={job.slug}
+          href={job.applyUrl ?? ""}
+          companyName={localizedCompany?.name ?? job.companySlug}
+          companyLogo={company?.logo}
+          sourcePath={sourcePath}
+          className="button--full job-detail__mobile-apply-button"
+        />
       </div>
     </main>
   );

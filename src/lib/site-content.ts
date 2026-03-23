@@ -26,13 +26,13 @@ const infoSections: InfoSection[] = [
         slug: "tecrube-proqramlari",
         label: "Təcrübə proqramları",
         title: "Təcrübə proqramlarını daha ağıllı müqayisə et",
-        description: "İnternship və trainee elanlarını karyera başlanğıcına uyğun filtr və siqnallarla izləmək üçün hazırlanmış bələdçi.",
+        description: "İnternship və trainee elanlarını ilk karyera addımına uyğun şəkildə müqayisə etmək üçün qısa bələdçi.",
         intro:
-          "CareerApple tələbələrə yalnız elan siyahısı vermir. Platforma rol səviyyəsi, iş modeli, deadline və şirkət etibarı kimi siqnalları birləşdirərək ilk karyera qərarını sürətləndirmək üçün qurulub.",
+          "CareerApple tələbələrə sadəcə elan siyahısı vermir. Rol səviyyəsi, iş modeli, son müraciət tarixi və şirkət etibarı bir yerdə göründüyü üçün seçim daha tez və daha inamlı olur.",
         highlights: [
-          "Təcrübə, trainee və yeni məzun rolları ayrıca indekslənir.",
-          "Deadline-a yaxın və yeni paylaşılmış elanlar ayrıca görünür.",
-          "Verified şirkət badge-i yalnız admin tərəfindən yoxlanılmış profillərə verilir."
+          "Təcrübə, trainee və yeni məzun rolları daha aydın müqayisə olunur.",
+          "Yeni elanlar və yaxın tarixli müraciətlər daha tez seçilir.",
+          "Verified badge etibarlı və aydın təqdim olunan şirkətləri fərqləndirməyə kömək edir."
         ],
         ctaLabel: "Vakansiyalara bax",
         ctaHref: "/jobs"
@@ -43,13 +43,13 @@ const infoSections: InfoSection[] = [
         title: "Hazırda gəncləri kim işə qəbul edir",
         description: "Platformada hansı sektorların aktiv olduğunu və hansı rolların daha çox açıldığını izah edən qısa xəritə.",
         intro:
-          "Azerbaycan bazarında gənclər üçün ən çox elan açan komandalar adətən data, marketinq, müştəri təcrübəsi, satış dəstəyi və product operations istiqamətlərində yerləşir. CareerApple bu axını tək lentdə toplamaq üçündür.",
+          "Azərbaycan bazarında gənclər üçün ən aktiv komandalar adətən data, marketinq, müştəri təcrübəsi, satış dəstəyi və məhsul əməliyyatları istiqamətlərində görünür. CareerApple bu mənzərəni bir yerdə görməyi asanlaşdırır.",
         highlights: [
           "Bank, fintex, FMCG və SaaS komandaları daha çox entry-level rol açır.",
-          "LinkedIn və yerli platformalardan gələn elanlar eyni freshness qaydası ilə sıralanır.",
-          "Admin yalnız şirkət profili olan işəgötürənlərin elanlarını avtomatik import edir."
+          "Fərqli platformalarda yayımlanan elanları bir yerdə görmək daha asandır.",
+          "Şirkət profili olan işəgötürənləri müqayisə etmək daha rahatdır."
         ],
-        ctaLabel: "Fresh elanlara keç",
+        ctaLabel: "Yeni elanlara keç",
         ctaHref: "/jobs"
       },
       {
@@ -58,7 +58,7 @@ const infoSections: InfoSection[] = [
         title: "İlk müraciət üçün praktik karyera məsləhətləri",
         description: "CV, portfoliо, cover note və müsahibə mərhələsi üçün gənclərə fokuslanan əsas istiqamətlər.",
         intro:
-          "Gənc namizədlər üçün əsas fərq illərin sayı deyil, siqnalların keyfiyyətidir. Portfolion, mini layihələrin, analitik düşüncə və yazılı təqdimatın tez-tez təcrübədən daha çox təsir edir.",
+          "Gənc namizədlər üçün əsas fərq illərin sayı deyil, özünü necə təqdim etdiyindir. Portfolio, mini layihələr, analitik düşüncə və yazılı təqdimat çox vaxt təcrübədən daha çox təsir edir.",
         highlights: [
           "CV-də kurs siyahısından çox nəticə göstərən layihələr önə çıxarılmalıdır.",
           "Junior rollar üçün problem həlli və kommunikasiya nümunələri əlavə üstünlük yaradır.",
@@ -70,16 +70,16 @@ const infoSections: InfoSection[] = [
       {
         slug: "careerapple-ai",
         label: "CareerApple AI",
-        title: "CareerApple AI namizəd axınını necə dəstəkləyəcək",
-        description: "Gələcək mərhələdə platformaya əlavə olunacaq ağıllı uyğunluq və CV köməkçisi barədə kontur.",
+        title: "CareerApple AI sənə seçim anında necə kömək edəcək",
+        description: "Gələcəkdə əlavə olunacaq ağıllı uyğunluq və CV dəstəyi barədə qısa baxış.",
         intro:
-          "CareerApple AI hazırkı mərhələdə ictimai funksionallıq kimi açıq deyil, amma məhsul planında CV siqnallarını, açar bacarıqları və rol uyğunluğunu analiz edən yardımçı qat kimi nəzərdə tutulur.",
+          "CareerApple AI gələcək mərhələdə istifadəçiyə daha sürətli qərar vermək üçün düşünülür. Məqsəd uyğun rolları daha aydın göstərmək, CV-ni gücləndirmək və növbəti addımı seçməyi asanlaşdırmaqdır.",
         highlights: [
           "Rol uyğunluğu üçün bacarıq əsaslı tövsiyələr veriləcək.",
           "CV-də boş qalan hissələr üçün redaktə təklifləri hazırlanacaq.",
-          "Eyni rola çoxlu müraciət edən istifadəçilər üçün fərqləndirici siqnallar vurğulanacaq."
+          "Müraciətdə səni önə çıxaran güclü tərəflər daha aydın vurğulanacaq."
         ],
-        ctaLabel: "Məhsul axınını gör",
+        ctaLabel: "Ana səhifəyə bax",
         ctaHref: "/"
       },
       {
@@ -90,24 +90,24 @@ const infoSections: InfoSection[] = [
         intro:
           "Fellowship proqramı CareerApple-ın gələcək community qatıdır. Məqsəd yalnız vakansiya göstərmək deyil, seçilmiş namizədləri mentor, workshop və mini layihələrlə daha hazır vəziyyətə gətirməkdir.",
         highlights: [
-          "Seçilmiş cohort-lar üzrə mentor review sessiyaları planlanır.",
+          "Seçilmiş cohort-lar üzrə mentor sessiyaları planlanır.",
           "Partnyor şirkətlər üçün hazır namizəd hovuzu formalaşdırılır.",
           "Tələbə klubları və karyera mərkəzləri ilə ortaq proqramlar nəzərdə tutulur."
         ],
-        ctaLabel: "İşəgötürən axınını oxu",
+        ctaLabel: "İşəgötürən səhifəsini oxu",
         ctaHref: "/for-employers"
       },
       {
         slug: "imkanlar",
         label: "İmkanlar",
-        title: "İmkanlar lentində yalnız relevat elanlar qalmalıdır",
-        description: "CareerApple feed-in niyə yalnız internship, junior və yeni məzun rolları üzərində qurulduğunu izah edən qeyd.",
+        title: "İmkanlar bölməsində yalnız uyğun elanlar qalmalıdır",
+        description: "CareerApple-ın niyə yalnız internship, junior və yeni məzun rollarına fokuslandığını izah edən qısa qeyd.",
         intro:
-          "Gənclər üçün məhsullarda əsas problem səs-küydür. Senior və alakasız elanlar ilk iş axtaran istifadəçini itirir. Ona görə platforma yalnız erkən karyera siqnallarını ayrıca səviyyə kimi saxlayır.",
+          "Gənclər üçün platformalarda əsas problem səs-küydür. Senior və əlaqəsiz elanlar ilk iş axtaran istifadəçini yorur. Buna görə CareerApple erkən karyera rollarını daha təmiz və fokuslu şəkildə göstərir.",
         highlights: [
-          "Filter default olaraq gənclərə uyğun səviyyələri önə çıxarır.",
-          "Scrape pipeline uyğun olmayan rolları avtomatik rədd edir.",
-          "Seçilmiş banner yalnız təsdiqlənmiş şirkət və youth-role kombinasiyasından qurulur."
+          "Filtrlər gənclərə uyğun səviyyələri daha tez önə çıxarır.",
+          "Uyğun olmayan rollar əsas lentdə diqqəti dağıtmır.",
+          "Seçilmiş bannerlər daha relevant və etibarlı imkanları göstərir."
         ],
         ctaLabel: "Featured elanlara bax",
         ctaHref: "/"
@@ -121,14 +121,14 @@ const infoSections: InfoSection[] = [
       {
         slug: "qiymetlendirme",
         label: "Qiymətləndirmə",
-        title: "İşəgötürən üçün məhsul ölçüləri və qiymətləndirmə modeli",
-        description: "CareerApple employer tərəfinin hansı ölçülərlə dəyər yaratdığını göstərən qısa çərçivə.",
+        title: "İşəgötürən üçün dəyər və nəticə çərçivəsi",
+        description: "CareerApple-ın işəgötürənə hansı üstünlükləri verdiyini göstərən qısa çərçivə.",
         intro:
-          "Bu məhsul klassik job board kimi deyil, gənc auditoriya üçün daha fokuslu discovery və conversion qatıdır. Ona görə əsas metriklər apply deyil, doğru apply, save, açılış sürəti və profil uyğunluğu olacaq.",
+          "Bu məhsul klassik job board kimi deyil. Məqsəd gənc auditoriya qarşısında daha güclü görünmək, daha uyğun namizədlər toplamaq və açıq rolları daha aydın təqdim etməkdir.",
         highlights: [
-          "Featured yerləşdirmə yalnız uyğun səviyyəli elanlar üçün nəzərdə tutulur.",
-          "Deadline, city və source freshness conversion keyfiyyətinə birbaşa təsir edir.",
-          "Admin review qatından keçən şirkətlər platformada təsdiqlənmiş kimi görünür."
+          "Seçilmiş yerləşdirmə erkən karyera rolları üçün daha güclü görünürlük yaradır.",
+          "Aydın şəhər, son tarix və müraciət keçidi namizəd qərarını sürətləndirir.",
+          "Etibarlı və səliqəli profil daha keyfiyyətli ilk təəssürat yaradır."
         ],
         ctaLabel: "İşəgötürən səhifəsinə keç",
         ctaHref: "/for-employers"
@@ -136,14 +136,14 @@ const infoSections: InfoSection[] = [
       {
         slug: "demo-isteyi",
         label: "Demo istəyi",
-        title: "CareerApple demo istəyi və onboarding konturu",
-        description: "İşəgötürən komandalarının platformaya qoşulması üçün sadə onboarding axını.",
+        title: "CareerApple demo istəyi və əməkdaşlıq çərçivəsi",
+        description: "İşəgötürən komandalarının platformaya qoşulması üçün sadə və aydın başlanğıc.",
         intro:
-          "Hazırkı məhsul mərhələsində employer onboarding admin tərəfindən idarə olunur. Şirkət profili yaradılır, təsdiqlənir və yalnız bundan sonra uyğun elanlar public lentə daxil edilir.",
+          "CareerApple şirkətlərə gənc auditoriya qarşısında daha premium görünmək üçün qurulub. Demo mərhələsi komandanın ehtiyacını anlamaq, şirkət təqdimatını gücləndirmək və doğru rolları daha yaxşı nümayiş etdirmək üçündür.",
         highlights: [
-          "Şirkət profili admin tərəfindən qurulur və yoxlanılır.",
-          "Scraped elanlar yalnız mövcud company profili ilə match olanda import olunur.",
-          "Demo mərhələsində prioritet fokus internship və yeni məzun rollarıdır."
+          "Şirkət təqdimatı daha aydın və etibarlı görünəcək şəkildə hazırlanır.",
+          "Vakansiyalar gənc auditoriya üçün daha rahat kəşf olunan formaya salınır.",
+          "Demo mərhələsində əsas diqqət internship və yeni məzun rollarına verilir."
         ],
         ctaLabel: "Əlaqə məlumatlarına bax",
         ctaHref: "/info/support/elaqe"
@@ -154,10 +154,10 @@ const infoSections: InfoSection[] = [
         title: "Universitet karyera mərkəzləri ilə əməkdaşlıq modeli",
         description: "Universitetlər və youth communities ilə işləmək üçün hazırlanmış ilkin istiqamətlər.",
         intro:
-          "CareerApple təkcə işəgötürənlə namizədi deyil, universitet karyera mərkəzlərini də məhsul axınına qoşmağı planlayır. Bu, tələbələrə daha tez vaxtda etibarlı elanlar çatdırmaq üçündür.",
+          "CareerApple təkcə işəgötürənlə namizədi deyil, universitet karyera mərkəzlərini də bu təcrübəyə qoşmağı planlayır. Məqsəd tələbələrə daha tez və daha etibarlı imkanlar çatdırmaqdır.",
         highlights: [
           "Karyera mərkəzləri üçün paylaşım dəstləri və seçilmiş vakansiya feed-ləri nəzərdə tutulur.",
-          "Fellowship və event axını universitet tərəfi ilə birgə qurula bilər.",
+          "Fellowship və tədbir proqramları universitet tərəfi ilə birgə qurula bilər.",
           "İşəgötürən kampaniyaları üçün auditoriya seqmentləri hazırlanır."
         ],
         ctaLabel: "Fellowship proqramını oxu",
@@ -169,11 +169,11 @@ const infoSections: InfoSection[] = [
         title: "Gənc auditoriya üçün marketinq alətləri və paylaşım materialları",
         description: "İşəgötürənlərin internship elanlarını daha yaxşı təqdim etməsi üçün istifadə ediləcək material seti.",
         intro:
-          "Gənc istifadəçi üçün iş elanı yalnız mətn deyil. Güclü title, aydın summary, doğru iş modeli və deadline siqnalı conversion-a birbaşa təsir edir. Ona görə platforma employer kontenti üçün aydın çərçivə tələb edir.",
+          "Gənc istifadəçi üçün iş elanı sadəcə mətn deyil. Güclü başlıq, aydın xülasə, düzgün iş modeli və son tarix namizədin qərarını birbaşa gücləndirir.",
         highlights: [
-          "Banner, qısa copy və təsdiq statusu birlikdə istifadə olunur.",
-          "Admin keyfiyyət standartına uyğun olmayan copy-ni moderasiya edir.",
-          "Scrape ilə gələn elanlar public görünməzdən əvvəl uyğunluq yoxlanır."
+          "Banner, qısa copy və etibar hissi birlikdə işləyir.",
+          "Şirkət təqdimatı daha aydın və premium görünməlidir.",
+          "Müraciət keçidi birbaşa və rahat olmalıdır."
         ],
         ctaLabel: "İşəgötürən səhifəsinə keç",
         ctaHref: "/for-employers"
@@ -181,14 +181,14 @@ const infoSections: InfoSection[] = [
       {
         slug: "tehlukesizlik",
         label: "Təhlükəsizlik",
-        title: "Şirkət profili və elan axınında təhlükəsizlik qaydaları",
-        description: "Verified badge, admin review və source nəzarəti ilə bağlı əsas prinsiplər.",
+        title: "Şirkət profili və elanlarda etibar qaydaları",
+        description: "Etibarlı profillər və rahat müraciət təcrübəsi üçün əsas prinsiplər.",
         intro:
-          "CareerApple-da company profile public öz-özünə açılmır. Admin sessiyası, ayrılmış giriş ünvanı və review mərhələsi şirkət məlumatlarının və elanların keyfiyyətini qorumaq üçün tələb olunur.",
+          "CareerApple-da məqsəd namizədə daha etibarlı təcrübə verməkdir. Şirkət məlumatlarının aydınlığı, düzgün keçidlər və premium təqdimat bu etibarı gücləndirir.",
         highlights: [
-          "Admin girişi ayrıca parol və signed session ilə qorunur.",
-          "Public istifadəçilər üçün company yaratma və admin keçidi göstərilmir.",
-          "Source URL və source adı saxlanaraq imported elanların izi qorunur."
+          "Etibarlı şirkət təqdimatı namizəddə daha güclü ilk təəssürat yaradır.",
+          "Müraciət linklərinin birbaşa və düzgün olması istifadəçi yolunu rahat saxlayır.",
+          "Şirkət və vakansiya məlumatları aydın görünəcək şəkildə qorunur."
         ],
         ctaLabel: "Hüquq mərkəzinə bax",
         ctaHref: "/info/support/huquq-merkezi"
@@ -203,13 +203,13 @@ const infoSections: InfoSection[] = [
         slug: "istifade-sertleri",
         label: "İstifadə şərtləri",
         title: "Platformadan istifadə üçün əsas şərtlər",
-        description: "CareerApple-ın public feed, admin girişi və məlumat istifadəsi üçün əsas davranış qaydaları.",
+        description: "CareerApple təcrübəsini aydın və etibarlı saxlayan əsas qaydalar.",
         intro:
-          "Məhsul hazırda MVP mərhələsində olsa da, istifadəçi və employer data axını aydın qaydalarla idarə olunmalıdır. Bu bölmə platforma daxilində görünən məlumatlardan və public axından necə istifadə edildiyini izah edir.",
+          "CareerApple istifadəçi və şirkət təcrübəsini aydın qaydalarla qoruyur. Bu bölmə platformada görünən məlumatlardan və təqdim olunan imkanlardan necə istifadə olunduğunu izah edir.",
         highlights: [
-          "Public istifadəçi yalnız açıq elanları və karyera resurslarını görə bilir.",
-          "Admin əməliyyatları ayrıca giriş nöqtəsi və gizli mühit dəyişənləri ilə idarə olunur.",
-          "Source-lardan gələn elanlar platforma daxilində moderasiya edilə bilər."
+          "İstifadəçi açıq elanları və karyera resurslarını rahat şəkildə görə bilir.",
+          "Şirkət təqdimatları etibarlı və aydın görünəcək şəkildə qorunur.",
+          "Platformadakı məlumatlar istifadəçi təcrübəsini yaxşı saxlamaq üçün yenilənə bilər."
         ],
         ctaLabel: "Məxfilik siyasətinə bax",
         ctaHref: "/info/legal/maxfilik-siyaseti"
@@ -217,44 +217,44 @@ const infoSections: InfoSection[] = [
       {
         slug: "maxfilik-siyaseti",
         label: "Məxfilik",
-        title: "CareerApple məxfilik siyasəti üçün məhsul konturu",
-        description: "Sessiya, tətbiq davranışı və analytics toplama prinsipləri barədə qısa qeyd.",
+        title: "CareerApple məxfilik siyasəti",
+        description: "Məlumatın qorunması və istifadəçi rahatlığı barədə qısa qeyd.",
         intro:
-          "Public auth hazırda bağlı olsa da, admin sessiyası, local fəaliyyət yaddaşı və gələcək analytics qatı üçün məlumatın necə emal olunacağı əvvəlcədən aydınlaşdırılmalıdır.",
+          "CareerApple istifadəçi etibarını qorumağı vacib sayır. Məlumatın necə saxlanması və istifadəçi rahatlığının necə qorunması bu bölmədə sadə dillə izah olunur.",
         highlights: [
-          "Admin sessiyası HTTP-only cookie ilə saxlanılır.",
-          "Namizəd tərəfində tətbiq və save davranışı hazırda lokal cihazda saxlanılır.",
-          "Production mərhələsində server-side audit log və privacy controls əlavə olunmalıdır."
+          "İstifadəçi məlumatları diqqətlə və ehtiyatla işlənir.",
+          "Vacib seçimlər daha aydın və rahat görünəcək şəkildə saxlanılır.",
+          "Məxfilik təcrübəsi istifadəçi etibarını qorumaq üçün davamlı olaraq yaxşılaşdırılır."
         ],
         ctaLabel: "Privacy seçimlərinə bax",
         ctaHref: "/info/support/maxfilik-secimlerin"
       },
       {
         slug: "menbe-siyaseti",
-        label: "Mənbə siyasəti",
-        title: "Scrape edilmiş elanlar üçün mənbə siyasəti",
-        description: "LinkedIn və yerli platformalardan gələn elanların platformaya necə daxil edildiyini izah edən qeyd.",
+        label: "Etibar və elan siyasəti",
+        title: "Elanlar üçün etibar və şəffaflıq siyasəti",
+        description: "CareerApple-da görünən elanların aydın və rahat təcrübə yaratması üçün əsas yanaşma.",
         intro:
-          "CareerApple birbaşa scrape olunan elanları kor şəkildə yayınlamır. Mənbə siqnalı, matching, freshness və admin review birlikdə işlədikdən sonra elan public feed-ə düşür.",
+          "CareerApple-da elanlar istifadəçiyə aydın, etibarlı və rahat görünməlidir. Məqsəd namizədi uyğun rola daha tez çatdırmaq və seçim anını sadələşdirməkdir.",
         highlights: [
-          "Source URL saxlanılır və orijinal elanla əlaqə qorunur.",
-          "Keyword filtrinə uyğun gəlməyən rollar import edilmir.",
-          "Company profile tapılmayan elanlar review üçün kənarda saxlanılır."
+          "Müraciət keçidi aydın və birbaşa saxlanılır.",
+          "Erkən karyera auditoriyasına uyğun elanlar önə çıxarılır.",
+          "Şirkət təqdimatı və elan dili etibar hissini qoruyur."
         ],
-        ctaLabel: "Scrape modelini oxu",
+        ctaLabel: "Etibar qaydalarına bax",
         ctaHref: "/info/employers/tehlukesizlik"
       },
       {
         slug: "kukiler",
         label: "Cookie seçimləri",
-        title: "Cookie və sessiya davranışı",
-        description: "Admin girişi və tətbiq davranışının texniki olaraq necə saxlandığı barədə qısa izah.",
+        title: "Cookie seçimləri və rahatlıq",
+        description: "Platformanın daha rahat işləməsi üçün əsas seçimlər barədə qısa izah.",
         intro:
-          "Bu mərhələdə cookie istifadəsi minimaldır və əsasən admin sessiyasını qorumaq üçündür. Public tərəfdə login bağlandığı üçün cookie səthi məhduddur.",
+          "CareerApple-da cookie istifadəsi istifadəçi təcrübəsini rahat saxlamaq üçündür. Məqsəd sürətli baxış, yadda saxlanan seçimlər və daha sabit təcrübə təqdim etməkdir.",
         highlights: [
-          "Admin session cookie-si yalnız HTTP-only formatında yaradılır.",
-          "Public feed üçün məcburi olmayan cookie axını yoxdur.",
-          "Gələcək analytics əlavə olunanda ayrıca consent axını tələb olunacaq."
+          "Vacib seçimlər istifadəçi rahatlığı üçün saxlanıla bilər.",
+          "Məxfilik balansı və rahatlıq birlikdə qorunur.",
+          "Gələcək yeniliklərdə seçimlər daha aydın görünəcək."
         ],
         ctaLabel: "Dəstək bölməsinə keç",
         ctaHref: "/info/support/yardim-merkezi"
@@ -271,11 +271,11 @@ const infoSections: InfoSection[] = [
         title: "CareerApple nə üçün yaradılıb",
         description: "Gənclər üçün internship və ilk iş axtarışını daha təmiz və relevant etmək məqsədi ilə qurulan məhsulun qısa hekayəsi.",
         intro:
-          "CareerApple-ın əsas ideyası sadədir: ilk iş axtaran istifadəçi üçün ən vacib siqnalı tez göstərmək. Platforma ona görə qaranlıq mövzu, qısa copy və yüksək relevance üzərində qurulub.",
+          "CareerApple-ın əsas ideyası sadədir: ilk iş axtaran istifadəçiyə ən vacib olanı daha tez göstərmək. Platforma buna görə təmiz görünüş, qısa copy və yüksək uyğunluq hissi üzərində qurulub.",
         highlights: [
           "Məhsul Azərbaycan bazarı və gənc auditoriya üçün lokallaşdırılır.",
-          "İlk mərhələdə diqqət internship, trainee və junior axınındadır.",
-          "Public company qovluğu hələ açılmayıb; əsas fokus vakansiya discovery-sidir."
+          "İlk mərhələdə diqqət internship, trainee və junior rollarındadır.",
+          "Əsas fokus uyğun vakansiyanı daha tez tapdırmaqdır."
         ],
         ctaLabel: "Ana səhifəyə qayıt",
         ctaHref: "/"
@@ -283,12 +283,12 @@ const infoSections: InfoSection[] = [
       {
         slug: "komandaya-qosul",
         label: "Komandaya qoşul",
-        title: "CareerApple komandaya necə qoşulur",
-        description: "Məhsul, growth və community istiqamətində gələcək komanda genişlənməsi üçün prinsip və ehtiyaclar.",
+        title: "CareerApple komandasına necə qoşula bilərsən",
+        description: "Məhsul, growth və community istiqamətində gələcək komanda genişlənməsi üçün qısa baxış.",
         intro:
-          "Hazırkı repo məhsul skeleton-u və admin pipeline-ını qurur. Növbəti mərhələdə real product growth üçün data, growth, design systems və partnerships bacarıqları vacib olacaq.",
+          "CareerApple böyüdükcə məhsul, growth və community istiqamətlərində güclü insanlara ehtiyac artacaq. Məqsəd gənclər üçün daha güclü karyera təcrübəsi qurmaqdır.",
         highlights: [
-          "Product engineering və scraping/data pipeline sahələri prioritetdir.",
+          "Məhsul düşüncəsi, growth və dizayn keyfiyyəti əsas prioritetlərdəndir.",
           "University community və employer relations ayrıca istiqamət kimi formalaşacaq.",
           "Məhsul dili və UX qərarları Azərbaycan bazarına uyğun saxlanılır."
         ],
@@ -301,10 +301,10 @@ const infoSections: InfoSection[] = [
         title: "Media və press üçün qısa məhsul məlumatı",
         description: "CareerApple-ı təqdim etmək üçün istifadə oluna biləcək sadə məhsul mövqeləndirməsi.",
         intro:
-          "CareerApple gənclər üçün internship və ilk iş elanlarını təsdiqlənmiş employer profilləri və mənbə-izli scraping ilə toplayan yerli karyera platformasıdır.",
+          "CareerApple gənclər üçün internship və ilk iş elanlarını təsdiqlənmiş işəgötürən profilləri ilə bir araya gətirən yerli karyera platformasıdır.",
         highlights: [
           "Məhsul copy-si qısa, local və action-first yanaşma ilə yazılır.",
-          "Public səhifələrdə admin və daxili idarəetmə istinadları gizli saxlanılır.",
+          "İstifadəçiyə görünən səhifələrdə sadə və premium dil qorunur.",
           "Məhsul dizaynında lime-on-black identikası qorunur."
         ],
         ctaLabel: "Brend qaydalarına bax",
@@ -316,7 +316,7 @@ const infoSections: InfoSection[] = [
         title: "Blog üçün mövzu xəritəsi",
         description: "CareerApple blogunda hansı mövzuların prioritet olacağına dair qısa redaksiya istiqaməti.",
         intro:
-          "Blog platformanın SEO və trust qatıdır. İlk mərhələdə internship bazarı, CV məsləhətləri, junior interview hazırlığı və employer insight mövzuları əsas istiqamət kimi nəzərdə tutulur.",
+          "Blog CareerApple-ın etibarını və faydasını gücləndirən kontent qatıdır. İlk mərhələdə internship bazarı, CV məsləhətləri, junior müsahibə hazırlığı və işəgötürən dünyası əsas mövzulardır.",
         highlights: [
           "Azerbaijani və English terminlərin aydın lokallaşdırılması vacibdir.",
           "Hər yazı məhsuldakı konkret user action ilə bağlanmalıdır.",
@@ -329,12 +329,12 @@ const infoSections: InfoSection[] = [
         slug: "brend-qaydalari",
         label: "Brend qaydaları",
         title: "CareerApple brend qaydaları",
-        description: "Vizual dil, ton və təsdiq siqnalları üçün istifadə olunan əsas qaydalar.",
+        description: "Vizual dil, ton və etibar hissi üçün istifadə olunan əsas qaydalar.",
         intro:
           "CareerApple vizual dili tünd fon, lime vurğular və aydın spacing üzərində qurulub. Məhsul dili də eyni dərəcədə sadə, sürətli və gənc auditoriya üçün anlaşılır saxlanılır.",
         highlights: [
           "San Francisco əsas tipografiya kimi istifadə olunur.",
-          "Lime accent yalnız vacib action və verification siqnallarında işlədilir.",
+          "Lime accent yalnız vacib action və etibar hissi yaradan nöqtələrdə işlədilir.",
           "Kartlar və bannerlər sadə, sərt və yüksək kontrastlı saxlanılır."
         ],
         ctaLabel: "Ana səhifəni aç",
@@ -350,13 +350,13 @@ const infoSections: InfoSection[] = [
         slug: "yardim-merkezi",
         label: "Yardım mərkəzi",
         title: "Platformadan istifadə üçün yardım mərkəzi",
-        description: "Vakansiya axtarışı, save/apply davranışı və admin review ilə bağlı əsas sualların cavabları.",
+        description: "Vakansiya axtarışı, yadda saxlama və müraciət addımları ilə bağlı əsas sualların cavabları.",
         intro:
-          "Hazırkı MVP-də ən əsas user action vakansiya kəşfi, save, apply və source link-ə keçiddir. Yardım mərkəzi bu minimal axınları daha tez anlamaq üçündür.",
+          "CareerApple-da əsas məqsəd uyğun vakansiyanı tez tapmaq, yadda saxlamaq və rahat müraciət etməkdir. Yardım mərkəzi bu təcrübəni daha aydın göstərmək üçündür.",
         highlights: [
-          "Axtarış və filtr axını public istifadəçilər üçün açıqdır.",
+          "Axtarış və filtrlər bütün istifadəçilər üçün rahatdır.",
           "Namizəd login və signup hələ aktiv deyil.",
-          "Admin hissəsi ayrıca giriş ünvanı ilə qorunur və public səthdə görünmür."
+          "Əsas təcrübə vakansiya kəşfi və müraciət rahatlığı üzərində qurulub."
         ],
         ctaLabel: "Vakansiyalara bax",
         ctaHref: "/jobs"
@@ -367,11 +367,11 @@ const infoSections: InfoSection[] = [
         title: "CareerApple ilə əlaqə üçün əsas kanallar",
         description: "Demo, partnership və məhsul əməkdaşlığı üçün əlaqə çərçivəsi.",
         intro:
-          "Hazırkı mərhələdə əlaqə axını manual idarə olunur. İşəgötürən onboarding, community partnership və media sorğuları ayrı-ayrı axınlar kimi idarə edilməlidir.",
+          "CareerApple ilə əməkdaşlıq, demo və media sorğuları üçün əlaqə qurmaq istəyirsənsə, ən rahat yol birbaşa e-poçtdur. Bütün əsas sorğular üçün vahid ünvan istifadə olunur: contact@trystradify.app.",
         highlights: [
-          "Demo və company onboarding review əsas prioritetdir.",
-          "University partnership və fellowship maraqları ayrıca toplana bilər.",
-          "Məhsul support sorğuları hüquq və privacy suallarından ayrı saxlanmalıdır."
+          "Demo və işəgötürən əməkdaşlığı sorğuları prioritetlə cavablandırılır.",
+          "University partnership və fellowship maraqları ayrıca qeyd oluna bilər.",
+          "Əlaqə ünvanı: contact@trystradify.app"
         ],
         ctaLabel: "İşəgötürən səhifəsinə bax",
         ctaHref: "/for-employers"
@@ -379,14 +379,14 @@ const infoSections: InfoSection[] = [
       {
         slug: "huquq-merkezi",
         label: "Hüquq mərkəzi",
-        title: "Hüquq mərkəzi və compliance qeydləri",
-        description: "Source policy, privacy və istifadə şərtləri arasında keçid nöqtəsi.",
+        title: "Hüquq mərkəzi və etibar qeydləri",
+        description: "Etibar, məxfilik və istifadə şərtləri arasında keçid nöqtəsi.",
         intro:
-          "CareerApple-da hüquqi təməl yalnız sənəd olmaq üçün deyil, data axınının necə idarə olunduğunu aydın göstərmək üçündür. Scrape pipeline, verified company modeli və admin access bu mərkəzdə birləşir.",
+          "CareerApple-da hüquqi təməl yalnız sənəd olmaq üçün deyil. Məqsəd istifadəçi və şirkət tərəfi üçün etibarlı, aydın və şəffaf təcrübə yaratmaqdır.",
         highlights: [
-          "Source-lardan gələn məlumatın izlenebilirliyi qorunmalıdır.",
-          "Company profile və elan moderasiyası eyni review standartına bağlıdır.",
-          "Production launch üçün ayrıca hüquqi mətnlər genişləndirilməlidir."
+          "Şirkət təqdimatı və vakansiya məlumatı aydın saxlanmalıdır.",
+          "Məxfilik və istifadə qaydaları bir-birini tamamlamalıdır.",
+          "Etibar hissi platformanın əsas prinsiplərindən biridir."
         ],
         ctaLabel: "Hüquq səhifələrini aç",
         ctaHref: "/info/legal/istifade-sertleri"
@@ -395,13 +395,13 @@ const infoSections: InfoSection[] = [
         slug: "maxfilik-secimlerin",
         label: "Məxfilik seçimlərin",
         title: "Məxfilik seçimlərini necə idarə etməliyik",
-        description: "İstifadəçi seçimi, analytics və cookie nəzarəti üçün gələcək məhsul davranışı barədə qeyd.",
+        description: "İstifadəçi seçimi və rahatlıq balansı barədə qısa qeyd.",
         intro:
-          "Məxfilik seçimləri MVP mərhələsində hələ geniş UI kimi açılmayıb. Amma məhsul artıq gələcəkdə lazım olacaq consent və analytics nəzarəti üçün sadə bir yol xəritəsi saxlayır.",
+          "Məxfilik seçimləri istifadəçiyə nəzarət hissi verməlidir. Məqsəd seçimləri aydın saxlamaq və platforma təcrübəsini rahat qorumaqdır.",
         highlights: [
-          "Hazırkı mərhələdə minimal session istifadəsi var.",
-          "Analytics və marketing cookies əlavə olunanda ayrıca seçim paneli qurulmalıdır.",
-          "User trust üçün privacy controls footer-dən tez tapılmalıdır."
+          "Hazırkı mərhələdə seçimlər sadə və başadüşüləndir.",
+          "Gələcəkdə əlavə seçimlər daha aydın paneldə təqdim olunacaq.",
+          "Məxfilik nəzarəti istifadəçi üçün tez tapılan yerdə qalmalıdır."
         ],
         ctaLabel: "Məxfilik siyasətinə bax",
         ctaHref: "/info/legal/maxfilik-siyaseti"

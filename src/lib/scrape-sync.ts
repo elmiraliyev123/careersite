@@ -286,9 +286,9 @@ function computeDeadline(postedAt: string) {
 
 function buildSummary(title: string, companyName: string, sourceName: string) {
   return createLocalizedText(
-    `${companyName} şirkətində açıq olan ${title} rolu ${sourceName} mənbəsindən sinxronlaşdırılıb və CareerApple youth feed-i üçün uyğunlaşdırılıb.`,
-    `The ${title} role at ${companyName} was synced from ${sourceName} and adapted for the CareerApple youth feed.`,
-    `Роль ${title} в ${companyName} была синхронизирована из ${sourceName} и адаптирована для ленты CareerApple.`
+    `${companyName} komandasında açıq olan ${title} rolu CareerApple-da gənclər üçün seçilmiş fürsət kimi təqdim olunur.`,
+    `The ${title} role at ${companyName} is presented on CareerApple as a selected opportunity for early-career talent.`,
+    `Роль ${title} в ${companyName} представлена на CareerApple как отобранная возможность для early-career аудитории.`
   );
 }
 
@@ -297,7 +297,7 @@ function buildResponsibilities(title: string, category: ReturnType<typeof inferC
 
   return [
     `${categoryLabel} istiqamətində komanda tapşırıqlarını dəstəkləmək`,
-    `${title} roluna uyğun gündəlik koordinasiya və hesabat axınında iştirak etmək`,
+    `${title} roluna uyğun gündəlik koordinasiya və hesabat işində iştirak etmək`,
     "Mentor və komanda lead-lərdən gələn feedback əsasında işini iterasiya etmək"
   ];
 }
@@ -314,9 +314,9 @@ function buildRequirements(level: Job["level"], category: ReturnType<typeof infe
 
 function buildBenefits(sourceName: string) {
   return [
-    "Verified employer profili üzərindən görünürlük",
-    "CareerApple-da gənclərə fokuslanan discovery axını",
-    `${sourceName} mənbəsi ilə izlənən aktual elan bağlantısı`
+    "CareerApple-da seçilmiş fürsətlər lentində görünürlük",
+    "Etibarlı şirkət təqdimatı ilə daha güclü ilk təəssürat",
+    `${sourceName} üzərində birbaşa müraciət imkanı`
   ];
 }
 
@@ -470,7 +470,7 @@ export async function syncScrapedJobs(options?: { dryRun?: boolean }): Promise<S
         scrapedCount
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Naməlum scraping xətası";
+      const message = error instanceof Error ? error.message : "Naməlum yeniləmə xətası";
       errors.push(`${source.name}: ${message}`);
       sourceSummaries.push({
         name: source.name,

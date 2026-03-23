@@ -43,9 +43,9 @@ const playbookArticles: PlaybookArticle[] = [
       "Покажи доказательства своей работы в верхней части CV"
     ),
     excerpt: createLocalizedText(
-      "Kurs siyahısını aşağı sal. Yuxarıda layihə, nəticə və istifadə etdiyin alət görünməlidir ki, recruiter ilk 10 saniyədə siqnalı tutsun.",
-      "Push the course list down. The top of the page should show a project, an outcome, and the tools you used so the recruiter catches the signal in the first ten seconds.",
-      "Опусти список курсов ниже. Вверху должны быть проект, результат и инструменты, чтобы рекрутер увидел сигнал в первые десять секунд."
+      "Kurs siyahısını aşağı sal. Yuxarıda layihə, nəticə və istifadə etdiyin alət görünməlidir ki, recruiter ilk 10 saniyədə güclü təəssürat alsın.",
+      "Push the course list down. The top of the page should show a project, an outcome, and the tools you used so the recruiter gets a strong first impression in the first ten seconds.",
+      "Опусти список курсов ниже. Вверху должны быть проект, результат и инструменты, чтобы рекрутер получил сильное первое впечатление в первые десять секунд."
     ),
     readTime: 4,
     layout: "tall",
@@ -119,9 +119,9 @@ const playbookArticles: PlaybookArticle[] = [
       "На этапе оффера ясность работает сильнее, чем бравада"
     ),
     excerpt: createLocalizedText(
-      "Tarix, maaş diapazonu, iş modeli və onboarding gözləntisini bir mesajda dəqiqləşdir. Yetkin siqnal çox vaxt burada görünür.",
-      "Clarify the start date, salary range, work model, and onboarding expectations in one message. This is often where maturity shows up.",
-      "Уточни дату старта, диапазон зарплаты, формат работы и ожидания по онбордингу в одном сообщении. Часто именно здесь видна зрелость."
+      "Tarix, maaş diapazonu, iş modeli və ilk gün gözləntisini bir mesajda dəqiqləşdir. Peşəkar təsir çox vaxt burada yaranır.",
+      "Clarify the start date, salary range, work model, and first-week expectations in one message. This is often where maturity shows up.",
+      "Уточни дату старта, диапазон зарплаты, формат работы и ожидания от первой недели в одном сообщении. Часто именно здесь видна зрелость."
     ),
     readTime: 4,
     layout: "wide",

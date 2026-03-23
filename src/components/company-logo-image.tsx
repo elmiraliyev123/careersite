@@ -34,7 +34,11 @@ export function CompanyLogoImage({
 }: CompanyLogoImageProps) {
   const sources = useMemo(() => {
     const websiteLogo = getClearbitLogoUrl(website);
-    const preferredSources = preferWebsiteLogo ? [websiteLogo, logo] : [logo, websiteLogo];
+    const preferredSources = preferWebsiteLogo
+      ? [websiteLogo, logo]
+      : logo
+        ? [logo]
+        : [websiteLogo];
     const unique = preferredSources.filter(
       (candidate, index, values): candidate is string =>
         typeof candidate === "string" && candidate.length > 0 && values.indexOf(candidate) === index

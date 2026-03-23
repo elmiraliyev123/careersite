@@ -87,7 +87,7 @@ export function CompanyVibeGrid({ company }: CompanyVibeGridProps) {
               return (
                 <div key={`${company.slug}-${item.label}`} className="company-tech-item">
                   <span className="company-tech-item__icon">
-                    <Icon size={18} />
+                    <Icon size={16} />
                   </span>
                   <strong>{item.label}</strong>
                 </div>

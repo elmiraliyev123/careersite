@@ -73,7 +73,7 @@ export const companies: Company[] = [
   {
     slug: "notion",
     name: "Notion",
-    tagline: "Məhsul və məlumat komandalarında erkən karyera üçün açıq rol axını.",
+    tagline: "Məhsul və məlumat komandalarında erkən karyera üçün açıq imkanlar.",
     sector: "Produktivlik SaaS",
     size: "1.001-5.000 əməkdaş",
     location: "San Fransisko, ABŞ",
@@ -84,7 +84,7 @@ export const companies: Company[] = [
     about:
       "Notion, məhsul, data və growth komandalarında gənc mütəxəssislərə real nəticə sahibi olmaq imkanı verən qlobal proqram şirkətidir.",
     wikipediaSummary:
-      "Notion Labs Inc. is a software company that develops a collaboration platform for notes, documents, databases, and project workflows. The product is widely used by teams to combine writing, planning, and knowledge management in one workspace.",
+      "Notion Labs Inc. is a software company that develops a collaboration platform for notes, documents, and team planning. The product is widely used by teams to bring writing, planning, and knowledge sharing into one workspace.",
     wikipediaSourceUrl: "https://en.wikipedia.org/wiki/Notion_(productivity_software)",
     focusAreas: ["Data analitikası", "Product operations", "Growth", "Research"],
     youthOffer: [
@@ -134,7 +134,7 @@ export const companies: Company[] = [
       "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1200&q=80",
     website: "https://www.revolut.com",
     about:
-      "Revolut, rəqəmsal bankçılıq və growth sahəsində gənc istedadları real performans göstəriciləri ilə işlədən qlobal fintex platformasıdır.",
+      "Revolut, rəqəmsal bankçılıq və growth sahəsində gənc istedadlara sürətli öyrənmə və real məsuliyyət verən qlobal fintex platformasıdır.",
     focusAreas: ["Growth marketing", "Risk operations", "CRM", "Business analysis"],
     youthOffer: [
       "Trainee marketinq proqramı",
@@ -194,7 +194,7 @@ export const companies: Company[] = [
   {
     slug: "kapital-bank",
     name: "Kapital Bank",
-    tagline: "Texnologiya, data və product komandalarında gənclər üçün aktiv internship axını.",
+    tagline: "Texnologiya, data və product komandalarında gənclər üçün aktiv imkanlar.",
     sector: "Bank və rəqəmsal məhsullar",
     size: "5.001-10.000 əməkdaş",
     location: "Bakı, Azərbaycan",
@@ -203,10 +203,10 @@ export const companies: Company[] = [
       "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80",
     website: "https://kapitalbank.az",
     about:
-      "Kapital Bank rəqəmsal məhsul, data və engineering istiqamətlərində gənclər üçün praktiki internship və junior açılışları ilə bazarda aktiv işəgötürənlərdən biridir.",
-    focusAreas: ["Data və AI", "Frontend", "Backend", "Ecosystem analytics"],
+      "Kapital Bank rəqəmsal məhsul, data və mühəndislik istiqamətlərində gənclər üçün praktiki internship və junior imkanları ilə bazarda aktiv işəgötürənlərdən biridir.",
+    focusAreas: ["Data və AI", "Frontend", "Platform development", "Ecosystem analytics"],
     youthOffer: [
-      "Engineering internship axını",
+      "Mühəndislik üzrə təcrübə proqramları",
       "Data və analytics üzrə gənc istedad proqramları",
       "Məhsul komandaları ilə mentorlu iş təcrübəsi"
     ],
@@ -226,7 +226,7 @@ export const companies: Company[] = [
       "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
     website: "https://birbank.business",
     about:
-      "Kapital Bank Life customer experience və ecosystem axınlarında gənclər üçün intern və analyst rolları açan çevik komandalardan biridir.",
+      "Kapital Bank Life customer experience və ecosystem istiqamətlərində gənclər üçün intern və analyst rolları açan çevik komandalardan biridir.",
     focusAreas: ["Customer experience", "Ecosystem operations", "Analytics", "Service design"],
     youthOffer: [
       "CX intern rolları",
@@ -272,14 +272,14 @@ export const companies: Company[] = [
       "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80",
     website: "https://portbim.com",
     about:
-      "PortBIM engineering məhsulları üzərində çalışan lokal texnologiya komandasıdır və intern developer rolları ilə erkən karyera üçün real texniki təcrübə yaradır.",
+      "PortBIM mühəndislik məhsulları üzərində çalışan lokal texnologiya komandasıdır və intern developer rolları ilə erkən karyera üçün real texniki təcrübə yaradır.",
     focusAreas: ["C# development", "BIM products", "Design systems", "QA"],
     youthOffer: [
       "Intern developer rolları",
       "Kiçik məhsul komandalarında shadowing",
       "Texniki mentorluq"
     ],
-    benefits: ["Ofisdə yaxın mentorluq", "Lokal məhsul təcrübəsi", "Stack exposure", "Komanda review-ları"],
+    benefits: ["Ofisdə yaxın mentorluq", "Lokal məhsul təcrübəsi", "Texniki inkişaf", "Komanda görüşləri"],
     featured: false,
     createdAt: "2026-03-09"
   },
@@ -295,7 +295,7 @@ export const companies: Company[] = [
       "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80",
     website: "https://pasha-insurance.az",
     about:
-      "PASHA Insurance World aktuari, risk və business analysis istiqamətlərində yeni məzunlar və təcrübəçilər üçün daha strukturlaşdırılmış inkişaf axını təqdim edir.",
+      "PASHA Insurance World aktuari, risk və business analysis istiqamətlərində yeni məzunlar və təcrübəçilər üçün daha strukturlaşdırılmış inkişaf yolu təqdim edir.",
     focusAreas: ["Aktuari", "Risk analysis", "Business support", "Operations"],
     youthOffer: [
       "Aktuari üzrə təcrübəçi rolları",
@@ -420,9 +420,9 @@ export const jobs: Job[] = [
     postedAt: "2026-03-12",
     deadline: "2026-04-10",
     summary: createLocalizedText(
-      "Design systems və onboarding axınları üzərində işləyərək istifadəçi problemlərini vizual həllərə çevirəcəksən.",
-      "You will work on design systems and onboarding flows and turn user problems into polished visual solutions.",
-      "Ты будешь работать над design systems и onboarding-потоками, превращая пользовательские задачи в визуальные решения."
+      "Design systems və əsas istifadəçi ssenariləri üzərində işləyərək problemləri vizual həllərə çevirəcəksən.",
+      "You will work on design systems and core user journeys, turning product problems into polished visual solutions.",
+      "Ты будешь работать над design systems и ключевыми пользовательскими сценариями, превращая задачи в продуманные визуальные решения."
     ),
     applyUrl: jobApplyUrlOverrides["junior-ui-ux-designer-figma"],
     directCompanyUrl: "https://www.figma.com/careers/",
@@ -456,9 +456,9 @@ export const jobs: Job[] = [
     postedAt: "2026-03-15",
     deadline: "2026-04-07",
     summary: createLocalizedText(
-      "Campaign performance, creator partnership və CRM axınlarını izləyərək growth komandasına dəstək verəcəksən.",
-      "You will support the growth team by tracking campaign performance, creator partnerships, and CRM flows.",
-      "Ты будешь помогать growth-команде, отслеживая кампании, creator-партнерства и CRM-потоки."
+      "Campaign performance, creator partnership və CRM proqramlarını izləyərək growth komandasına dəstək verəcəksən.",
+      "You will support the growth team by tracking campaign performance, creator partnerships, and CRM programs.",
+      "Ты будешь помогать growth-команде, отслеживая кампании, creator-партнерства и CRM-программы."
     ),
     applyUrl: jobApplyUrlOverrides["marketing-trainee-revolut"],
     directCompanyUrl: "https://www.revolut.com/careers/",
@@ -493,7 +493,7 @@ export const jobs: Job[] = [
     deadline: "2026-03-30",
     summary: createLocalizedText(
       "Merchant onboarding və əməliyyat keyfiyyət göstəricilərini izləyib commerce operations komandasına gündəlik dəstək verəcəksən.",
-      "You will support the commerce operations team by tracking merchant onboarding and day-to-day quality signals.",
+      "You will support the commerce operations team by tracking merchant onboarding and day-to-day quality metrics.",
       "Ты будешь поддерживать commerce operations, отслеживая onboarding мерчантов и показатели качества."
     ),
     applyUrl: jobApplyUrlOverrides["operations-intern-shopify"],
@@ -527,9 +527,9 @@ export const jobs: Job[] = [
     postedAt: "2026-03-10",
     deadline: "2026-04-08",
     summary: createLocalizedText(
-      "Risk siqnallarını və istifadəçi tranzaksiyalarını yoxlayaraq compliance komandasına ilkin analiz təqdim edəcəksən.",
-      "You will review risk signals and user transactions and deliver first-pass analysis to the compliance team.",
-      "Ты будешь проверять риск-сигналы и транзакции пользователей, передавая команде compliance первичный анализ."
+      "Risk nümunələrini və istifadəçi tranzaksiyalarını yoxlayaraq compliance komandasına ilkin analiz təqdim edəcəksən.",
+      "You will analyze risk patterns and user transactions and deliver first-pass analysis to the compliance team.",
+      "Ты будешь проверять риск-паттерны и транзакции пользователей, передавая команде compliance первичный анализ."
     ),
     applyUrl: jobApplyUrlOverrides["risk-operations-junior-wise"],
     directCompanyUrl: "https://wise.jobs",
@@ -570,7 +570,7 @@ export const jobs: Job[] = [
     directCompanyUrl: "https://www.notion.so/careers",
     responsibilities: [
       "Feature launch checklist-lərini yeniləmək",
-      "Support və product komandaları arasında məlumat axınını koordinasiya etmək",
+      "Support və product komandaları arasında məlumat paylaşımını koordinasiya etmək",
       "Daxili knowledge page-lərini strukturlaşdırmaq"
     ],
     requirements: [
@@ -606,7 +606,7 @@ export const jobs: Job[] = [
     responsibilities: [
       "Research note-ları təmizləyib tematikləşdirmək",
       "Usability test nəticələrindən qısa insight-lar çıxarmaq",
-      "Research repository-ni yeniləmək"
+      "Research kitabxanasını yeniləmək"
     ],
     requirements: [
       "Psixologiya, sosiologiya və ya dizayn arxa planı",
@@ -639,7 +639,7 @@ export const jobs: Job[] = [
     applyUrl: jobApplyUrlOverrides["business-analyst-trainee-revolut"],
     directCompanyUrl: "https://www.revolut.com/careers/",
     responsibilities: [
-      "Weekly business review fayllarını hazırlamaq",
+      "Həftəlik biznes görüşləri üçün materiallar hazırlamaq",
       "Müxtəlif komandalar üçün KPI izləmə cədvəlləri qurmaq",
       "Təkrarlanan hesabatları avtomatlaşdırmaq"
     ],

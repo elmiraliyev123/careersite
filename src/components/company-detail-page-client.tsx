@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink, Globe, MapPin, Users } from "lucide-react";
+import { ArrowLeft, ExternalLink, Globe, MapPin, Users } from "lucide-react";
 
 import { CompanyVibeGrid } from "@/components/company-vibe-grid";
 import { CompanyLogoImage } from "@/components/company-logo-image";
@@ -31,7 +31,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
 
   return (
     <main className="section">
-      <div className="shell stack-lg">
+      <div className="shell stack-lg company-detail-shell">
         <div className="breadcrumb">
           <Link href="/">{t("nav.home")}</Link>
           <span>/</span>
@@ -76,21 +76,67 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
                 {company.website.replace("https://", "")}
               </span>
             </div>
-          </div>
 
-          <div className="detail-hero__actions">
-            <Link href={officialSiteHref} prefetch={false} className="button button--primary">
-              {t("actions.officialSite")}
-            </Link>
-            <Link href="/jobs" className="button button--ghost">
-              {t("actions.backToJobs")}
-            </Link>
+            <div className="company-detail__actions-row">
+              <Link href={officialSiteHref} prefetch={false} className="button button--primary">
+                <Globe size={16} />
+                {t("actions.officialSite")}
+              </Link>
+              <Link href="/jobs" className="button button--ghost">
+                <ArrowLeft size={16} />
+                {t("actions.backToJobs")}
+              </Link>
+            </div>
+
+            <div className="chip-row company-detail__hero-tags hide-scrollbar">
+              <span className="chip chip--accent">{t("labels.openRoles", { count: jobs.length })}</span>
+              <span className="chip">{translateSector(locale, company.sector)}</span>
+              {(localizedCompany.industryTags ?? []).map((item) => (
+                <span key={item} className="chip">
+                  {item}
+                </span>
+              ))}
+              {localizedCompany.benefits.map((item) => (
+                <span key={item} className="chip">
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
-        <CompanyVibeGrid company={company} />
+        <section className="stack-md company-detail-jobs-section">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">{t("companyPage.jobsEyebrow")}</p>
+              <h2>{t("companyPage.jobsTitle", { name: localizedCompany.name })}</h2>
+            </div>
+          </div>
 
-        <div className="detail-grid">
+          {jobs.length === 0 ? (
+            <div className="empty-state empty-state--large">
+              <h3>{t("companyPage.emptyTitle")}</h3>
+              <p>{t("companyPage.emptyCopy")}</p>
+            </div>
+          ) : (
+            <div className="card-grid card-grid--jobs company-detail-jobs-grid hide-scrollbar">
+              {jobs.map((job) => (
+                <JobCard
+                  key={job.slug}
+                  job={job}
+                  company={company}
+                  sourcePath={`/companies/${company.slug}`}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <div className="company-detail-vibe-section">
+          <CompanyVibeGrid company={company} />
+        </div>
+
+        <div className="detail-grid company-detail-info-grid">
           <section className="detail-panel">
             <p className="eyebrow">{t("companyPage.aboutEyebrow")}</p>
             <h2>{t("companyPage.aboutTitle")}</h2>
@@ -137,7 +183,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             </ul>
           </section>
 
-          <aside className="detail-panel detail-panel--sticky">
+          <aside className="detail-panel detail-panel--sticky company-detail__role-summary">
             <p className="eyebrow">{t("companyPage.openRolesEyebrow")}</p>
             <h2>{t("labels.openRoles", { count: jobs.length })}</h2>
             <div className="chip-row">
@@ -155,33 +201,6 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             </div>
           </aside>
         </div>
-
-        <section className="stack-md">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">{t("companyPage.jobsEyebrow")}</p>
-              <h2>{t("companyPage.jobsTitle", { name: localizedCompany.name })}</h2>
-            </div>
-          </div>
-
-          {jobs.length === 0 ? (
-            <div className="empty-state empty-state--large">
-              <h3>{t("companyPage.emptyTitle")}</h3>
-              <p>{t("companyPage.emptyCopy")}</p>
-            </div>
-          ) : (
-            <div className="card-grid card-grid--jobs mobile-snap-row">
-              {jobs.map((job) => (
-                <JobCard
-                  key={job.slug}
-                  job={job}
-                  company={company}
-                  sourcePath={`/companies/${company.slug}`}
-                />
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </main>
   );

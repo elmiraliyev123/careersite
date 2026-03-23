@@ -36,6 +36,18 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
   const [result, setResult] = useState<SyncResult>(null);
   const [mode, setMode] = useState<"preview" | "sync" | null>(null);
 
+  function getActionLabel(action: "created" | "updated" | "preview") {
+    if (action === "created") {
+      return "yaradıldı";
+    }
+
+    if (action === "updated") {
+      return "yeniləndi";
+    }
+
+    return "öncədən baxış";
+  }
+
   async function runSync(dryRun: boolean) {
     setMode(dryRun ? "preview" : "sync");
 
@@ -51,13 +63,13 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.message ?? "Scrape əməliyyatı uğursuz oldu.");
+        throw new Error(payload.message ?? "Yeniləmə əməliyyatı uğursuz oldu.");
       }
 
       setResult(payload);
     } catch (error) {
       setResult({
-        message: error instanceof Error ? error.message : "Scrape əməliyyatı uğursuz oldu.",
+        message: error instanceof Error ? error.message : "Yeniləmə əməliyyatı uğursuz oldu.",
         dryRun,
         importedCount: 0,
         updatedCount: 0,
@@ -76,14 +88,14 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
     <section className="dashboard-panel admin-section">
       <div className="section-title-row">
         <div>
-          <p className="eyebrow">Scrape sync</p>
-          <h2>LinkedIn və lokal career platformalarından ən yeni elanları çək</h2>
+          <p className="eyebrow">Məlumat yenilə</p>
+          <h2>Seçilmiş platformalardan ən yeni elanları yenilə</h2>
         </div>
       </div>
 
       <p className="site-footer__copy">
-        Sync yalnız mövcud company profili ilə match olan elanları import edir. Match olmayan
-        company adları review üçün ayrıca göstərilir.
+        Yeniləmə yalnız uyğun şirkətlə əlaqələnən elanları əlavə edir. Uyğunlaşmayan şirkət adları
+        ayrıca göstərilir ki, komanda onları rahat nəzərdən keçirə bilsin.
       </p>
 
       <div className="dashboard-list">
@@ -104,7 +116,7 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
           disabled={mode !== null}
           onClick={() => void runSync(true)}
         >
-          {mode === "preview" ? "Preview işləyir..." : "Preview et"}
+          {mode === "preview" ? "Öncədən baxış hazırlanır..." : "Öncədən bax"}
         </button>
         <button
           type="button"
@@ -112,7 +124,7 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
           disabled={mode !== null}
           onClick={() => void runSync(false)}
         >
-          {mode === "sync" ? "Sync işləyir..." : "İmport et"}
+          {mode === "sync" ? "Yenilənir..." : "Yenilə"}
         </button>
       </div>
 
@@ -126,7 +138,7 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
             <article className="stat-card">
               <div>
                 <strong>{result.totalScraped}</strong>
-                <span>toplanan elan</span>
+                <span>tapılan elan</span>
               </div>
             </article>
             <article className="stat-card">
@@ -138,7 +150,7 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
             <article className="stat-card">
               <div>
                 <strong>{result.importedCount + result.updatedCount}</strong>
-                <span>{result.dryRun ? "preview nəticə" : "yaradıldı / yeniləndi"}</span>
+                <span>{result.dryRun ? "öncədən baxış" : "yaradıldı / yeniləndi"}</span>
               </div>
             </article>
           </div>
@@ -153,7 +165,7 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
                       {job.companyName} • {job.sourceName}
                     </span>
                   </div>
-                  <span>{job.action}</span>
+                  <span>{getActionLabel(job.action)}</span>
                 </div>
               ))}
             </div>

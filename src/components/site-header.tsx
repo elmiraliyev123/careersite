@@ -63,6 +63,24 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMobileMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
+
   if (focusedHeader?.hidden) {
     return null;
   }
@@ -97,7 +115,7 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
 
   return (
     <>
-      <header className="mobile-header md:hidden">
+      <header className="mobile-header">
         <div className="shell mobile-header__inner">
           <Link href="/" className="brand">
             <span className="brand__mark">CA</span>
@@ -108,7 +126,7 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
             type="button"
             className={`mobile-header__menu-button${isMobileMenuOpen ? " mobile-header__menu-button--open" : ""}`}
             onClick={() => setIsMobileMenuOpen((current) => !current)}
-            aria-label={isMobileMenuOpen ? t("actions.goBack") : t("nav.mainNavigation")}
+            aria-label={isMobileMenuOpen ? t("actions.closeMenu") : t("nav.mainNavigation")}
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation-drawer"
           >
@@ -119,59 +137,56 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
         </div>
       </header>
 
-      <div className="mobile-header-spacer md:hidden" aria-hidden="true" />
+      <div className="mobile-header-spacer" aria-hidden="true" />
 
-      <button
-        type="button"
-        className={`mobile-drawer__overlay md:hidden${isMobileMenuOpen ? " mobile-drawer__overlay--visible" : ""}`}
-        onClick={() => setIsMobileMenuOpen(false)}
-        aria-label={t("actions.goBack")}
-        tabIndex={isMobileMenuOpen ? 0 : -1}
-      />
+      {isMobileMenuOpen ? (
+        <div
+          id="mobile-navigation-drawer"
+          className="mobile-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("nav.mainNavigation")}
+        >
+          <div
+            className="mobile-drawer__backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
 
-      <aside
-        id="mobile-navigation-drawer"
-        className={`mobile-drawer md:hidden${isMobileMenuOpen ? " mobile-drawer--open" : ""}`}
-        aria-hidden={!isMobileMenuOpen}
-      >
-        <div className="mobile-drawer__panel">
-          <div className="mobile-drawer__top">
-            <Link href="/" className="brand" onClick={() => setIsMobileMenuOpen(false)}>
-              <span className="brand__mark">CA</span>
-              <span className="brand__text">CareerApple</span>
-            </Link>
-
-            <button
-              type="button"
-              className="mobile-drawer__close"
-              onClick={() => setIsMobileMenuOpen(false)}
-              aria-label={t("actions.goBack")}
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <nav className="mobile-drawer__nav" aria-label={t("nav.mainNavigation")}>
-            {primaryLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="mobile-drawer__link"
+          <div className="mobile-drawer__inner">
+            <div className="mobile-drawer__top">
+              <button
+                type="button"
+                className="mobile-drawer__close"
                 onClick={() => setIsMobileMenuOpen(false)}
+                aria-label={t("actions.closeMenu")}
               >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+                <X size={20} />
+              </button>
+            </div>
 
-          <div className="mobile-drawer__footer">
-            <LanguageSwitcher compact onSelect={() => setIsMobileMenuOpen(false)} />
-            <SessionActions role={role} />
+            <nav className="mobile-drawer__nav" aria-label={t("nav.mainNavigation")}>
+              {primaryLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="mobile-drawer__link"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="mobile-drawer__footer">
+              <LanguageSwitcher compact onSelect={() => setIsMobileMenuOpen(false)} />
+              <SessionActions role={role} />
+            </div>
           </div>
         </div>
-      </aside>
+      ) : null}
 
-      <header className="site-header hidden md:block">
+      <header className="site-header">
         <div className="shell site-header__inner">
           <Link href="/" className="brand">
             <span className="brand__mark">CA</span>

@@ -25,25 +25,25 @@ export default async function AdminPage() {
 
   if (!role) {
     return (
-      <AccessGate
-        eyebrow="Giriş tələb olunur"
-        title="Admin bölməsi yalnız girişdən sonra görünür"
-        description="Admin hissəsi ayrıca giriş ünvanından idarə olunur."
-        actionHref="/adminlog"
-        actionLabel="Admin kimi daxil ol"
-      />
+        <AccessGate
+          eyebrow="Giriş tələb olunur"
+          title="Admin bölməsi yalnız girişdən sonra görünür"
+          description="İdarəetmə bölməsi ayrıca girişlə qorunur."
+          actionHref="/adminlog"
+          actionLabel="Admin kimi daxil ol"
+        />
     );
   }
 
   if (role !== "admin") {
     return (
-      <AccessGate
-        eyebrow="Giriş rolu uyğun deyil"
-        title="Bu səhifə yalnız admin üçündür"
-        description="Bu keçid ayrıca admin idarəetməsi üçün ayrılıb. İctimai namizəd paneli bu mərhələdə aktiv deyil."
-        actionHref="/jobs"
-        actionLabel="Vakansiyalara bax"
-      />
+        <AccessGate
+          eyebrow="Giriş rolu uyğun deyil"
+          title="Bu səhifə yalnız admin üçündür"
+          description="Bu keçid yalnız idarəetmə üçün ayrılıb. Namizəd tərəfi burada göstərilmir."
+          actionHref="/jobs"
+          actionLabel="Vakansiyalara bax"
+        />
     );
   }
 
@@ -69,11 +69,11 @@ export default async function AdminPage() {
     <main className="section">
       <div className="shell admin-shell">
         <aside className="detail-panel admin-sidebar-panel">
-          <p className="eyebrow">Internal</p>
-          <h2>CareerApple admin</h2>
+          <p className="eyebrow">İdarəetmə</p>
+          <h2>CareerApple paneli</h2>
           <p className="info-copy">
-            Public səthdən ayrı idarəetmə zonası. Featured axın, şirkət profilləri, apply URL
-            override-ları və scraper nəticələri buradan idarə olunur.
+            Vakansiyalar, şirkət profilləri, birbaşa müraciət linkləri və yenilənən elanlar
+            buradan idarə olunur.
           </p>
 
           <nav className="admin-sidebar-nav" aria-label="Admin sections">
@@ -87,7 +87,7 @@ export default async function AdminPage() {
               Jobs
             </a>
             <a href="#admin-logs" className="admin-sidebar-nav__link">
-              Scraper Logs
+              Yeniləmə qeydləri
             </a>
           </nav>
         </aside>
@@ -95,11 +95,11 @@ export default async function AdminPage() {
         <div className="admin-workspace stack-lg">
           <div className="page-hero">
             <p className="eyebrow">Admin paneli</p>
-            <h1>Production-ready company, job və ingest idarəetməsi</h1>
+            <h1>Şirkət və vakansiya idarəetməsi bir paneldə</h1>
             <p>
-              Featured companies, fresh internship axını, manual data override-lar və scraper
-              nəticələri eyni idarə panelində toplanır. Dəyişikliklər birbaşa public səthə
-              təsir edir, ona görə hər input artıq təhlükəsizləşdirilmiş CRUD axınından keçir.
+              Seçilmiş şirkətlər, yeni vakansiyalar, manual override-lar və yenilənən elanlar
+              eyni idarə panelində toplanır. Buradakı dəyişikliklər platformada görünən təcrübəyə
+              birbaşa təsir edir.
             </p>
           </div>
 
@@ -108,17 +108,17 @@ export default async function AdminPage() {
               <article className="feature-card">
                 <DatabaseZap size={20} />
                 <h3>{storage.jobCount} aktiv vakansiya</h3>
-                <p>Vakansiyalar SQLite storage üzərində saxlanılır və freshness əsasında sıralanır.</p>
+                <p>Vakansiyalar bir paneldən yenilənir və son görünən elanları izləməyi asanlaşdırır.</p>
               </article>
               <article className="feature-card">
                 <ShieldCheck size={20} />
                 <h3>{allFeaturedCompanies.length} featured şirkət</h3>
-                <p>Featured olunan profillər və youth-role axını ana səhifəyə avtomatik düşür.</p>
+                <p>Seçilmiş profillər və erkən karyera rolları ana səhifədə önə çıxır.</p>
               </article>
               <article className="feature-card">
                 <AlertTriangle size={20} />
                 <h3>{allFeaturedListings.length} featured listing</h3>
-                <p>Yalnız internship, trainee, junior və yeni məzun rolları featured axına daxil olur.</p>
+                <p>Yalnız internship, trainee, junior və yeni məzun rolları seçilmiş bloklarda görünür.</p>
               </article>
             </div>
 
@@ -144,8 +144,8 @@ export default async function AdminPage() {
             <section className="dashboard-panel">
               <div className="section-title-row">
                 <div>
-                  <p className="eyebrow">Fresh featured listings</p>
-                  <h2>Featured şirkətlərdən gələn ən yeni youth-role vakansiyalar</h2>
+                  <p className="eyebrow">Seçilmiş elanlar</p>
+                  <h2>Seçilmiş şirkətlərdən görünən ən yeni vakansiyalar</h2>
                 </div>
               </div>
 
@@ -178,16 +178,16 @@ export default async function AdminPage() {
             <section className="dashboard-panel">
               <div className="section-title-row">
                 <div>
-                  <p className="eyebrow">İngest statusu</p>
-                  <h2>Scraper və admin tərəfindən gələn data eyni axında işləyir</h2>
+                  <p className="eyebrow">Etibar və nəzarət</p>
+                  <h2>Məzmun keyfiyyəti və təhlükəsizlik eyni paneldə izlənir</h2>
                 </div>
                 <CalendarClock size={18} className="panel-icon" />
               </div>
 
               <ul className="bullet-list">
-                <li>Mutation endpoint-lər admin sessiyası və trusted origin check ilə qorunur.</li>
-                <li>Company description, Wikipedia mətnləri və job content render öncəsi sanitizasiya olunur.</li>
-                <li>Admin apply URL override-ları generic scraped link-lərin yerini ala bilir.</li>
+                <li>Dəyişikliklər yalnız qorunan girişlə edilir.</li>
+                <li>Şirkət təsvirləri, Wikipedia mətnləri və vakansiya copy-si göstərilməzdən əvvəl sanitizasiya olunur.</li>
+                <li>Birbaşa müraciət linkləri istəyə uyğun yenilənə bilir.</li>
               </ul>
             </section>
           </section>

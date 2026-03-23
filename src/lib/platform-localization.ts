@@ -26,7 +26,7 @@ const localizedCompanyContent: Record<
 > = {
   notion: {
     tagline: {
-      en: "An early-career hiring flow for product, operations, and data teams."
+      en: "Open early-career opportunities across product, operations, and data teams."
     },
     about: {
       en: "Notion is a global software company where early-career talent can own real outcomes across product, data, and growth teams."
@@ -45,7 +45,7 @@ const localizedCompanyContent: Record<
       en: "A fast-learning setup for fintech, growth, and marketing teams."
     },
     about: {
-      en: "Revolut is a global fintech platform where early-career talent works with real performance signals across digital banking and growth."
+      en: "Revolut is a global fintech platform where early-career talent gets real responsibility across digital banking and growth."
     }
   },
   shopify: {
@@ -66,7 +66,7 @@ const localizedCompanyContent: Record<
   },
   "kapital-bank": {
     tagline: {
-      en: "An active internship flow for youth talent across technology, data, and product teams."
+      en: "Active early-career opportunities across technology, data, and product teams."
     },
     about: {
       en: "Kapital Bank is one of the more active employers in the local market for practical internships and junior openings across digital product, data, and engineering."
@@ -77,7 +77,7 @@ const localizedCompanyContent: Record<
       en: "Early-career roles across customer experience and ecosystem teams."
     },
     about: {
-      en: "Kapital Bank Life is one of the more agile teams opening intern and analyst roles in customer experience and ecosystem flows."
+      en: "Kapital Bank Life is one of the more agile teams opening intern and analyst roles across customer experience and ecosystem work."
     }
   },
   "coca-cola-cci": {
