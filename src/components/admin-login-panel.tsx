@@ -13,6 +13,7 @@ export function AdminLoginPanel() {
   const searchParams = useSearchParams();
   const [submissionState, setSubmissionState] = useState<SubmissionState>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
@@ -26,7 +27,7 @@ export function AdminLoginPanel() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ username, password })
       });
 
       const result = await response.json();
@@ -48,17 +49,28 @@ export function AdminLoginPanel() {
   }
 
   return (
-    <section className="detail-panel stack-sm">
-      <p className="eyebrow">Admin giriş</p>
-      <h2>Ayrı admin keçidi</h2>
-      <p>
-        İctimai login və signup söndürülüb. Admin hissəsinə yalnız bu ayrıca giriş keçidindən və
-        env ilə konfiqurasiya olunan admin parolu ilə daxil olmaq mümkündür.
-      </p>
+    <section className="admin-login-card">
+      <div className="admin-login-card__header">
+        <h1>Admin giriş</h1>
+        <p>İdarəetmə panelinə daxil olmaq üçün istifadəçi adı və parolu daxil et.</p>
+      </div>
 
-      <form className="stack-sm" onSubmit={(event) => void signIn(event)}>
-        <label className="field">
-          <span>Admin parolu</span>
+      <form className="admin-login-form" onSubmit={(event) => void signIn(event)}>
+        <label className="admin-field">
+          <span>İstifadəçi adı</span>
+          <input
+            type="text"
+            name="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="admin"
+            autoComplete="username"
+            required
+          />
+        </label>
+
+        <label className="admin-field">
+          <span>Parol</span>
           <input
             type="password"
             name="password"
@@ -70,12 +82,12 @@ export function AdminLoginPanel() {
           />
         </label>
 
-        <button type="submit" className="button button--primary button--full" disabled={isLoading}>
-          {isLoading ? "Daxil olunur..." : "Admin kimi daxil ol"}
+        <button type="submit" className="admin-button admin-button--primary" disabled={isLoading}>
+          {isLoading ? "Daxil olunur..." : "Daxil ol"}
         </button>
       </form>
 
-      {submissionState ? <p>{submissionState.message}</p> : null}
+      {submissionState ? <p className="admin-form-message admin-form-message--error">{submissionState.message}</p> : null}
     </section>
   );
 }

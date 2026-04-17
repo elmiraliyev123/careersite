@@ -15,9 +15,10 @@ import { getLocalizedCompany } from "@/lib/platform-localization";
 type CompanyCardProps = {
   company: Company;
   openRoles: number;
+  priority?: boolean;
 };
 
-export function CompanyCard({ company, openRoles }: CompanyCardProps) {
+export function CompanyCard({ company, openRoles, priority = false }: CompanyCardProps) {
   const { locale, t } = useI18n();
   const localizedCompany = getLocalizedCompany(company, locale);
   const outboundWebsiteHref = buildOutboundHref({
@@ -31,7 +32,13 @@ export function CompanyCard({ company, openRoles }: CompanyCardProps) {
   return (
     <article className="company-card">
       <Link href={`/companies/${company.slug}`} className="company-card__cover">
-        <Image src={company.cover} alt={localizedCompany.name} fill sizes="(max-width: 900px) 100vw, 33vw" />
+        <Image
+          src={company.cover}
+          alt={localizedCompany.name}
+          fill
+          priority={priority}
+          sizes="(max-width: 900px) 100vw, 33vw"
+        />
       </Link>
 
       <div className="company-card__body">
@@ -51,7 +58,9 @@ export function CompanyCard({ company, openRoles }: CompanyCardProps) {
 
         <Link href={`/companies/${company.slug}`} className="company-card__title-row">
           <h3>{localizedCompany.name}</h3>
-          <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+          {localizedCompany.verified !== false ? (
+            <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+          ) : null}
         </Link>
         <p className="company-card__tagline">{localizedCompany.tagline}</p>
 

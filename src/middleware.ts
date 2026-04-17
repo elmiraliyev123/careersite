@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 const adminSubdomain = (process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN ?? "adminlog").toLowerCase();
 const adminSessionCookieName = "careerapple_admin_session";
+const adminLoginPath = "/admin/login";
 
 function getHostname(request: NextRequest) {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -23,13 +24,19 @@ export function middleware(request: NextRequest) {
   const hostname = getHostname(request);
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/adminlog") {
+    const url = request.nextUrl.clone();
+    url.pathname = adminLoginPath;
+    return NextResponse.redirect(url);
+  }
+
   if (
     pathname.startsWith("/admin") &&
-    pathname !== "/adminlog" &&
+    pathname !== adminLoginPath &&
     !request.cookies.get(adminSessionCookieName)?.value
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/adminlog";
+    url.pathname = adminLoginPath;
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
@@ -40,7 +47,7 @@ export function middleware(request: NextRequest) {
 
   if (pathname === "/" || pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/adminlog";
+    url.pathname = adminLoginPath;
     return NextResponse.rewrite(url);
   }
 

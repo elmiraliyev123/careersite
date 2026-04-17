@@ -1,4 +1,5 @@
 import { createLocalizedText, type LocalizedContentValue } from "@/lib/localized-content";
+import type { JobModerationStatus } from "@/lib/moderation";
 
 export type Company = {
   slug: string;
@@ -11,6 +12,8 @@ export type Company = {
   logo: string;
   cover: string;
   website: string;
+  profileSourceUrl?: string;
+  companyDomain?: string;
   about: string;
   wikipediaSummary?: string;
   wikipediaSourceUrl?: string;
@@ -18,16 +21,19 @@ export type Company = {
   youthOffer: string[];
   benefits: string[];
   featured?: boolean;
+  verified?: boolean;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Job = {
   slug: string;
   title: LocalizedContentValue;
   companySlug: string;
+  companyName?: string;
   city: string;
   workModel: "Ofisdən" | "Hibrid" | "Uzaqdan";
-  level: "Təcrübə" | "Junior" | "Trainee" | "Yeni məzun";
+  level: "Təcrübə" | "Junior" | "Trainee" | "Yeni məzun" | "Mid" | "Senior" | "Manager" | "Naməlum";
   category: LocalizedContentValue;
   salary?: string;
   postedAt: string;
@@ -39,9 +45,56 @@ export type Job = {
   tags: LocalizedContentValue[];
   featured?: boolean;
   sourceName?: string;
+  sourcePlatform?: string;
+  sourceKind?: string;
   sourceUrl?: string;
+  sourceReferenceUrl?: string;
+  sourceListingUrl?: string;
+  jobDetailUrl?: string;
+  scrapedDetailUrl?: string;
+  applyActionUrl?: string;
+  scrapedApplyUrl?: string;
+  finalVerifiedUrl?: string;
+  canonicalApplyUrl?: string;
   applyUrl?: string;
+  applyLinkStatus?: "valid" | "broken" | "uncertain";
+  applyLinkScore?: number;
+  applyLinkKind?:
+    | "external"
+    | "ats"
+    | "tracking_redirect"
+    | "linkedin_easy_apply"
+    | "linkedin_offsite"
+    | "linkedin_detail_only"
+    | "career_page"
+    | "job_board_detail"
+    | "unknown";
+  applyCtaMode?: "apply" | "view" | "disabled";
+  verifiedApply?: boolean;
+  officialSource?: boolean;
+  checkedRecentlyAt?: string;
+  lastCheckedAt?: string;
+  freshnessStatus?: "hot" | "fresh" | "aging" | "stale" | "expired";
+  expiresAt?: string;
+  isExpired?: boolean;
+  trustBadges?: string[];
+  trustScore?: number;
+  publishable?: boolean;
+  validationStatus?: "verified" | "unresolved" | "rejected" | "pending";
+  validationReason?: string;
+  moderationStatus?: JobModerationStatus;
+  moderationNotes?: string;
+  moderationUpdatedAt?: string;
+  internshipConfidence?: number;
+  locationConfidence?: number;
+  duplicateRisk?: number;
+  logoUrl?: string;
+  logoSource?: string;
+  logoConfidence?: number;
   directCompanyUrl?: string;
+  firstSeenAt?: string;
+  sourcePostedAt?: string;
+  needsReview?: boolean;
   createdAt?: string;
 };
 
@@ -342,29 +395,6 @@ export const jobApplyUrlOverrides: Record<string, string> = {
   "ux-research-assistant-figma": "https://job-boards.greenhouse.io/figma/jobs/5239012198",
   "business-analyst-trainee-revolut": "https://www.revolut.com/careers/position/business-analyst-trainee-8123491044/",
   "customer-success-intern-shopify": "https://www.shopify.com/careers/customer-success-intern-2026-4412194",
-  "ecosystem-analytics-intern-bir-ecosystem-kapital-bank-life":
-    "https://careers.birbank.business/en/vacancies/ecosystem-analytics-intern-4385673176",
-  "system-elma-development-intern-kapital-bank-life":
-    "https://careers.birbank.business/en/vacancies/system-elma-development-intern-4385670391",
-  "marketing-intern-coca-cola-cci": "https://careers.cci.com.tr/en/job/marketing-intern-4379846606",
-  "system-elma-development-intern-kapital-bank":
-    "https://careers.kapitalbank.az/en/vacancies/system-elma-development-intern-6852",
-  "frontend-developer-internship-kapital-bank":
-    "https://careers.kapitalbank.az/en/vacancies/frontend-developer-internship-6841",
-  "backend-intern-kapital-bank":
-    "https://careers.kapitalbank.az/en/vacancies/backend-intern-6840",
-  "aktuari-uzr-t-crub-ci-pasha-insurance-world":
-    "https://careers.pasha-insurance.az/en/job/aktuari-uzre-tecrubeci-4378651632",
-  "ai-engineer-data-scientist-intern-kapital-bank":
-    "https://careers.kapitalbank.az/en/vacancies/ai-engineer-data-scientist-intern-6730",
-  "data-scientist-ai-engineer-intern-kapital-bank":
-    "https://careers.kapitalbank.az/en/vacancies/data-scientist-ai-engineer-intern-6717",
-  "ecosystem-analytics-intern-bir-ecosystem-kapital-bank":
-    "https://careers.kapitalbank.az/en/vacancies/ecosystem-analytics-intern-bir-ecosystem-6562",
-  "emerging-talent-field-service-engineering-intern-2026-opportunities-azerbaijan-baker-hughes":
-    "https://careers.bakerhughes.com/global/en/job/R145321/emerging-talent-field-service-engineering-intern-2026-azerbaijan",
-  "intern-c-developer-design-development-department-portbim":
-    "https://careers.portbim.com/jobs/intern-c-developer-design-development-department-4349446063"
 };
 
 export const jobs: Job[] = [
@@ -688,6 +718,6 @@ export const jobs: Job[] = [
   }
 ];
 
-export const jobLevels = ["Hamısı", "Təcrübə", "Junior", "Trainee", "Yeni məzun"] as const;
+export const jobLevels = ["Hamısı", "Təcrübə", "Junior", "Trainee", "Yeni məzun", "Mid", "Senior", "Manager", "Naməlum"] as const;
 export const workModels = ["Hamısı", "Ofisdən", "Hibrid", "Uzaqdan"] as const;
-export const cities = ["Hamısı", "Bakı", "San Fransisko", "London", "Tallinn", "Dublin", "Varşava"] as const;
+export const cities = ["Hamısı", "Bakı"] as const;

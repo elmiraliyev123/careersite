@@ -5,7 +5,7 @@ import {
   getClearedSessionCookieConfig,
   getSessionCookieConfig,
   isAdminAuthConfigured,
-  verifyAdminPassword
+  verifyAdminCredentials
 } from "@/lib/session";
 import { hasTrustedOrigin } from "@/lib/request-security";
 
@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   }
 
   const payload = await request.json();
+  const username = typeof payload?.username === "string" ? payload.username.trim() : "";
   const password = typeof payload?.password === "string" ? payload.password : "";
 
   if (!isAdminAuthConfigured()) {
@@ -26,12 +27,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!password) {
-    return NextResponse.json({ message: "Admin parolu daxil edilməlidir." }, { status: 400 });
+  if (!username || !password) {
+    return NextResponse.json({ message: "Admin istifadəçi adı və parolu daxil edilməlidir." }, { status: 400 });
   }
 
-  if (!verifyAdminPassword(password)) {
-    return NextResponse.json({ message: "Admin parolu yanlışdır." }, { status: 401 });
+  if (!verifyAdminCredentials(username, password)) {
+    return NextResponse.json({ message: "İstifadəçi adı və ya parol yanlışdır." }, { status: 401 });
   }
 
   const response = NextResponse.json({

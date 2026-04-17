@@ -1,18 +1,24 @@
 type VerifiedBadgeProps = {
   compact?: boolean;
   label?: string;
+  profile?: boolean;
 };
 
-export function VerifiedBadge({ compact = false, label = "Verified company" }: VerifiedBadgeProps) {
+export function VerifiedBadge({
+  compact = false,
+  label = "Verified company",
+  profile = false
+}: VerifiedBadgeProps) {
+  const size = compact ? (profile ? 19 : 15) : profile ? 24 : 17;
   return (
     <span
-      className={`verified-badge${compact ? " verified-badge--compact" : ""}`}
+      className={`verified-badge${compact ? " verified-badge--compact" : ""}${profile ? " verified-badge--profile" : ""}`}
       aria-label={label}
       title={label}
     >
       <svg
-        width={compact ? 24 : 30}
-        height={compact ? 24 : 30}
+        width={size}
+        height={size}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
@@ -22,9 +28,14 @@ export function VerifiedBadge({ compact = false, label = "Verified company" }: V
           fill="currentColor"
         />
         <path
+          d="M12 2.9 14.06 4.27l2.43-.32 1.21 2.13 2.34.68-.17 2.45 1.68 1.79-1.35 2.05.68 2.34-2.13 1.21-.32 2.43-2.45-.17L12 21.1l-2.05-1.37-2.44.32-1.21-2.13-2.34-.68.17-2.45L2.46 12.99l1.35-2.05-.68-2.34 2.13-1.21.32-2.43 2.45.17L12 2.9Z"
+          stroke="rgba(255,255,255,0.28)"
+          strokeWidth="0.8"
+        />
+        <path
           d="m8.75 12.2 2.1 2.15 4.4-4.9"
           stroke="#ffffff"
-          strokeWidth="2.1"
+          strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />

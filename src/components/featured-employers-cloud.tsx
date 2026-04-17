@@ -51,7 +51,9 @@ export function FeaturedEmployersCloud({ items }: FeaturedEmployersCloudProps) {
                   <span className="logo-cloud__copy">
                     <span className="logo-cloud__name">
                       {localizedCompany.name}
-                      <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                      {localizedCompany.verified !== false ? (
+                        <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                      ) : null}
                     </span>
                     <span>{translateSector(locale, company.sector)}</span>
                     <span className="logo-cloud__vacancies">

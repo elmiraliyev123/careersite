@@ -17,7 +17,7 @@ export function CompaniesPageClient({ companies, selectedCategory = "" }: Compan
   const hasFilter = Boolean(selectedCategory);
 
   return (
-    <main className="section">
+    <main className="section companies-page">
       <div className="shell stack-lg">
         <div className="page-hero">
           <p className="eyebrow">{t("nav.companies")}</p>
@@ -43,9 +43,14 @@ export function CompaniesPageClient({ companies, selectedCategory = "" }: Compan
             <p>{t("companiesPage.emptyCopy")}</p>
           </div>
         ) : (
-          <div className="card-grid card-grid--companies mobile-snap-row">
-            {companies.map(({ company, openRoles }) => (
-              <CompanyCard key={company.slug} company={company} openRoles={openRoles} />
+          <div className="card-grid card-grid--companies companies-results-grid">
+            {companies.map(({ company, openRoles }, index) => (
+              <CompanyCard
+                key={company.slug}
+                company={company}
+                openRoles={openRoles}
+                priority={index === 0}
+              />
             ))}
           </div>
         )}

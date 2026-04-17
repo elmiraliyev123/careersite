@@ -9,7 +9,7 @@ export function EmployersPageClient() {
   const { t } = useI18n();
 
   return (
-    <main className="section">
+    <main className="section employers-page">
       <div className="shell stack-lg">
         <div className="page-hero">
           <p className="eyebrow">{t("employersPage.eyebrow")}</p>

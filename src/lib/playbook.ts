@@ -32,7 +32,7 @@ const playbookArticles: PlaybookArticle[] = [
     layout: "feature",
     visualLabel: "STAR",
     gradient:
-      "linear-gradient(135deg, rgba(214, 255, 95, 0.24) 0%, rgba(50, 205, 50, 0.12) 48%, rgba(9, 14, 9, 0.96) 100%)"
+      "linear-gradient(135deg, rgba(207, 232, 255, 0.24) 0%, rgba(167, 199, 231, 0.18) 48%, rgba(127, 174, 220, 0.14) 100%)"
   },
   {
     slug: "cv-proof",
@@ -51,7 +51,7 @@ const playbookArticles: PlaybookArticle[] = [
     layout: "tall",
     visualLabel: "CV",
     gradient:
-      "linear-gradient(150deg, rgba(255, 255, 255, 0.14) 0%, rgba(214, 255, 95, 0.18) 40%, rgba(13, 18, 13, 0.98) 100%)"
+      "linear-gradient(150deg, rgba(207, 232, 255, 0.22) 0%, rgba(167, 199, 231, 0.18) 40%, rgba(127, 174, 220, 0.14) 100%)"
   },
   {
     slug: "portfolio-shape",
@@ -70,7 +70,7 @@ const playbookArticles: PlaybookArticle[] = [
     layout: "standard",
     visualLabel: "CASE",
     gradient:
-      "linear-gradient(160deg, rgba(50, 205, 50, 0.14) 0%, rgba(118, 255, 207, 0.18) 44%, rgba(10, 13, 15, 0.96) 100%)"
+      "linear-gradient(160deg, rgba(207, 232, 255, 0.16) 0%, rgba(167, 199, 231, 0.18) 44%, rgba(127, 174, 220, 0.14) 100%)"
   },
   {
     slug: "follow-up-template",
@@ -89,7 +89,7 @@ const playbookArticles: PlaybookArticle[] = [
     layout: "wide",
     visualLabel: "PING",
     gradient:
-      "linear-gradient(135deg, rgba(112, 255, 177, 0.18) 0%, rgba(214, 255, 95, 0.1) 38%, rgba(13, 15, 16, 0.96) 100%)"
+      "linear-gradient(135deg, rgba(207, 232, 255, 0.18) 0%, rgba(167, 199, 231, 0.14) 38%, rgba(127, 174, 220, 0.12) 100%)"
   },
   {
     slug: "ai-prompting",
@@ -108,7 +108,7 @@ const playbookArticles: PlaybookArticle[] = [
     layout: "standard",
     visualLabel: "AI",
     gradient:
-      "linear-gradient(140deg, rgba(96, 127, 255, 0.16) 0%, rgba(214, 255, 95, 0.14) 42%, rgba(12, 15, 17, 0.96) 100%)"
+      "linear-gradient(140deg, rgba(207, 232, 255, 0.16) 0%, rgba(167, 199, 231, 0.14) 42%, rgba(127, 174, 220, 0.12) 100%)"
   },
   {
     slug: "offer-clarity",
@@ -127,7 +127,7 @@ const playbookArticles: PlaybookArticle[] = [
     layout: "wide",
     visualLabel: "OFFER",
     gradient:
-      "linear-gradient(145deg, rgba(214, 255, 95, 0.18) 0%, rgba(255, 214, 94, 0.12) 42%, rgba(13, 13, 11, 0.97) 100%)"
+      "linear-gradient(145deg, rgba(207, 232, 255, 0.18) 0%, rgba(167, 199, 231, 0.16) 42%, rgba(127, 174, 220, 0.14) 100%)"
   }
 ];
 

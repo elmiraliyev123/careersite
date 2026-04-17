@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Globe, MapPin, Users } from "lucide-react";
 
-import { CompanyVibeGrid } from "@/components/company-vibe-grid";
 import { CompanyLogoImage } from "@/components/company-logo-image";
 import { JobCard } from "@/components/job-card";
 import { useI18n } from "@/components/i18n-provider";
@@ -21,16 +20,21 @@ type CompanyDetailPageClientProps = {
 export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClientProps) {
   const { locale, t } = useI18n();
   const localizedCompany = getLocalizedCompany(company, locale);
-  const officialSiteHref = buildOutboundHref({
-    targetUrl: company.website,
+  const companyLinkTarget = company.profileSourceUrl ?? company.website;
+  const companyLinkHref = buildOutboundHref({
+    targetUrl: companyLinkTarget,
     companyName: localizedCompany.name,
     logoUrl: company.logo,
     sourcePath: `/companies/${company.slug}`,
     fallbackHref: `/companies/${company.slug}`
   });
+  const primaryLinkLabel = localizedCompany.verified === false ? t("labels.source") : t("actions.officialSite");
+  const hasSourceBackedSummary = Boolean(company.wikipediaSourceUrl && localizedCompany.wikipediaSummary);
+  const hasMinimalProfileNote = localizedCompany.verified === false && Boolean(localizedCompany.about.trim());
+  const evidenceTags = (localizedCompany.industryTags ?? []).filter(Boolean);
 
   return (
-    <main className="section">
+    <main className="section company-detail-page">
       <div className="shell stack-lg company-detail-shell">
         <div className="breadcrumb">
           <Link href="/">{t("nav.home")}</Link>
@@ -56,7 +60,9 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
               <div className="stack-sm">
                 <div className="company-profile__title">
                   <h1>{localizedCompany.name}</h1>
-                  <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                  {localizedCompany.verified !== false ? (
+                    <VerifiedBadge compact profile label={t("labels.verifiedCompany")} />
+                  ) : null}
                 </div>
                 <p className="detail-hero__summary">{localizedCompany.tagline}</p>
               </div>
@@ -78,9 +84,9 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             </div>
 
             <div className="company-detail__actions-row">
-              <Link href={officialSiteHref} prefetch={false} className="button button--primary">
+              <Link href={companyLinkHref} prefetch={false} className="button button--primary">
                 <Globe size={16} />
-                {t("actions.officialSite")}
+                {primaryLinkLabel}
               </Link>
               <Link href="/jobs" className="button button--ghost">
                 <ArrowLeft size={16} />
@@ -91,16 +97,16 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             <div className="chip-row company-detail__hero-tags hide-scrollbar">
               <span className="chip chip--accent">{t("labels.openRoles", { count: jobs.length })}</span>
               <span className="chip">{translateSector(locale, company.sector)}</span>
-              {(localizedCompany.industryTags ?? []).map((item) => (
+              {evidenceTags.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
               ))}
-              {localizedCompany.benefits.map((item) => (
+              {localizedCompany.verified !== false ? localizedCompany.benefits.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
-              ))}
+              )) : null}
             </div>
           </div>
         </section>
@@ -132,72 +138,53 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
           )}
         </section>
 
-        <div className="company-detail-vibe-section">
-          <CompanyVibeGrid company={company} />
-        </div>
-
         <div className="detail-grid company-detail-info-grid">
-          <section className="detail-panel">
-            <p className="eyebrow">{t("companyPage.aboutEyebrow")}</p>
-            <h2>{t("companyPage.aboutTitle")}</h2>
-            <p className="info-copy">{localizedCompany.about}</p>
-          </section>
+          {hasMinimalProfileNote ? (
+            <section className="detail-panel">
+              <p className="eyebrow">{t("companyPage.aboutEyebrow")}</p>
+              <h2>{t("companyPage.aboutTitle")}</h2>
+              <p className="info-copy">{localizedCompany.about}</p>
+            </section>
+          ) : null}
 
-          <section className="detail-panel">
-            <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
-            <h2>{t("companyPage.overviewTitle")}</h2>
-            <div className="stack-sm">
-              <p className="info-copy">
-                {localizedCompany.wikipediaSummary ?? t("companyPage.overviewPlaceholder")}
-              </p>
-              {company.wikipediaSourceUrl ? (
+          {hasSourceBackedSummary ? (
+            <section className="detail-panel">
+              <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
+              <h2>{t("companyPage.overviewTitle")}</h2>
+              <div className="stack-sm">
+                <p className="info-copy">{localizedCompany.wikipediaSummary}</p>
                 <a
-                  href={company.wikipediaSourceUrl}
+                  href={company.wikipediaSourceUrl!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-link"
                 >
                   {t("companyPage.wikipediaSource")} <ExternalLink size={15} />
                 </a>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="detail-panel">
-            <p className="eyebrow">{t("companyPage.focusEyebrow")}</p>
-            <h2>{t("companyPage.focusTitle")}</h2>
-            <ul className="bullet-list">
-              {localizedCompany.focusAreas.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="detail-panel">
-            <p className="eyebrow">{t("companyPage.youthOfferEyebrow")}</p>
-            <h2>{t("companyPage.youthOfferTitle")}</h2>
-            <ul className="bullet-list">
-              {localizedCompany.youthOffer.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
+              </div>
+            </section>
+          ) : null}
 
           <aside className="detail-panel detail-panel--sticky company-detail__role-summary">
-            <p className="eyebrow">{t("companyPage.openRolesEyebrow")}</p>
+            <p className="eyebrow">{localizedCompany.verified === false ? t("labels.source") : t("companyPage.openRolesEyebrow")}</p>
             <h2>{t("labels.openRoles", { count: jobs.length })}</h2>
             <div className="chip-row">
               <span className="chip chip--accent">{translateSector(locale, company.sector)}</span>
-              {(localizedCompany.industryTags ?? []).map((item) => (
+              {evidenceTags.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
               ))}
-              {localizedCompany.benefits.map((item) => (
+              {localizedCompany.verified !== false ? localizedCompany.benefits.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
-              ))}
+              )) : null}
+            </div>
+            <div className="stack-sm">
+              <Link href={companyLinkHref} prefetch={false} className="text-link">
+                {primaryLinkLabel} <ExternalLink size={15} />
+              </Link>
             </div>
           </aside>
         </div>

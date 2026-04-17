@@ -89,7 +89,7 @@
     "feature2Title": "Seçilmiş kartlarla bax",
     "feature2Copy": "Ən diqqətəlayiq elanları vizual kartlarda izlə və uyğun gördüyün rola birbaşa keç.",
     "feature3Title": "Yoxlanmış və etibarlı",
-    "feature3Copy": "Hər şirkət adı yanında görünən lime badge profilin etibarlı və aydın təqdim olunduğunu göstərir.",
+    "feature3Copy": "Hər şirkət adı yanında görünən yumşaq mavi nişan profilin etibarlı və aydın təqdim olunduğunu göstərir.",
     "feature4Title": "Vahid platforma",
     "feature4Copy": "Fərqli məkanlarda yayımlanan erkən karyera rolları burada daha səliqəli, daha rahat və müqayisə üçün hazır görünür."
   },
@@ -301,9 +301,22 @@
       "digitalBanking": "Bank və rəqəmsal məhsullar",
       "insuranceExperience": "Sığorta və müştəri təcrübəsi",
       "fmcg": "FMCG",
-      "constructionTech": "Construction tech",
-      "insuranceRisk": "Sığorta və risk",
-      "energyTechnology": "Enerji texnologiyaları"
-    }
+    "constructionTech": "Construction tech",
+    "insuranceRisk": "Sığorta və risk",
+    "energyTechnology": "Enerji texnologiyaları",
+    "banking": "Bankçılıq",
+    "insurance": "Sığorta",
+    "telecom": "Telekom",
+    "retail": "Pərakəndə satış",
+    "energy": "Enerji",
+    "logistics": "Logistika",
+    "technology": "Texnologiya",
+    "consulting": "Konsaltinq",
+    "education": "Təhsil",
+    "healthcare": "Səhiyyə",
+    "manufacturing": "İstehsalat",
+    "governmentPublic": "Dövlət / İctimai",
+    "other": "Digər"
+  }
   }
 }

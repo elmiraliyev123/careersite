@@ -14,125 +14,215 @@
     <header class="navbar">
         <div class="nav-container">
             <div class="logo">
-                <img src="img/apple_logo.webp" alt="CareerApple loqosu" class="logo-icon">
+                <div class="logo-box">CA</div>
                 <span class="logo-text">CareerApple</span>
             </div>
             <nav class="nav-links">
-                <a href="#">Təcrübələr</a>
-                <a href="#">Junior vakansiyalar</a>
+                <a href="#" class="active">Vakansiyalar</a>
                 <a href="#">Şirkətlər</a>
-                <a href="#">Karyera tədbirləri</a>
+                <a href="#">Tələbələr</a>
+                <a href="#">Karyera məsləhətləri</a>
             </nav>
             <div class="nav-actions">
-                <a href="#" class="login-link">Daxil ol</a>
-                <a href="#" class="btn btn-green">Profil yarat</a>
+                <div class="lang-switcher">
+                    <span class="active">AZ</span>|<a href="#">EN</a>|<a href="#">RU</a>
+                </div>
+                <a href="#" class="btn btn-outline">İşəgötürənlər üçün</a>
             </div>
         </div>
     </header>
 
     <main>
         <section class="hero">
-            <div class="hero-content">
-                <p class="hero-kicker">Azərbaycanda gənclər üçün yeni nəsil karyera məkanı</p>
+            <div class="hero-content text-center">
                 <h1 class="hero-title">
-                    <span class="gold-text">İLK İŞİNİ</span><br>
-                    daha sürətli tap
+                    Gənclər üçün açıq rolları<br>filtrlə və müraciət et
                 </h1>
-                <p class="hero-desc">
-                    Təcrübə proqramlarını, trainee rollarını və junior vakansiyaları bir yerdə araşdır.
-                    Şirkət mədəniyyətini gör, uyğun fürsəti seç və müraciətini bir neçə dəqiqəyə tamamla.
-                </p>
-                <div class="hero-actions">
-                    <a href="#" class="btn btn-green hero-btn">Vakansiyalara bax</a>
-                    <a href="#" class="btn btn-outline hero-secondary-btn">Şirkətləri kəşf et</a>
+                
+                <div class="hero-filter-unit">
+                    <div class="filter-input-group search-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="İxtisas, bacarıq (məs: intern, designer)">
+                    </div>
+                    <div class="filter-separator"></div>
+                    <div class="filter-input-group">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <select>
+                            <option value="">Bütün şəhərlər</option>
+                            <option value="baku">Bakı</option>
+                        </select>
+                    </div>
+                    <div class="filter-separator"></div>
+                    <div class="filter-input-group">
+                        <i class="fas fa-briefcase"></i>
+                        <select>
+                            <option value="">Karyera səviyyəsi</option>
+                            <option value="intern">Təcrübəçi (Intern)</option>
+                            <option value="junior">Kiçik Mütəxəssis (Junior)</option>
+                        </select>
+                    </div>
+                    <div class="filter-separator"></div>
+                    <div class="filter-input-group">
+                        <i class="fas fa-laptop-house"></i>
+                        <select>
+                            <option value="">İş modeli</option>
+                            <option value="office">Ofisdən</option>
+                            <option value="hybrid">Hibrid</option>
+                            <option value="remote">Məsafədən</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary filter-btn">Filtrlə</button>
                 </div>
-                <div class="hero-stats">
-                    <div class="stat-pill">
-                        <strong>1,200+</strong>
-                        <span>aktiv gənc vakansiya</span>
+            </div>
+        </section>
+
+        <!-- Vakansiyalar -->
+        <section class="vacancies-section">
+            <div class="container portion-header">
+                <h2>Seçilmiş Vakansiyalar</h2>
+                <a href="#" class="view-all">Bütün vakansiyalar <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="container v-cards-container">
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="job-logo">
+                            <img src="https://cdn.simpleicons.org/kapitalbank/1E2E4A" alt="Kapital Bank">
+                        </div>
+                        <div class="job-meta-top">
+                            <span class="badge new-badge">Yeni</span>
+                            <span class="job-posted">2 gün əvvəl</span>
+                        </div>
                     </div>
-                    <div class="stat-pill">
-                        <strong>340+</strong>
-                        <span>təcrübə və trainee rolu</span>
+                    <div class="job-content">
+                        <h3>Intern - Digital Solutions Tribe</h3>
+                        <p class="company-name text-muted">Kapital Bank</p>
+                        <div class="job-tags">
+                            <span class="j-tag"><i class="fas fa-map-marker-alt"></i> Bakı</span>
+                            <span class="j-tag"><i class="fas fa-briefcase"></i> Təcrübə</span>
+                            <span class="j-tag"><i class="fas fa-clock"></i> Tam iş günü</span>
+                        </div>
                     </div>
-                    <div class="stat-pill">
-                        <strong>180+</strong>
-                        <span>işəgötürən tərəfdaş</span>
+                    <div class="job-footer">
+                        <span class="job-deadline">Son müraciət: 20 May 2026</span>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="job-logo pb-logo">
+                            <img src="https://cdn.simpleicons.org/pasha/1E2E4A" alt="Pasha Insurance">
+                        </div>
+                        <div class="job-meta-top">
+                            <span class="job-posted">1 həftə əvvəl</span>
+                        </div>
+                    </div>
+                    <div class="job-content">
+                        <h3>Junior Data Analyst</h3>
+                        <p class="company-name text-muted">PASHA Insurance</p>
+                        <div class="job-tags">
+                            <span class="j-tag"><i class="fas fa-map-marker-alt"></i> Bakı</span>
+                            <span class="j-tag"><i class="fas fa-briefcase"></i> Junior</span>
+                            <span class="j-tag"><i class="fas fa-laptop-house"></i> Hibrid</span>
+                        </div>
+                    </div>
+                    <div class="job-footer">
+                        <span class="job-deadline">Son müraciət: 15 May 2026</span>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="job-logo">
+                            <img src="https://cdn.simpleicons.org/cocacola/1E2E4A" alt="Coca-Cola CCI">
+                        </div>
+                        <div class="job-meta-top">
+                            <span class="job-posted">4 gün əvvəl</span>
+                        </div>
+                    </div>
+                    <div class="job-content">
+                        <h3>Marketing Trainee</h3>
+                        <p class="company-name text-muted">Coca-Cola CCI</p>
+                        <div class="job-tags">
+                            <span class="j-tag"><i class="fas fa-map-marker-alt"></i> Bakı</span>
+                            <span class="j-tag"><i class="fas fa-briefcase"></i> Trainee</span>
+                            <span class="j-tag"><i class="fas fa-building"></i> Ofis</span>
+                        </div>
+                    </div>
+                    <div class="job-footer">
+                        <span class="job-deadline">Son müraciət: 28 May 2026</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="companies-section">
-            <div class="container section-header">
-                <h2>Seçilmiş şirkətlər <span class="badge">Gənclər üçün açıq imkanlar</span></h2>
-                <p>
-                    Təcrübəçi, junior və yeni məzun rolları açan şirkətləri izləyin, iş mühiti haqqında qısa məlumat alın
-                    və sizə uyğun istiqaməti daha sürətli seçin.
-                </p>
+        <!-- Featured Companies (Təsdiqlənmiş İşəgötürənlər) -->
+        <section class="companies-h-section">
+            <div class="container portion-header">
+                <h2>Təsdiqlənmiş İşəgötürənlər</h2>
+                <a href="#" class="view-all">Bütün şirkətlər <i class="fas fa-arrow-right"></i></a>
             </div>
-
-            <div class="container cards-container">
-                <div class="card">
-                    <div class="card-gradient" style="background: linear-gradient(180deg, rgba(10, 13, 8, 0.12) 0%, rgba(10, 13, 8, 0.86) 100%), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80') center/cover;"></div>
-                    <div class="card-logo">
-                        <img src="https://cdn.simpleicons.org/notion/111111" alt="Notion">
-                    </div>
-                    <div class="card-content">
-                        <h3>Notion <i class="fas fa-check-circle verified"></i></h3>
-                        <p class="card-desc">
-                            Notion gənc data və məhsul istedadlarına real layihələrdə məsuliyyət götürmək imkanı yaradır.<br>
-                            Seçilən rol: Data Analyst Intern; mentor dəstəyi və çevik iş mühiti təqdim olunur.
-                        </p>
-                        <div class="card-tags">
-                            <span class="tag"><i class="fas fa-building"></i> Produktivlik SaaS</span>
-                            <span class="tag"><i class="fas fa-users"></i> 1.001-5.000 əməkdaş • San Fransisko, ABŞ</span>
-                        </div>
-                        <button class="btn btn-outline">İzlə</button>
+            
+            <div class="container comp-h-container">
+                <div class="comp-h-card">
+                    <div class="comp-logo"><img src="https://cdn.simpleicons.org/kapitalbank/1E2E4A" alt="Kapital Bank"></div>
+                    <div class="comp-info">
+                        <h4>Kapital Bank</h4>
+                        <span class="vacancy-count">4 aktiv vakansiya</span>
                     </div>
                 </div>
-
-                <div class="card">
-                    <div class="card-gradient" style="background: linear-gradient(180deg, rgba(10, 13, 8, 0.12) 0%, rgba(10, 13, 8, 0.86) 100%), url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80') center/cover;"></div>
-                    <div class="card-logo pb-logo">
-                        <img src="https://cdn.simpleicons.org/figma/F24E1E" alt="Figma">
-                    </div>
-                    <div class="card-content">
-                        <h3>Figma <i class="fas fa-check-circle verified"></i></h3>
-                        <p class="card-desc">
-                            Figma məhsul dizaynı və kollaborasiya sahəsində böyümək istəyən gəncləri praktik komandalara qoşur.<br>
-                            Seçilən rol: Junior UI/UX Designer; portfel inkişafı və dizayn kritikləri ilə dəstəklənir.
-                        </p>
-                        <div class="card-tags">
-                            <span class="tag"><i class="fas fa-leaf"></i> Dizayn texnologiyaları</span>
-                            <span class="tag"><i class="fas fa-users"></i> 1.001-5.000 əməkdaş • San Fransisko, ABŞ</span>
-                        </div>
-                        <button class="btn btn-outline">İzlə</button>
+                <div class="comp-h-card">
+                    <div class="comp-logo"><img src="https://cdn.simpleicons.org/miro/1E2E4A" alt="Miro"></div>
+                    <div class="comp-info">
+                        <h4>Miro</h4>
+                        <span class="vacancy-count">2 aktiv vakansiya</span>
                     </div>
                 </div>
-
-                <div class="card">
-                    <div class="card-gradient" style="background: linear-gradient(180deg, rgba(10, 13, 8, 0.12) 0%, rgba(10, 13, 8, 0.86) 100%), url('https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1200&q=80') center/cover;"></div>
-                    <div class="card-logo">
-                        <img src="https://cdn.simpleicons.org/revolut/111111" alt="Revolut">
+                <div class="comp-h-card">
+                    <div class="comp-logo pb-logo"><img src="https://cdn.simpleicons.org/pasha/1E2E4A" alt="PASHA"></div>
+                    <div class="comp-info">
+                        <h4>PASHA Insurance</h4>
+                        <span class="vacancy-count">5 aktiv vakansiya</span>
                     </div>
-                    <div class="card-content">
-                        <h3>Revolut <i class="fas fa-check-circle verified"></i></h3>
-                        <p class="card-desc">
-                            Revolut sürətli fintech tempində marketinq, məhsul və analitika təcrübəsi qazanmaq istəyənlər üçün uyğundur.<br>
-                            Seçilən rol: Marketing Trainee; kampaniya analizi və yaradıcı tərəfdaşlıqlar üzərində işləyirsən.
-                        </p>
-                        <div class="card-tags">
-                            <span class="tag"><i class="fas fa-landmark"></i> Fintex</span>
-                            <span class="tag"><i class="fas fa-users"></i> 10.000+ əməkdaş • London, Birləşmiş Krallıq</span>
-                        </div>
-                        <button class="btn btn-outline">İzlə</button>
+                </div>
+                <div class="comp-h-card">
+                    <div class="comp-logo"><img src="https://cdn.simpleicons.org/cocacola/1E2E4A" alt="Coca-cola"></div>
+                    <div class="comp-info">
+                        <h4>Coca-Cola CCI</h4>
+                        <span class="vacancy-count">1 aktiv vakansiya</span>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="text-center mt-4">
-                <button class="btn btn-outline-green">Bütün şirkətlərə keç</button>
+        <!-- Value Proposition / Niyə CareerApple? -->
+        <section class="value-prop-section">
+            <div class="container text-center mb-5">
+                <h2>Niyə CareerApple?</h2>
+                <p class="section-subtext">Axtarış daha aydın, seçim daha dəqiq olsun</p>
+            </div>
+            
+            <div class="container vp-grid">
+                <div class="vp-card">
+                    <div class="vp-icon"><i class="fas fa-check-shield"></i></div>
+                    <h3>Təsdiqlənmiş vakansiyalar</h3>
+                    <p>Bütün elanlar əllə yoxlanılır və sadəcə aktual olan gənc rollar platformaya əlavə edilir, saxta elan yoxdur.</p>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-icon"><i class="fas fa-eye"></i></div>
+                    <h3>Şəffaf məlumatlar</h3>
+                    <p>Maaş aralığı, iş modeli (ofis, hibrid, remote) və komanda mühiti haqqında aydın məlumat alırsan.</p>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-icon"><i class="fas fa-bolt"></i></div>
+                    <h3>Gənclərə özəl hədəfləmə</h3>
+                    <p>Platformada sadəcə intern, trainee və junior səviyyəli fürsətlər var, təcrübə tələbi olan senior rollar yoxdur.</p>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-icon"><i class="fas fa-id-card"></i></div>
+                    <h3>Hərtərəfli şirkət profilləri</h3>
+                    <p>Müraciət etməzdən əvvəl şirkətin iş mühiti, mədəniyyəti və işçi rəyləri ilə tam tanış olursan.</p>
+                </div>
             </div>
         </section>
     </main>

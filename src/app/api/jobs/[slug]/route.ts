@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { revalidatePublishedJobApplyUrls } from "@/lib/job-pipeline";
 import { deleteJob, findJobBySlug, updateJob } from "@/lib/platform-database";
 import { requireAdminMutation } from "@/lib/request-security";
 import { validateJobInput } from "@/lib/platform-validation";
@@ -13,6 +14,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { slug } = await context.params;
+  await revalidatePublishedJobApplyUrls({ slugs: [slug] }).catch(() => null);
   const job = findJobBySlug(slug);
 
   if (!job) {

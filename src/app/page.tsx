@@ -4,14 +4,17 @@ import {
   getCompanyBySlug,
   getCompanyOpenRoleCount,
   getFeaturedCompanies,
-  getFeaturedListings,
+  getJobs,
   getHeroCities,
-  getHomeStats
+  getHomeStats,
+  isYouthRole
 } from "@/lib/platform";
 
 export default async function HomePage() {
   const stats = getHomeStats();
-  const featuredJobs = getFeaturedListings();
+  const jobs = getJobs();
+  const youthJobs = jobs.filter(isYouthRole);
+  const featuredJobs = youthJobs.slice(0, 8);
   const featuredJobItems = featuredJobs
     .map((job) => {
       const company = getCompanyBySlug(job.companySlug);

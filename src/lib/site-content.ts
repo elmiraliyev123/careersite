@@ -305,7 +305,7 @@ const infoSections: InfoSection[] = [
         highlights: [
           "Məhsul copy-si qısa, local və action-first yanaşma ilə yazılır.",
           "İstifadəçiyə görünən səhifələrdə sadə və premium dil qorunur.",
-          "Məhsul dizaynında lime-on-black identikası qorunur."
+          "Məhsul dizaynında soft-blue-on-black identikası qorunur."
         ],
         ctaLabel: "Brend qaydalarına bax",
         ctaHref: "/info/company/brend-qaydalari"
@@ -331,10 +331,10 @@ const infoSections: InfoSection[] = [
         title: "CareerApple brend qaydaları",
         description: "Vizual dil, ton və etibar hissi üçün istifadə olunan əsas qaydalar.",
         intro:
-          "CareerApple vizual dili tünd fon, lime vurğular və aydın spacing üzərində qurulub. Məhsul dili də eyni dərəcədə sadə, sürətli və gənc auditoriya üçün anlaşılır saxlanılır.",
+          "CareerApple vizual dili tünd fon, soft blue vurğular və aydın spacing üzərində qurulub. Məhsul dili də eyni dərəcədə sadə, sürətli və gənc auditoriya üçün anlaşılır saxlanılır.",
         highlights: [
           "San Francisco əsas tipografiya kimi istifadə olunur.",
-          "Lime accent yalnız vacib action və etibar hissi yaradan nöqtələrdə işlədilir.",
+          "Soft blue accent yalnız vacib action və etibar hissi yaradan nöqtələrdə işlədilir.",
           "Kartlar və bannerlər sadə, sərt və yüksək kontrastlı saxlanılır."
         ],
         ctaLabel: "Ana səhifəni aç",

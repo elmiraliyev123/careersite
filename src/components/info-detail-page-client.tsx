@@ -37,7 +37,7 @@ export function InfoDetailPageClient({ page }: InfoDetailPageClientProps) {
   const pageLabel = translateFooterPage(locale, page.slug);
 
   return (
-    <main className="section">
+    <main className="section info-page">
       <div className="shell stack-lg">
         <div className="breadcrumb">
           <Link href="/">{t("info.home")}</Link>

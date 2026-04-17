@@ -46,7 +46,9 @@ export function FeaturedCompaniesCarousel({ items }: FeaturedCompaniesCarouselPr
                   <div className="featured-company-card__content">
                     <div className="featured-company-card__title-row">
                       <h3>{localizedCompany.name}</h3>
-                      <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                      {localizedCompany.verified !== false ? (
+                        <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                      ) : null}
                     </div>
                     <p className="featured-company-card__industry">
                       {translateSector(locale, company.sector)}

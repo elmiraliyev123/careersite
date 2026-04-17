@@ -5,7 +5,8 @@ import {
   getCompanyBySlug,
   getCompanyOpenRoleCount,
   getFeaturedCompanies,
-  getJobs
+  getJobs,
+  isYouthRole
 } from "@/lib/platform";
 
 type JobsPageProps = {
@@ -35,7 +36,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     openRoles: getCompanyOpenRoleCount(company.slug)
   }));
   const newestInternships = getJobs()
-    .filter((job) => job.level === "Təcrübə" || job.level === "Trainee")
+    .filter((job) => isYouthRole(job))
     .slice(0, 8)
     .map((job) => {
       const company = getCompanyBySlug(job.companySlug);

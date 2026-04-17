@@ -117,7 +117,20 @@ const sectorKeyMap: Record<string, string> = {
   FMCG: "fmcg",
   "Construction tech": "constructionTech",
   "Sığorta və risk": "insuranceRisk",
-  "Enerji texnologiyaları": "energyTechnology"
+  "Enerji texnologiyaları": "energyTechnology",
+  Banking: "banking",
+  Insurance: "insurance",
+  Telecom: "telecom",
+  Retail: "retail",
+  Energy: "energy",
+  Logistics: "logistics",
+  Technology: "technology",
+  Consulting: "consulting",
+  Education: "education",
+  Healthcare: "healthcare",
+  Manufacturing: "manufacturing",
+  "Government / Public": "governmentPublic",
+  Other: "other"
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {

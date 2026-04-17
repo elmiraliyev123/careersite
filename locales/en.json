@@ -89,7 +89,7 @@
     "feature2Title": "Browse featured cards",
     "feature2Copy": "Move through standout opportunities in visual cards and jump straight into the role that feels right.",
     "feature3Title": "Verified and trusted",
-    "feature3Copy": "A lime badge next to each company name shows that the profile is clear, trusted, and ready to explore.",
+    "feature3Copy": "A soft blue badge next to each company name shows that the profile is clear, trusted, and ready to explore.",
     "feature4Title": "One clear platform",
     "feature4Copy": "Early-career roles from different places come together here in a cleaner format that is easier to scan and compare."
   },
@@ -301,9 +301,22 @@
       "digitalBanking": "Digital Banking",
       "insuranceExperience": "Insurance & Customer Experience",
       "fmcg": "FMCG",
-      "constructionTech": "Construction Tech",
-      "insuranceRisk": "Insurance & Risk",
-      "energyTechnology": "Energy Technology"
-    }
+    "constructionTech": "Construction Tech",
+    "insuranceRisk": "Insurance & Risk",
+    "energyTechnology": "Energy Technology",
+    "banking": "Banking",
+    "insurance": "Insurance",
+    "telecom": "Telecom",
+    "retail": "Retail",
+    "energy": "Energy",
+    "logistics": "Logistics",
+    "technology": "Technology",
+    "consulting": "Consulting",
+    "education": "Education",
+    "healthcare": "Healthcare",
+    "manufacturing": "Manufacturing",
+    "governmentPublic": "Government / Public",
+    "other": "Other"
+  }
   }
 }

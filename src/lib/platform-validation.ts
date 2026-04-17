@@ -1,5 +1,6 @@
 import type { Company, Job } from "@/data/platform";
 import { normalizeLocalizedText, normalizeLocalizedTextList } from "@/lib/localized-content";
+import { normalizeJobModerationStatus } from "@/lib/moderation";
 import { sanitizeText, sanitizeTextList } from "@/lib/text-sanitizer";
 
 export type CompanyInput = Omit<Company, "slug">;
@@ -17,7 +18,7 @@ type ValidationFailure = {
 
 type ValidationResult<T> = ValidationSuccess<T> | ValidationFailure;
 
-const jobLevels = new Set<Job["level"]>(["Təcrübə", "Junior", "Trainee", "Yeni məzun"]);
+const jobLevels = new Set<Job["level"]>(["Təcrübə", "Junior", "Trainee", "Yeni məzun", "Mid", "Senior", "Manager", "Naməlum"]);
 const workModels = new Set<Job["workModel"]>(["Ofisdən", "Hibrid", "Uzaqdan"]);
 
 function getTrimmedString(value: unknown) {
@@ -53,6 +54,14 @@ function normalizeList(value: unknown) {
   }
 
   return [];
+}
+
+function isAssetPath(value: string) {
+  return value.startsWith("/") && !value.startsWith("//");
+}
+
+function isOptionalMediaSource(value: string) {
+  return value.length === 0 || isHttpUrl(value) || isAssetPath(value);
 }
 
 function requiredString(value: unknown, label: string) {
@@ -137,14 +146,14 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
   const location = requiredString(record.location, "Lokasiya");
   if (typeof location !== "string") return { ok: false, message: location };
 
-  const logo = requiredString(record.logo, "Logo URL");
-  if (typeof logo !== "string") return { ok: false, message: logo };
+  const logo = getTrimmedString(record.logo);
 
   const cover = requiredString(record.cover, "Cover URL");
   if (typeof cover !== "string") return { ok: false, message: cover };
 
   const website = requiredString(record.website, "Website");
   if (typeof website !== "string") return { ok: false, message: website };
+  const companyDomain = getTrimmedString(record.companyDomain) || undefined;
 
   const about = requiredString(record.about, "Haqqında");
   if (typeof about !== "string") return { ok: false, message: about };
@@ -152,18 +161,15 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
   const wikipediaSummary = getTrimmedString(record.wikipediaSummary) || undefined;
   const wikipediaSourceUrl = getTrimmedString(record.wikipediaSourceUrl) || undefined;
 
-  const focusAreas = requiredList(record.focusAreas, "Fokus sahələri");
-  if (!Array.isArray(focusAreas)) return { ok: false, message: focusAreas };
+  const focusAreas = normalizeList(record.focusAreas);
 
-  const youthOffer = requiredList(record.youthOffer, "Gənclər üçün təklif");
-  if (!Array.isArray(youthOffer)) return { ok: false, message: youthOffer };
+  const youthOffer = normalizeList(record.youthOffer);
 
-  const benefits = requiredList(record.benefits, "Üstünlüklər");
-  if (!Array.isArray(benefits)) return { ok: false, message: benefits };
+  const benefits = normalizeList(record.benefits);
   const industryTags = normalizeList(record.industryTags);
 
-  if (!isHttpUrl(logo) || !isHttpUrl(cover) || !isHttpUrl(website)) {
-    return { ok: false, message: "Logo, cover və website sahələri keçərli URL olmalıdır." };
+  if (!isOptionalMediaSource(logo) || !isOptionalMediaSource(cover) || !isHttpUrl(website)) {
+    return { ok: false, message: "Logo və cover üçün URL və ya lokal fayl yolu, website üçün isə keçərli URL daxil edilməlidir." };
   }
 
   if (wikipediaSourceUrl && !isHttpUrl(wikipediaSourceUrl)) {
@@ -181,6 +187,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
       logo,
       cover,
       website,
+      companyDomain,
       about,
       wikipediaSummary,
       wikipediaSourceUrl,
@@ -189,6 +196,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
       benefits,
       industryTags: industryTags.length > 0 ? industryTags : [sector],
       featured: Boolean(record.featured),
+      verified: record.verified === undefined ? true : Boolean(record.verified),
       createdAt: normalizedCreatedAt(record.createdAt)
     }
   };
@@ -233,8 +241,7 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
   const requirements = requiredList(record.requirements, "Tələblər");
   if (!Array.isArray(requirements)) return { ok: false, message: requirements };
 
-  const benefits = requiredList(record.benefits, "Üstünlüklər");
-  if (!Array.isArray(benefits)) return { ok: false, message: benefits };
+  const benefits = normalizeList(record.benefits);
 
   const tags = requiredLocalizedList(record.tags, "Tag-lər", "az");
   if (!Array.isArray(tags)) return { ok: false, message: tags };
@@ -284,6 +291,8 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
         typeof record.sourceUrl === "string" && isHttpUrl(record.sourceUrl)
           ? record.sourceUrl.trim()
           : undefined,
+      moderationStatus: normalizeJobModerationStatus(record.moderationStatus, "draft"),
+      moderationNotes: getTrimmedString(record.moderationNotes) || undefined,
       createdAt: normalizedCreatedAt(record.createdAt)
     }
   };

@@ -1,139 +1,303 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
-import { startTransition, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { VerifiedBadge } from "@/components/verified-badge";
-import { jobLevels, workModels, type Company, type Job } from "@/data/platform";
-import { getPrimaryLocalizedText, type LocalizedContentValue } from "@/lib/localized-content";
+import type { Company, Job } from "@/data/platform";
+import { type JobModerationStatus } from "@/lib/moderation";
+import { getPrimaryLocalizedText } from "@/lib/localized-content";
 
 type AdminPanelClientProps = {
   companies: Company[];
   jobs: Job[];
-  availableCities: string[];
 };
 
-type SubmissionState = {
+type AdminMessage = {
   kind: "success" | "error";
-  message: string;
+  text: string;
 } | null;
 
-function splitTextarea(value: string) {
+type DrawerState =
+  | { type: "job"; mode: "create" | "edit"; slug?: string }
+  | { type: "company"; mode: "create" | "edit"; slug?: string }
+  | null;
+
+type JobFormState = {
+  title: string;
+  companySlug: string;
+  city: string;
+  workModel: Job["workModel"];
+  level: Job["level"];
+  category: string;
+  postedAt: string;
+  deadline: string;
+  summary: string;
+  responsibilities: string;
+  requirements: string;
+  benefits: string;
+  tags: string;
+  applyUrl: string;
+  sourceName: string;
+  sourceUrl: string;
+  moderationStatus: JobModerationStatus;
+  moderationNotes: string;
+};
+
+type CompanyFormState = {
+  name: string;
+  tagline: string;
+  sector: string;
+  industryTags: string;
+  size: string;
+  location: string;
+  website: string;
+  companyDomain: string;
+  logo: string;
+  cover: string;
+  about: string;
+  focusAreas: string;
+  youthOffer: string;
+  benefits: string;
+  verified: boolean;
+  featured: boolean;
+  wikipediaSummary: string;
+  wikipediaSourceUrl: string;
+};
+
+const jobLevelOptions: Job["level"][] = ["Təcrübə", "Junior", "Trainee", "Yeni məzun", "Mid", "Senior", "Manager", "Naməlum"];
+const workModelOptions: Job["workModel"][] = ["Ofisdən", "Hibrid", "Uzaqdan"];
+
+function todayValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function defaultDeadlineValue() {
+  const date = new Date();
+  date.setDate(date.getDate() + 21);
+  return date.toISOString().slice(0, 10);
+}
+
+function splitLines(value: string) {
   return value
     .split(/\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
-function joinTextarea(values: LocalizedContentValue[]) {
-  return values.map((value) => getPrimaryLocalizedText(value)).join("\n");
+function joinLines(values: string[] | undefined) {
+  return (values ?? []).join("\n");
 }
 
-function todayValue() {
-  return new Date().toISOString().slice(0, 10);
+function createEmptyJobForm(companySlug = ""): JobFormState {
+  return {
+    title: "",
+    companySlug,
+    city: "Bakı",
+    workModel: "Hibrid",
+    level: "Təcrübə",
+    category: "",
+    postedAt: todayValue(),
+    deadline: defaultDeadlineValue(),
+    summary: "",
+    responsibilities: "",
+    requirements: "",
+    benefits: "",
+    tags: "",
+    applyUrl: "",
+    sourceName: "",
+    sourceUrl: "",
+    moderationStatus: "draft",
+    moderationNotes: ""
+  };
 }
 
-function deadlineValue() {
-  const date = new Date();
-  date.setDate(date.getDate() + 21);
-
-  return date.toISOString().slice(0, 10);
+function createEmptyCompanyForm(): CompanyFormState {
+  return {
+    name: "",
+    tagline: "",
+    sector: "",
+    industryTags: "",
+    size: "",
+    location: "Bakı, Azərbaycan",
+    website: "",
+    companyDomain: "",
+    logo: "",
+    cover: "",
+    about: "",
+    focusAreas: "",
+    youthOffer: "",
+    benefits: "",
+    verified: true,
+    featured: false,
+    wikipediaSummary: "",
+    wikipediaSourceUrl: ""
+  };
 }
 
-export function AdminPanelClient({ companies, jobs, availableCities }: AdminPanelClientProps) {
+function mapJobToForm(job: Job): JobFormState {
+  return {
+    title: getPrimaryLocalizedText(job.title),
+    companySlug: job.companySlug,
+    city: job.city,
+    workModel: job.workModel,
+    level: job.level,
+    category: getPrimaryLocalizedText(job.category),
+    postedAt: job.postedAt,
+    deadline: job.deadline,
+    summary: getPrimaryLocalizedText(job.summary),
+    responsibilities: joinLines(job.responsibilities),
+    requirements: joinLines(job.requirements),
+    benefits: joinLines(job.benefits),
+    tags: (job.tags ?? []).map((tag) => getPrimaryLocalizedText(tag)).join("\n"),
+    applyUrl: job.applyActionUrl ?? job.finalVerifiedUrl ?? job.canonicalApplyUrl ?? job.applyUrl ?? "",
+    sourceName: job.sourceName ?? "",
+    sourceUrl: job.sourceUrl ?? job.sourceListingUrl ?? "",
+    moderationStatus: job.moderationStatus ?? "draft",
+    moderationNotes: job.moderationNotes ?? ""
+  };
+}
+
+function mapCompanyToForm(company: Company): CompanyFormState {
+  return {
+    name: company.name,
+    tagline: company.tagline,
+    sector: company.sector,
+    industryTags: joinLines(company.industryTags ?? [company.sector]),
+    size: company.size,
+    location: company.location,
+    website: company.website,
+    companyDomain: company.companyDomain ?? "",
+    logo: company.logo ?? "",
+    cover: company.cover ?? "",
+    about: company.about,
+    focusAreas: joinLines(company.focusAreas),
+    youthOffer: joinLines(company.youthOffer),
+    benefits: joinLines(company.benefits),
+    verified: company.verified !== false,
+    featured: Boolean(company.featured),
+    wikipediaSummary: company.wikipediaSummary ?? "",
+    wikipediaSourceUrl: company.wikipediaSourceUrl ?? ""
+  };
+}
+
+function formatScore(value?: number) {
+  return typeof value === "number" ? `${Math.round(value * 100)}%` : "—";
+}
+
+export function AdminPanelClient({ companies: initialCompanies, jobs: initialJobs }: AdminPanelClientProps) {
   const router = useRouter();
-  const [companyState, setCompanyState] = useState<SubmissionState>(null);
-  const [jobState, setJobState] = useState<SubmissionState>(null);
-  const [isSubmittingCompany, setIsSubmittingCompany] = useState(false);
-  const [isSubmittingJob, setIsSubmittingJob] = useState(false);
-  const [editingCompanySlug, setEditingCompanySlug] = useState<string | null>(null);
-  const [editingJobSlug, setEditingJobSlug] = useState<string | null>(null);
+  const [companies, setCompanies] = useState(initialCompanies);
+  const [jobs, setJobs] = useState(initialJobs);
+  const [drawer, setDrawer] = useState<DrawerState>(null);
+  const [jobForm, setJobForm] = useState<JobFormState>(createEmptyJobForm(initialCompanies[0]?.slug ?? ""));
+  const [companyForm, setCompanyForm] = useState<CompanyFormState>(createEmptyCompanyForm());
+  const [message, setMessage] = useState<AdminMessage>(null);
+  const [isSavingJob, setIsSavingJob] = useState(false);
+  const [isSavingCompany, setIsSavingCompany] = useState(false);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
 
-  const editingCompany = editingCompanySlug
-    ? companies.find((company) => company.slug === editingCompanySlug) ?? null
-    : null;
-  const editingJob = editingJobSlug
-    ? jobs.find((job) => job.slug === editingJobSlug) ?? null
-    : null;
-
-  async function submitCompany(formData: FormData, form: HTMLFormElement) {
-    setIsSubmittingCompany(true);
-    setCompanyState(null);
-
-    const payload = {
-      name: String(formData.get("name") ?? "").trim(),
-      tagline: String(formData.get("tagline") ?? "").trim(),
-      sector: String(formData.get("sector") ?? "").trim(),
-      industryTags: splitTextarea(String(formData.get("industryTags") ?? "")),
-      size: String(formData.get("size") ?? "").trim(),
-      location: String(formData.get("location") ?? "").trim(),
-      logo: String(formData.get("logo") ?? "").trim(),
-      cover: String(formData.get("cover") ?? "").trim(),
-      website: String(formData.get("website") ?? "").trim(),
-      about: String(formData.get("about") ?? "").trim(),
-      focusAreas: splitTextarea(String(formData.get("focusAreas") ?? "")),
-      youthOffer: splitTextarea(String(formData.get("youthOffer") ?? "")),
-      benefits: splitTextarea(String(formData.get("benefits") ?? "")),
-      featured: formData.get("featured") === "on",
-      createdAt: editingCompany?.createdAt ?? todayValue()
-    };
-
-    const endpoint = editingCompany ? `/api/companies/${editingCompany.slug}` : "/api/companies";
-    const method = editingCompany ? "PUT" : "POST";
-
-    try {
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message ?? "Şirkət profili yadda saxlanmadı.");
-      }
-
-      form.reset();
-      setEditingCompanySlug(null);
-      setCompanyState({ kind: "success", message: result.message });
-      router.refresh();
-    } catch (error) {
-      setCompanyState({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Şirkət profili yadda saxlanmadı."
-      });
-    } finally {
-      setIsSubmittingCompany(false);
+  useEffect(() => {
+    if (!selectedLogoFile) {
+      setLogoPreviewUrl(null);
+      return;
     }
+
+    const previewUrl = URL.createObjectURL(selectedLogoFile);
+    setLogoPreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedLogoFile]);
+
+  const reviewJobs = useMemo(
+    () => jobs.filter((job) => ["draft", "suggested", "needs_review"].includes(job.moderationStatus ?? "draft")),
+    [jobs]
+  );
+
+  const companyJobCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const job of jobs) {
+      counts.set(job.companySlug, (counts.get(job.companySlug) ?? 0) + 1);
+    }
+
+    return counts;
+  }, [jobs]);
+
+  function closeDrawer() {
+    setDrawer(null);
+    setSelectedLogoFile(null);
+    setLogoPreviewUrl(null);
   }
 
-  async function submitJob(formData: FormData, form: HTMLFormElement) {
-    setIsSubmittingJob(true);
-    setJobState(null);
+  function openJobEditor(job?: Job) {
+    setMessage(null);
 
-    const payload = {
-      title: String(formData.get("title") ?? "").trim(),
-      companySlug: String(formData.get("companySlug") ?? "").trim(),
-      city: String(formData.get("city") ?? "").trim(),
-      workModel: String(formData.get("workModel") ?? "").trim(),
-      level: String(formData.get("level") ?? "").trim(),
-      category: String(formData.get("category") ?? "").trim(),
-      postedAt: String(formData.get("postedAt") ?? "").trim(),
-      deadline: String(formData.get("deadline") ?? "").trim(),
-      summary: String(formData.get("summary") ?? "").trim(),
-      responsibilities: splitTextarea(String(formData.get("responsibilities") ?? "")),
-      requirements: splitTextarea(String(formData.get("requirements") ?? "")),
-      benefits: splitTextarea(String(formData.get("benefits") ?? "")),
-      tags: splitTextarea(String(formData.get("tags") ?? "")),
-      applyUrl: String(formData.get("applyUrl") ?? "").trim(),
-      createdAt: editingJob?.createdAt ?? todayValue()
-    };
+    if (job) {
+      setJobForm(mapJobToForm(job));
+      setDrawer({ type: "job", mode: "edit", slug: job.slug });
+      return;
+    }
 
-    const endpoint = editingJob ? `/api/jobs/${editingJob.slug}` : "/api/jobs";
-    const method = editingJob ? "PUT" : "POST";
+    setJobForm(createEmptyJobForm(companies[0]?.slug ?? ""));
+    setDrawer({ type: "job", mode: "create" });
+  }
+
+  function openCompanyEditor(company?: Company) {
+    setMessage(null);
+    setSelectedLogoFile(null);
+
+    if (company) {
+      setCompanyForm(mapCompanyToForm(company));
+      setDrawer({ type: "company", mode: "edit", slug: company.slug });
+      return;
+    }
+
+    setCompanyForm(createEmptyCompanyForm());
+    setDrawer({ type: "company", mode: "create" });
+  }
+
+  function updateJobInState(nextJob: Job) {
+    setJobs((current) => {
+      const existingIndex = current.findIndex((item) => item.slug === nextJob.slug);
+
+      if (existingIndex === -1) {
+        return [nextJob, ...current];
+      }
+
+      const clone = [...current];
+      clone[existingIndex] = nextJob;
+      return clone;
+    });
+  }
+
+  function updateCompanyInState(nextCompany: Company) {
+    setCompanies((current) => {
+      const existingIndex = current.findIndex((item) => item.slug === nextCompany.slug);
+
+      if (existingIndex === -1) {
+        return [nextCompany, ...current];
+      }
+
+      const clone = [...current];
+      clone[existingIndex] = nextCompany;
+      return clone;
+    });
+  }
+
+  async function submitJob(statusOverride?: JobModerationStatus) {
+    setIsSavingJob(true);
+    setMessage(null);
+
+    const endpoint =
+      drawer?.type === "job" && drawer.mode === "edit" && drawer.slug
+        ? `/api/jobs/${drawer.slug}`
+        : "/api/jobs";
+    const method = drawer?.type === "job" && drawer.mode === "edit" ? "PUT" : "POST";
+    const moderationStatus = statusOverride ?? jobForm.moderationStatus;
 
     try {
       const response = await fetch(endpoint, {
@@ -141,7 +305,26 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          title: jobForm.title,
+          companySlug: jobForm.companySlug,
+          city: jobForm.city,
+          workModel: jobForm.workModel,
+          level: jobForm.level,
+          category: jobForm.category,
+          postedAt: jobForm.postedAt,
+          deadline: jobForm.deadline,
+          summary: jobForm.summary,
+          responsibilities: splitLines(jobForm.responsibilities),
+          requirements: splitLines(jobForm.requirements),
+          benefits: splitLines(jobForm.benefits),
+          tags: splitLines(jobForm.tags),
+          applyUrl: jobForm.applyUrl,
+          sourceName: jobForm.sourceName,
+          sourceUrl: jobForm.sourceUrl,
+          moderationStatus,
+          moderationNotes: jobForm.moderationNotes
+        })
       });
 
       const result = await response.json();
@@ -150,605 +333,732 @@ export function AdminPanelClient({ companies, jobs, availableCities }: AdminPane
         throw new Error(result.message ?? "Vakansiya yadda saxlanmadı.");
       }
 
-      form.reset();
-      setEditingJobSlug(null);
-      setJobState({ kind: "success", message: result.message });
+      updateJobInState(result.item);
+      setMessage({ kind: "success", text: result.message ?? "Vakansiya yeniləndi." });
       router.refresh();
+      closeDrawer();
     } catch (error) {
-      setJobState({
+      setMessage({
         kind: "error",
-        message: error instanceof Error ? error.message : "Vakansiya yadda saxlanmadı."
+        text: error instanceof Error ? error.message : "Vakansiya yadda saxlanmadı."
       });
     } finally {
-      setIsSubmittingJob(false);
+      setIsSavingJob(false);
     }
   }
 
-  async function removeCompany(slug: string) {
-    if (!window.confirm("Bu şirkəti silmək istəyirsən? Bağlı vakansiyalar da silinə bilər.")) {
-      return;
+  async function uploadLogoIfNeeded() {
+    if (!selectedLogoFile) {
+      return companyForm.logo;
     }
 
-    setCompanyState(null);
+    const body = new FormData();
+    body.append("file", selectedLogoFile);
+
+    const response = await fetch("/api/admin/uploads/logo", {
+      method: "POST",
+      body
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message ?? "Logo yüklənmədi.");
+    }
+
+    return result.url as string;
+  }
+
+  async function submitCompany() {
+    setIsSavingCompany(true);
+    setMessage(null);
+
+    const endpoint =
+      drawer?.type === "company" && drawer.mode === "edit" && drawer.slug
+        ? `/api/companies/${drawer.slug}`
+        : "/api/companies";
+    const method = drawer?.type === "company" && drawer.mode === "edit" ? "PUT" : "POST";
 
     try {
-      const response = await fetch(`/api/companies/${slug}`, { method: "DELETE" });
+      const logo = await uploadLogoIfNeeded();
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: companyForm.name,
+          tagline: companyForm.tagline,
+          sector: companyForm.sector,
+          industryTags: splitLines(companyForm.industryTags),
+          size: companyForm.size,
+          location: companyForm.location,
+          website: companyForm.website,
+          companyDomain: companyForm.companyDomain,
+          logo,
+          cover: companyForm.cover,
+          about: companyForm.about,
+          focusAreas: splitLines(companyForm.focusAreas),
+          youthOffer: splitLines(companyForm.youthOffer),
+          benefits: splitLines(companyForm.benefits),
+          verified: companyForm.verified,
+          featured: companyForm.featured,
+          wikipediaSummary: companyForm.wikipediaSummary,
+          wikipediaSourceUrl: companyForm.wikipediaSourceUrl
+        })
+      });
+
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message ?? "Şirkət silinmədi.");
+        throw new Error(result.message ?? "Şirkət yadda saxlanmadı.");
       }
 
-      if (editingCompanySlug === slug) {
-        setEditingCompanySlug(null);
+      updateCompanyInState(result.item);
+      setMessage({ kind: "success", text: result.message ?? "Şirkət yadda saxlanıldı." });
+      router.refresh();
+      closeDrawer();
+    } catch (error) {
+      setMessage({
+        kind: "error",
+        text: error instanceof Error ? error.message : "Şirkət yadda saxlanmadı."
+      });
+    } finally {
+      setIsSavingCompany(false);
+    }
+  }
+
+  async function updateJobStatus(job: Job, moderationStatus: JobModerationStatus) {
+    setMessage(null);
+
+    try {
+      const response = await fetch(`/api/admin/jobs/${job.slug}/moderation`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          moderationStatus
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "Status yenilənmədi.");
       }
 
-      setCompanyState({ kind: "success", message: result.message });
+      updateJobInState(result.item);
+      setMessage({ kind: "success", text: result.message ?? "Status yeniləndi." });
       router.refresh();
     } catch (error) {
-      setCompanyState({
+      setMessage({
         kind: "error",
-        message: error instanceof Error ? error.message : "Şirkət silinmədi."
+        text: error instanceof Error ? error.message : "Status yenilənmədi."
       });
     }
   }
 
-  async function removeJob(slug: string) {
-    if (!window.confirm("Bu vakansiyanı silmək istəyirsən?")) {
-      return;
-    }
-
-    setJobState(null);
+  async function toggleVerified(company: Company) {
+    setMessage(null);
 
     try {
-      const response = await fetch(`/api/jobs/${slug}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/companies/${company.slug}/verified`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          verified: company.verified === false
+        })
+      });
+
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message ?? "Vakansiya silinmədi.");
+        throw new Error(result.message ?? "Verified status yenilənmədi.");
       }
 
-      if (editingJobSlug === slug) {
-        setEditingJobSlug(null);
-      }
-
-      setJobState({ kind: "success", message: result.message });
+      updateCompanyInState(result.item);
+      setMessage({ kind: "success", text: result.message ?? "Verified status yeniləndi." });
       router.refresh();
     } catch (error) {
-      setJobState({
+      setMessage({
         kind: "error",
-        message: error instanceof Error ? error.message : "Vakansiya silinmədi."
+        text: error instanceof Error ? error.message : "Verified status yenilənmədi."
       });
     }
+  }
+
+  async function logout() {
+    await fetch("/api/session", { method: "DELETE" });
+    router.push("/admin/login");
+    router.refresh();
+  }
+
+  function renderJobSignals(job: Job) {
+    return (
+      <div className="admin-signals">
+        <span>Trust: {formatScore(job.trustScore)}</span>
+        <span>Internship: {formatScore(job.internshipConfidence)}</span>
+        <span>Location: {formatScore(job.locationConfidence)}</span>
+        <span>Duplicate: {formatScore(job.duplicateRisk)}</span>
+        <span>Logo: {formatScore(job.logoConfidence)}</span>
+        <span>Apply: {job.applyLinkStatus ?? "unknown"}</span>
+      </div>
+    );
+  }
+
+  function renderJobActions(job: Job) {
+    const status = job.moderationStatus ?? "draft";
+
+    return (
+      <div className="admin-row-actions">
+        {["draft", "suggested", "needs_review"].includes(status) ? (
+          <button type="button" className="admin-button admin-button--primary" onClick={() => void updateJobStatus(job, "approved")}>
+            Approve
+          </button>
+        ) : null}
+
+        {status === "approved" ? (
+          <button type="button" className="admin-button admin-button--primary" onClick={() => void updateJobStatus(job, "published")}>
+            Publish
+          </button>
+        ) : null}
+
+        {status === "published" ? (
+          <button type="button" className="admin-button" onClick={() => void updateJobStatus(job, "approved")}>
+            Unpublish
+          </button>
+        ) : null}
+
+        <button type="button" className="admin-button" onClick={() => openJobEditor(job)}>
+          Edit
+        </button>
+
+        {status !== "rejected" ? (
+          <button type="button" className="admin-button admin-button--danger" onClick={() => void updateJobStatus(job, "rejected")}>
+            Reject
+          </button>
+        ) : null}
+
+        {status !== "archived" ? (
+          <button type="button" className="admin-button" onClick={() => void updateJobStatus(job, "archived")}>
+            Archive
+          </button>
+        ) : null}
+      </div>
+    );
   }
 
   return (
-    <div className="admin-management-grid">
-      <section id="admin-companies" className="detail-panel admin-section">
-        <div className="admin-panel-header">
-          <div>
-            <p className="eyebrow">Şirkət idarəsi</p>
-            <h2>{editingCompany ? "Şirkət profilini redaktə et" : "Yeni şirkət profili yarat"}</h2>
-          </div>
-          {editingCompany ? (
-            <button
-              type="button"
-              className="button button--ghost"
-              onClick={() => {
-                setEditingCompanySlug(null);
-                setCompanyState(null);
-              }}
-            >
-              Ləğv et
-            </button>
-          ) : null}
+    <div className="admin-console">
+      <aside className="admin-console__sidebar">
+        <div className="admin-console__brand">
+          <strong>CareerApple Admin</strong>
+          <span>Moderation console</span>
         </div>
 
-        <p>
-          Featured seçilən şirkətlərin internship və junior rolları ana səhifədə avtomatik
-          görünəcək. Redaktə zamanı slug sabit qalır, yalnız profil məlumatı yenilənir.
-        </p>
+        <nav className="admin-console__nav" aria-label="Admin navigation">
+          <a href="#review-queue">Suggested jobs</a>
+          <a href="#all-jobs">All jobs</a>
+          <a href="#companies">Companies</a>
+        </nav>
 
-        <form
-          key={editingCompany?.slug ?? "company-create"}
-          className="stack-sm"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-
-            startTransition(() => {
-              void submitCompany(new FormData(form), form);
-            });
-          }}
-        >
-          <label className="field">
-            <span>Şirkət adı</span>
-            <input
-              name="name"
-              type="text"
-              defaultValue={editingCompany?.name ?? ""}
-              placeholder="Məsələn: Miro"
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Qısa tagline</span>
-            <input
-              name="tagline"
-              type="text"
-              defaultValue={editingCompany?.tagline ?? ""}
-              placeholder="Gənclər üçün açıq məhsul və dizayn rolları."
-              required
-            />
-          </label>
-
-          <div className="grid-two">
-            <label className="field">
-              <span>Primary industry</span>
-              <input
-                name="sector"
-                type="text"
-                defaultValue={editingCompany?.sector ?? ""}
-                placeholder="Collaboration SaaS"
-                required
-              />
-            </label>
-
-            <label className="field">
-              <span>Komanda ölçüsü</span>
-              <input
-                name="size"
-                type="text"
-                defaultValue={editingCompany?.size ?? ""}
-                placeholder="1.001-5.000 əməkdaş"
-                required
-              />
-            </label>
-          </div>
-
-          <label className="field">
-            <span>Industry tags</span>
-            <textarea
-              name="industryTags"
-              rows={3}
-              defaultValue={editingCompany ? (editingCompany.industryTags ?? [editingCompany.sector]).join("\n") : ""}
-              placeholder={"SaaS\nFintex\nProductivity"}
-            />
-          </label>
-
-          <div className="grid-two">
-            <label className="field">
-              <span>Lokasiya</span>
-              <input
-                name="location"
-                type="text"
-                defaultValue={editingCompany?.location ?? ""}
-                placeholder="Amsterdam, Niderland"
-                required
-              />
-            </label>
-
-            <label className="field">
-              <span>Website</span>
-              <input
-                name="website"
-                type="url"
-                defaultValue={editingCompany?.website ?? ""}
-                placeholder="https://miro.com"
-                required
-              />
-            </label>
-          </div>
-
-          <label className="field">
-            <span>Logo URL override</span>
-            <input
-              name="logo"
-              type="url"
-              defaultValue={editingCompany?.logo ?? ""}
-              placeholder="https://..."
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Cover URL</span>
-            <input
-              name="cover"
-              type="url"
-              defaultValue={editingCompany?.cover ?? ""}
-              placeholder="https://..."
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Description override</span>
-            <textarea
-              name="about"
-              rows={4}
-              defaultValue={editingCompany?.about ?? ""}
-              placeholder="Şirkətin gənclərə necə uyğun olduğunu qısa izah et."
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Fokus sahələri</span>
-            <textarea
-              name="focusAreas"
-              rows={3}
-              defaultValue={editingCompany ? joinTextarea(editingCompany.focusAreas) : ""}
-              placeholder={"Product design\nResearch\nData analytics"}
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Gənclər üçün təklif</span>
-            <textarea
-              name="youthOffer"
-              rows={3}
-              defaultValue={editingCompany ? joinTextarea(editingCompany.youthOffer) : ""}
-              placeholder={"Mentor dəstəkli internship\nJunior rotasiya proqramı"}
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Üstünlüklər</span>
-            <textarea
-              name="benefits"
-              rows={3}
-              defaultValue={editingCompany ? joinTextarea(editingCompany.benefits) : ""}
-              placeholder={"Hibrid iş modeli\nTəlim büdcəsi\nMentorluq"}
-              required
-            />
-          </label>
-
-          <label className="field field--checkbox">
-            <span>Featured company kimi göstər</span>
-            <input name="featured" type="checkbox" defaultChecked={editingCompany?.featured ?? true} />
-          </label>
-
-          {companyState ? (
-            <p className={`notice ${companyState.kind === "error" ? "notice--error" : "notice--success"}`}>
-              {companyState.message}
-            </p>
-          ) : null}
-
-          <button type="submit" className="button button--primary" disabled={isSubmittingCompany}>
-            {isSubmittingCompany
-              ? "Yadda saxlanır..."
-              : editingCompany
-                ? "Şirkət profilini yenilə"
-                : "Şirkət profilini yarat"}
+        <div className="admin-console__sidebar-actions">
+          <button type="button" className="admin-button admin-button--primary" onClick={() => openJobEditor()}>
+            New job
           </button>
-        </form>
-      </section>
-
-      <section id="admin-jobs" className="detail-panel admin-section">
-        <div className="admin-panel-header">
-          <div>
-            <p className="eyebrow">Vakansiya idarəsi</p>
-            <h2>{editingJob ? "Vakansiyanı redaktə et" : "Yeni youth-role vakansiya əlavə et"}</h2>
-          </div>
-          {editingJob ? (
-            <button
-              type="button"
-              className="button button--ghost"
-              onClick={() => {
-                setEditingJobSlug(null);
-                setJobState(null);
-              }}
-            >
-              Ləğv et
-            </button>
-          ) : null}
+          <button type="button" className="admin-button" onClick={() => openCompanyEditor()}>
+            New company
+          </button>
         </div>
+      </aside>
 
-        <p>
-          Səviyyə yalnız internship, junior, trainee və yeni məzun ola bilər. Vakansiyanın featured
-          bannerə düşməsi üçün bağlı şirkət featured olmalıdır.
-        </p>
+      <div className="admin-console__main">
+        <header className="admin-console__topbar">
+          <div>
+            <h1>Admin panel</h1>
+            <p>Suggested jobs stay internal until approved and published by an admin.</p>
+          </div>
 
-        <form
-          key={editingJob?.slug ?? "job-create"}
-          className="stack-sm"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
+          <div className="admin-console__topbar-actions">
+            <div className="admin-summary">
+              <strong>{reviewJobs.length}</strong>
+              <span>needs review</span>
+            </div>
+            <div className="admin-summary">
+              <strong>{jobs.filter((job) => job.moderationStatus === "published").length}</strong>
+              <span>published</span>
+            </div>
+            <div className="admin-summary">
+              <strong>{companies.length}</strong>
+              <span>companies</span>
+            </div>
+            <button type="button" className="admin-button" onClick={() => void logout()}>
+              Logout
+            </button>
+          </div>
+        </header>
 
-            startTransition(() => {
-              void submitJob(new FormData(form), form);
-            });
-          }}
-        >
-          <label className="field">
-            <span>Vakansiya adı</span>
-            <input
-              name="title"
-              type="text"
-              defaultValue={editingJob ? getPrimaryLocalizedText(editingJob.title) : ""}
-              placeholder="Məsələn: Data Analyst Intern"
-              required
-            />
-          </label>
+        {message ? (
+          <div className={`admin-banner admin-banner--${message.kind}`}>
+            {message.text}
+          </div>
+        ) : null}
 
-          <div className="grid-two">
-            <label className="field">
-              <span>Şirkət</span>
-              <select name="companySlug" defaultValue={editingJob?.companySlug ?? companies[0]?.slug ?? ""} required>
+        <section id="review-queue" className="admin-section">
+          <div className="admin-section__header">
+            <div>
+              <h2>Suggested jobs</h2>
+              <p>Review source signals before anything reaches the public feed.</p>
+            </div>
+          </div>
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Company</th>
+                  <th>Location</th>
+                  <th>Source</th>
+                  <th>Apply</th>
+                  <th>Signals</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reviewJobs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="admin-table__empty">No jobs waiting for review.</td>
+                  </tr>
+                ) : (
+                  reviewJobs.map((job) => {
+                    const company = companies.find((item) => item.slug === job.companySlug);
+                    return (
+                      <tr key={job.slug}>
+                        <td>
+                          <strong>{getPrimaryLocalizedText(job.title)}</strong>
+                          <div className="admin-muted">{job.moderationStatus ?? "draft"}</div>
+                        </td>
+                        <td>{company?.name ?? job.companySlug}</td>
+                        <td>{job.city}</td>
+                        <td>
+                          {job.sourceUrl ? (
+                            <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer" className="admin-link">
+                              {job.sourceName ?? "Source"}
+                            </a>
+                          ) : (
+                            <span className="admin-muted">{job.sourceName ?? "Manual"}</span>
+                          )}
+                        </td>
+                        <td>
+                          {job.finalVerifiedUrl ?? job.canonicalApplyUrl ?? job.applyUrl ? (
+                            <a
+                              href={job.finalVerifiedUrl ?? job.canonicalApplyUrl ?? job.applyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="admin-link"
+                            >
+                              {job.applyLinkStatus ?? "view"}
+                            </a>
+                          ) : (
+                            <span className="admin-status admin-status--muted">missing</span>
+                          )}
+                        </td>
+                        <td>{renderJobSignals(job)}</td>
+                        <td>{renderJobActions(job)}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="all-jobs" className="admin-section">
+          <div className="admin-section__header">
+            <div>
+              <h2>All jobs</h2>
+              <p>Edit, publish, unpublish, reject, or archive jobs.</p>
+            </div>
+            <button type="button" className="admin-button admin-button--primary" onClick={() => openJobEditor()}>
+              Add job
+            </button>
+          </div>
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Company</th>
+                  <th>Status</th>
+                  <th>Apply status</th>
+                  <th>Deadline</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job) => {
+                  const company = companies.find((item) => item.slug === job.companySlug);
+                  return (
+                    <tr key={job.slug}>
+                      <td>
+                        <strong>{getPrimaryLocalizedText(job.title)}</strong>
+                        <div className="admin-muted">{job.city} · {job.workModel}</div>
+                      </td>
+                      <td>{company?.name ?? job.companySlug}</td>
+                      <td>
+                        <span className="admin-status">{job.moderationStatus ?? "draft"}</span>
+                      </td>
+                      <td>{job.applyLinkStatus ?? "unknown"}</td>
+                      <td>{job.deadline}</td>
+                      <td>{renderJobActions(job)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="companies" className="admin-section">
+          <div className="admin-section__header">
+            <div>
+              <h2>Companies</h2>
+              <p>Edit company metadata, verified state, domain, and logo.</p>
+            </div>
+            <button type="button" className="admin-button admin-button--primary" onClick={() => openCompanyEditor()}>
+              Add company
+            </button>
+          </div>
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Logo</th>
+                  <th>Name</th>
+                  <th>Verified</th>
+                  <th>Domain</th>
+                  <th>Jobs</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {companies.map((company) => (
-                  <option key={company.slug} value={company.slug}>
-                    {company.name}
-                  </option>
+                  <tr key={company.slug}>
+                    <td>
+                      <div className="admin-logo-cell">
+                        {company.logo ? (
+                          <img src={company.logo} alt={company.name} />
+                        ) : (
+                          <span>{company.name[0]}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <strong>{company.name}</strong>
+                      <div className="admin-muted">{company.website.replace(/^https?:\/\//, "")}</div>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className={`admin-toggle${company.verified !== false ? " admin-toggle--active" : ""}`}
+                        onClick={() => void toggleVerified(company)}
+                      >
+                        {company.verified !== false ? "Verified" : "Hidden"}
+                      </button>
+                    </td>
+                    <td>{company.companyDomain ?? "—"}</td>
+                    <td>{companyJobCounts.get(company.slug) ?? 0}</td>
+                    <td>
+                      <div className="admin-row-actions">
+                        <button type="button" className="admin-button" onClick={() => openCompanyEditor(company)}>
+                          Edit
+                        </button>
+                        <button type="button" className="admin-button" onClick={() => openCompanyEditor(company)}>
+                          Logo
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Şəhər</span>
-              <select name="city" defaultValue={editingJob?.city ?? availableCities[0]} required>
-                {availableCities
-                  .filter((city) => city !== "Hamısı")
-                  .map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-              </select>
-            </label>
+              </tbody>
+            </table>
           </div>
+        </section>
+      </div>
 
-          <div className="grid-two">
-            <label className="field">
-              <span>İş modeli</span>
-              <select
-                name="workModel"
-                defaultValue={editingJob?.workModel ?? workModels[1]}
-                required
-              >
-                {workModels
-                  .filter((item) => item !== "Hamısı")
-                  .map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-              </select>
-            </label>
+      {drawer ? (
+        <div className="admin-drawer" role="dialog" aria-modal="true">
+          <button type="button" className="admin-drawer__backdrop" onClick={closeDrawer} aria-label="Close editor" />
+          <div className="admin-drawer__panel">
+            <div className="admin-drawer__header">
+              <div>
+                <h2>{drawer.type === "job" ? (drawer.mode === "edit" ? "Edit job" : "New job") : drawer.mode === "edit" ? "Edit company" : "New company"}</h2>
+                <p>{drawer.type === "job" ? "Update moderation-ready job data." : "Manage company metadata and logo."}</p>
+              </div>
+              <button type="button" className="admin-button" onClick={closeDrawer}>
+                Close
+              </button>
+            </div>
 
-            <label className="field">
-              <span>Səviyyə</span>
-              <select name="level" defaultValue={editingJob?.level ?? jobLevels[1]} required>
-                {jobLevels
-                  .filter((item) => item !== "Hamısı")
-                  .map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="grid-two">
-            <label className="field">
-              <span>Kateqoriya</span>
-              <input
-                name="category"
-                type="text"
-                defaultValue={editingJob ? getPrimaryLocalizedText(editingJob.category) : ""}
-                placeholder="Data və analitika"
-                required
-              />
-            </label>
-
-            <label className="field">
-              <span>Paylaşılma tarixi</span>
-              <input
-                name="postedAt"
-                type="date"
-                defaultValue={editingJob?.postedAt ?? todayValue()}
-                required
-              />
-            </label>
-          </div>
-
-          <label className="field">
-            <span>Son müraciət tarixi</span>
-            <input
-              name="deadline"
-              type="date"
-              defaultValue={editingJob?.deadline ?? deadlineValue()}
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Apply URL override</span>
-            <input
-              name="applyUrl"
-              type="url"
-              defaultValue={editingJob?.applyUrl ?? editingJob?.directCompanyUrl ?? ""}
-              placeholder="https://company.com/careers/apply-role"
-            />
-          </label>
-
-          <label className="field">
-            <span>Qısa xülasə</span>
-            <textarea
-              name="summary"
-              rows={4}
-              defaultValue={editingJob ? getPrimaryLocalizedText(editingJob.summary) : ""}
-              placeholder="Rolun əsas təsir sahəsini 2-3 cümlə ilə yaz."
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Məsuliyyətlər</span>
-            <textarea
-              name="responsibilities"
-              rows={4}
-              defaultValue={editingJob ? joinTextarea(editingJob.responsibilities) : ""}
-              placeholder={"Dashboard hazırlamaq\nKomanda ilə weekly sync etmək"}
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Tələblər</span>
-            <textarea
-              name="requirements"
-              rows={4}
-              defaultValue={editingJob ? joinTextarea(editingJob.requirements) : ""}
-              placeholder={"SQL biliyi\nAnalitik düşüncə"}
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Üstünlüklər</span>
-            <textarea
-              name="benefits"
-              rows={4}
-              defaultValue={editingJob ? joinTextarea(editingJob.benefits) : ""}
-              placeholder={"Mentorluq\nHibrid iş modeli"}
-              required
-            />
-          </label>
-
-          <label className="field">
-            <span>Tag-lər</span>
-            <textarea
-              name="tags"
-              rows={3}
-              defaultValue={editingJob ? joinTextarea(editingJob.tags) : ""}
-              placeholder={"SQL\nIntern\nGrowth"}
-              required
-            />
-          </label>
-
-          {jobState ? (
-            <p className={`notice ${jobState.kind === "error" ? "notice--error" : "notice--success"}`}>
-              {jobState.message}
-            </p>
-          ) : null}
-
-          <button type="submit" className="button button--primary" disabled={isSubmittingJob}>
-            {isSubmittingJob
-              ? "Yadda saxlanır..."
-              : editingJob
-                ? "Vakansiyanı yenilə"
-                : "Vakansiyanı yarat"}
-          </button>
-        </form>
-      </section>
-
-      <section className="dashboard-panel admin-section">
-        <div className="section-title-row">
-          <div>
-            <p className="eyebrow">Şirkət siyahısı</p>
-            <h2>Mövcud company profilləri</h2>
-          </div>
-        </div>
-
-        {companies.length === 0 ? (
-          <div className="empty-state">
-            <p>Hələ heç bir şirkət profili yoxdur.</p>
-          </div>
-        ) : (
-          <div className="dashboard-list">
-            {companies.map((company) => (
-              <div key={company.slug} className="dashboard-item admin-item">
-                <div className="admin-item__meta">
-                  <strong className="admin-item__title">
-                    <span>{company.name}</span>
-                    <VerifiedBadge compact />
-                  </strong>
-                  <span>
-                    {[company.sector, ...(company.industryTags ?? [])].join(" • ")} • {company.location}
-                  </span>
+            {drawer.type === "job" ? (
+              <div className="admin-form">
+                <div className="admin-form-grid">
+                  <label className="admin-field">
+                    <span>Title</span>
+                    <input value={jobForm.title} onChange={(event) => setJobForm((current) => ({ ...current, title: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Company</span>
+                    <select value={jobForm.companySlug} onChange={(event) => setJobForm((current) => ({ ...current, companySlug: event.target.value }))}>
+                      <option value="">Select company</option>
+                      {companies.map((company) => (
+                        <option key={company.slug} value={company.slug}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="admin-field">
+                    <span>Location</span>
+                    <input value={jobForm.city} onChange={(event) => setJobForm((current) => ({ ...current, city: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Work mode</span>
+                    <select value={jobForm.workModel} onChange={(event) => setJobForm((current) => ({ ...current, workModel: event.target.value as Job["workModel"] }))}>
+                      {workModelOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="admin-field">
+                    <span>Level</span>
+                    <select value={jobForm.level} onChange={(event) => setJobForm((current) => ({ ...current, level: event.target.value as Job["level"] }))}>
+                      {jobLevelOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="admin-field">
+                    <span>Category</span>
+                    <input value={jobForm.category} onChange={(event) => setJobForm((current) => ({ ...current, category: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Posted</span>
+                    <input type="date" value={jobForm.postedAt} onChange={(event) => setJobForm((current) => ({ ...current, postedAt: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Deadline</span>
+                    <input type="date" value={jobForm.deadline} onChange={(event) => setJobForm((current) => ({ ...current, deadline: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Description</span>
+                    <textarea rows={4} value={jobForm.summary} onChange={(event) => setJobForm((current) => ({ ...current, summary: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Tags</span>
+                    <textarea rows={3} value={jobForm.tags} onChange={(event) => setJobForm((current) => ({ ...current, tags: event.target.value }))} placeholder={"Internship\nProduct"} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Responsibilities</span>
+                    <textarea rows={4} value={jobForm.responsibilities} onChange={(event) => setJobForm((current) => ({ ...current, responsibilities: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Requirements</span>
+                    <textarea rows={4} value={jobForm.requirements} onChange={(event) => setJobForm((current) => ({ ...current, requirements: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Benefits</span>
+                    <textarea rows={3} value={jobForm.benefits} onChange={(event) => setJobForm((current) => ({ ...current, benefits: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Apply link</span>
+                    <input value={jobForm.applyUrl} onChange={(event) => setJobForm((current) => ({ ...current, applyUrl: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Source name</span>
+                    <input value={jobForm.sourceName} onChange={(event) => setJobForm((current) => ({ ...current, sourceName: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Source link</span>
+                    <input value={jobForm.sourceUrl} onChange={(event) => setJobForm((current) => ({ ...current, sourceUrl: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Moderation notes</span>
+                    <textarea rows={3} value={jobForm.moderationNotes} onChange={(event) => setJobForm((current) => ({ ...current, moderationNotes: event.target.value }))} />
+                  </label>
                 </div>
-                <div className="admin-inline-actions">
-                  <button
-                    type="button"
-                    className="button button--ghost"
-                    onClick={() => {
-                      setEditingCompanySlug(company.slug);
-                      setCompanyState(null);
-                    }}
-                  >
-                    Redaktə et
+
+                <div className="admin-preview-links">
+                  {jobForm.sourceUrl ? (
+                    <a href={jobForm.sourceUrl} target="_blank" rel="noopener noreferrer" className="admin-link">
+                      Preview source
+                    </a>
+                  ) : null}
+                  {jobForm.applyUrl ? (
+                    <a href={jobForm.applyUrl} target="_blank" rel="noopener noreferrer" className="admin-link">
+                      Preview apply link
+                    </a>
+                  ) : null}
+                </div>
+
+                <div className="admin-drawer__actions">
+                  <button type="button" className="admin-button" onClick={() => void submitJob()} disabled={isSavingJob}>
+                    Save
                   </button>
-                  <button
-                    type="button"
-                    className="button button--danger"
-                    onClick={() => void removeCompany(company.slug)}
-                  >
-                    Sil
+                  <button type="button" className="admin-button admin-button--primary" onClick={() => void submitJob("published")} disabled={isSavingJob}>
+                    Publish
+                  </button>
+                  <button type="button" className="admin-button admin-button--danger" onClick={() => void submitJob("rejected")} disabled={isSavingJob}>
+                    Reject
+                  </button>
+                  <button type="button" className="admin-button" onClick={() => void submitJob("archived")} disabled={isSavingJob}>
+                    Archive
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            ) : (
+              <div className="admin-form">
+                <div className="admin-form-grid">
+                  <label className="admin-field">
+                    <span>Name</span>
+                    <input value={companyForm.name} onChange={(event) => setCompanyForm((current) => ({ ...current, name: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Tagline</span>
+                    <input value={companyForm.tagline} onChange={(event) => setCompanyForm((current) => ({ ...current, tagline: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Sector</span>
+                    <input value={companyForm.sector} onChange={(event) => setCompanyForm((current) => ({ ...current, sector: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Domain</span>
+                    <input value={companyForm.companyDomain} onChange={(event) => setCompanyForm((current) => ({ ...current, companyDomain: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Website</span>
+                    <input value={companyForm.website} onChange={(event) => setCompanyForm((current) => ({ ...current, website: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Cover image URL</span>
+                    <input value={companyForm.cover} onChange={(event) => setCompanyForm((current) => ({ ...current, cover: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Company size</span>
+                    <input value={companyForm.size} onChange={(event) => setCompanyForm((current) => ({ ...current, size: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Location</span>
+                    <input value={companyForm.location} onChange={(event) => setCompanyForm((current) => ({ ...current, location: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>About</span>
+                    <textarea rows={4} value={companyForm.about} onChange={(event) => setCompanyForm((current) => ({ ...current, about: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Industry tags</span>
+                    <textarea rows={3} value={companyForm.industryTags} onChange={(event) => setCompanyForm((current) => ({ ...current, industryTags: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Focus areas</span>
+                    <textarea rows={3} value={companyForm.focusAreas} onChange={(event) => setCompanyForm((current) => ({ ...current, focusAreas: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Youth offer</span>
+                    <textarea rows={3} value={companyForm.youthOffer} onChange={(event) => setCompanyForm((current) => ({ ...current, youthOffer: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Benefits</span>
+                    <textarea rows={3} value={companyForm.benefits} onChange={(event) => setCompanyForm((current) => ({ ...current, benefits: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Wikipedia summary</span>
+                    <textarea rows={3} value={companyForm.wikipediaSummary} onChange={(event) => setCompanyForm((current) => ({ ...current, wikipediaSummary: event.target.value }))} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Wikipedia source URL</span>
+                    <input value={companyForm.wikipediaSourceUrl} onChange={(event) => setCompanyForm((current) => ({ ...current, wikipediaSourceUrl: event.target.value }))} />
+                  </label>
+                  <label className="admin-field admin-field--full">
+                    <span>Logo URL override</span>
+                    <input value={companyForm.logo} onChange={(event) => setCompanyForm((current) => ({ ...current, logo: event.target.value }))} placeholder="/uploads/company-logos/..." />
+                  </label>
+                </div>
 
-      <section className="dashboard-panel admin-section">
-        <div className="section-title-row">
-          <div>
-            <p className="eyebrow">Vakansiya siyahısı</p>
-            <h2>Mövcud youth-role elanları</h2>
-          </div>
-        </div>
-
-        {jobs.length === 0 ? (
-          <div className="empty-state">
-            <p>Hələ heç bir vakansiya yoxdur.</p>
-          </div>
-        ) : (
-          <div className="dashboard-list">
-            {jobs.map((job) => {
-              const company = companies.find((item) => item.slug === job.companySlug);
-
-              return (
-                <div key={job.slug} className="dashboard-item admin-item">
-                  <div className="admin-item__meta">
-                    <strong>{getPrimaryLocalizedText(job.title)}</strong>
-                    <span>
-                      {company?.name ?? job.companySlug} • {job.city} • {job.deadline}
-                    </span>
-                    <span>{job.applyUrl ?? job.directCompanyUrl ?? "Apply URL təyin edilməyib"}</span>
+                <div className="admin-upload">
+                  <div className="admin-upload__preview">
+                    {logoPreviewUrl || companyForm.logo ? (
+                      <img src={logoPreviewUrl ?? companyForm.logo} alt={companyForm.name || "Logo preview"} />
+                    ) : (
+                      <span>No logo</span>
+                    )}
                   </div>
-                  <div className="admin-inline-actions">
+
+                  <div className="admin-upload__controls">
+                    <label className="admin-button">
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                          const file = event.target.files?.[0] ?? null;
+                          setSelectedLogoFile(file);
+                        }}
+                        hidden
+                      />
+                      Upload logo
+                    </label>
                     <button
                       type="button"
-                      className="button button--ghost"
+                      className="admin-button"
                       onClick={() => {
-                        setEditingJobSlug(job.slug);
-                        setJobState(null);
+                        setSelectedLogoFile(null);
+                        setCompanyForm((current) => ({ ...current, logo: "" }));
                       }}
                     >
-                      Redaktə et
-                    </button>
-                    <button
-                      type="button"
-                      className="button button--danger"
-                      onClick={() => void removeJob(job.slug)}
-                    >
-                      Sil
+                      Remove logo
                     </button>
                   </div>
                 </div>
-              );
-            })}
+
+                <label className="admin-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={companyForm.verified}
+                    onChange={(event) => setCompanyForm((current) => ({ ...current, verified: event.target.checked }))}
+                  />
+                  <span>Verified company</span>
+                </label>
+
+                <label className="admin-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={companyForm.featured}
+                    onChange={(event) => setCompanyForm((current) => ({ ...current, featured: event.target.checked }))}
+                  />
+                  <span>Featured on public site</span>
+                </label>
+
+                <div className="admin-drawer__actions">
+                  <button type="button" className="admin-button admin-button--primary" onClick={() => void submitCompany()} disabled={isSavingCompany}>
+                    Save company
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </section>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function LoginPage() {
             <Link href="/jobs" className="button button--primary">
               Vakansiyalara bax
             </Link>
-            <Link href="/adminlog" className="button button--ghost">
+            <Link href="/admin/login" className="button button--ghost">
               Admin keçidinə get
             </Link>
           </div>

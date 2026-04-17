@@ -4,11 +4,33 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import type { Job } from "@/data/platform";
-import { createLocalizedText, getPrimaryLocalizedText, normalizeLocalizedText } from "@/lib/localized-content";
-import { listCompanies, upsertScrapedJob } from "@/lib/platform-database";
-import { scrapeSources, type ScrapeSource } from "@/lib/scrape-config";
-import type { JobInput } from "@/lib/platform-validation";
+import { buildRawJobIdentity, normalizeCompanyName, nowIsoTimestamp, type RawIngestedJob } from "@/lib/job-intelligence";
+import { validateExtractedJobRecords } from "@/lib/candidate-job-url-validator";
+import {
+  createIngestionRun,
+  enqueueRawJobs,
+  getIngestionRun,
+  previewRawJobs,
+  queueDueRevalidations,
+  requeueRecoverableFailedCandidates,
+  revalidatePublishedJobApplyUrls,
+  schedulePipelineProcessing,
+  type ScrapePipelineResult
+} from "@/lib/job-pipeline";
+import { listCompanies, getPlatformDatabase } from "@/lib/platform-database";
+import { getEnabledScrapeSources, getScrapeSourceInventory, type ScrapeSource } from "@/lib/scrape-config";
+import {
+  getSourceComplianceIndex,
+  isComplianceStatusAllowed,
+  reviewSourceComplianceBatch,
+  type SourceComplianceReview
+} from "@/lib/source-compliance";
+import { runSourceAdapter } from "@/lib/source-adapters";
+import {
+  extractFromScraperOutput,
+  toRawIngestedJob,
+  type ExtractionRunResult
+} from "@/lib/job-extractor";
 
 const execFileAsync = promisify(execFile);
 const azMonthMap = new Map([
@@ -26,60 +48,82 @@ const azMonthMap = new Map([
   ["dekabr", 11]
 ]);
 
-type ScrapedJobRecord = {
-  job_title?: string | null;
-  company_name?: string | null;
-  job_url?: string | null;
-  location?: string | null;
-  publication_or_deadline_date?: string | null;
-};
-
 type ScrapeRunResult = {
   source: ScrapeSource;
-  jobs: ScrapedJobRecord[];
-  stdout: string;
+  jobs: RawIngestedJob[];
+  extraction: ExtractionRunResult;
 };
 
-type UnmatchedCompany = {
-  name: string;
-  sources: string[];
-  sampleTitles: string[];
+type SyncScrapedJobsOptions = {
+  dryRun?: boolean;
+  sourceIds?: string[];
+  revalidateBeforeIngest?: boolean;
 };
 
-export type ScrapeSyncResult = {
-  dryRun: boolean;
-  importedCount: number;
-  updatedCount: number;
-  matchedCount: number;
-  totalScraped: number;
+export type ScrapeSyncResult = ScrapePipelineResult & {
   sources: Array<{
+    id: string;
     name: string;
     url: string;
+    sourceDomain: string;
+    sourceType: string;
+    countryOrMarket?: string;
+    policy?: string;
+    discoveryMethod?: string;
+    extractionMethod?: string;
+    kind: string;
+    adapter: string;
+    trustTier: string;
+    hasDetailPages: string;
+    hasApplyUrls: string;
+    supportsJobDetailPages: string;
+    supportsApplyLinks: string;
+    reliableEnough: boolean;
+    extractionReady: boolean;
+    reliabilityScore?: number;
+    freshnessScore?: number;
+    parserStatus?: string;
+    lastCheckedAt?: string | null;
+    termsUrl?: string | null;
+    privacyUrl?: string | null;
+    robotsUrl?: string | null;
+    legalReviewStatus?: string | null;
+    legalReviewNotes?: string | null;
+    allowedIngestionMethod?: string | null;
+    lastLegalCheckedAt?: string | null;
+    restrictedReason?: string;
     scrapedCount: number;
+    error?: string | null;
   }>;
-  importedJobs: Array<{
-    title: string;
-    companyName: string;
-    sourceName: string;
-    action: "created" | "updated" | "preview";
+};
+
+export type DailySourceCycleResult = {
+  reviewedSourceCount: number;
+  activeSourceCount: number;
+  skippedSourceCount: number;
+  skippedSources: Array<{
+    id: string;
+    name: string;
+    reason: string;
+    legalReviewStatus: string | null;
+    allowedIngestionMethod: string | null;
+    lastCheckedAt: string;
   }>;
-  unmatchedCompanies: UnmatchedCompany[];
-  errors: string[];
+  ingestion: ScrapeSyncResult;
+  revalidation: Awaited<ReturnType<typeof revalidatePublishedJobApplyUrls>>;
+};
+
+type SourceHealthRow = {
+  source_id: string;
+  last_checked_at: string | null;
+  last_success_at: string | null;
+  last_scraped_count: number | null;
+  parser_status: string | null;
+  last_error: string | null;
 };
 
 function normalizeText(value: string | null | undefined) {
   return value?.replace(/\s+/g, " ").trim() ?? "";
-}
-
-function normalizeCompanyName(value: string) {
-  return normalizeText(value)
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\b(llc|ltd|inc|plc|company|group)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function resolvePythonBinary() {
@@ -93,114 +137,6 @@ function resolvePythonBinary() {
   return preferred ?? "python3";
 }
 
-async function runPythonScraper(source: ScrapeSource): Promise<ScrapeRunResult> {
-  const outputPath = path.join(
-    process.cwd(),
-    "data",
-    `scrape-${source.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.json`
-  );
-
-  const pythonBinary = resolvePythonBinary();
-  const scriptPath = path.join(process.cwd(), "scrape_youth_jobs.py");
-  const { stdout } = await execFileAsync(
-    pythonBinary,
-    [scriptPath, source.url, "--output", outputPath, "--timeout", "25"],
-    {
-      cwd: process.cwd(),
-      maxBuffer: 1024 * 1024 * 8
-    }
-  );
-
-  const raw = await fs.readFile(outputPath, "utf8");
-  const parsed = JSON.parse(raw);
-
-  return {
-    source,
-    jobs: Array.isArray(parsed) ? (parsed as ScrapedJobRecord[]) : [],
-    stdout: stdout.trim()
-  };
-}
-
-function inferLevel(title: string): Job["level"] {
-  const folded = title.toLowerCase();
-
-  if (folded.includes("trainee")) {
-    return "Trainee";
-  }
-
-  if (folded.includes("yeni məzun")) {
-    return "Yeni məzun";
-  }
-
-  if (folded.includes("junior") || folded.includes("asistent")) {
-    return "Junior";
-  }
-
-  return "Təcrübə";
-}
-
-function inferCategory(title: string) {
-  const folded = title.toLowerCase();
-
-  if (folded.includes("data") || folded.includes("analyst") || folded.includes("analytics")) {
-    return createLocalizedText("Data və analitika", "Data & Analytics", "Данные и аналитика");
-  }
-
-  if (folded.includes("marketing") || folded.includes("brand")) {
-    return createLocalizedText("Marketinq", "Marketing", "Маркетинг");
-  }
-
-  if (folded.includes("frontend") || folded.includes("backend") || folded.includes("developer") || folded.includes("engineer")) {
-    return createLocalizedText("Mühəndislik", "Engineering", "Инженерия");
-  }
-
-  if (folded.includes("sales")) {
-    return createLocalizedText("Satış", "Sales", "Продажи");
-  }
-
-  if (folded.includes("design")) {
-    return createLocalizedText("Dizayn", "Design", "Дизайн");
-  }
-
-  if (folded.includes("cx") || folded.includes("customer")) {
-    return createLocalizedText("Müştəri təcrübəsi", "Customer Experience", "Клиентский опыт");
-  }
-
-  if (folded.includes("risk") || folded.includes("aktuari")) {
-    return createLocalizedText("Risk və sığorta", "Risk & Insurance", "Риск и страхование");
-  }
-
-  return createLocalizedText("Əməliyyatlar", "Operations", "Операции");
-}
-
-function inferWorkModel(title: string, location: string | null | undefined): Job["workModel"] {
-  const folded = `${title} ${location ?? ""}`.toLowerCase();
-
-  if (folded.includes("remote") || folded.includes("uzaqdan")) {
-    return "Uzaqdan";
-  }
-
-  if (folded.includes("hybrid") || folded.includes("hibrid")) {
-    return "Hibrid";
-  }
-
-  return "Hibrid";
-}
-
-function inferCity(location: string | null | undefined) {
-  const normalized = normalizeText(location);
-
-  if (!normalized) {
-    return "Bakı";
-  }
-
-  if (normalized.toLowerCase().includes("baku") || normalized.toLowerCase().includes("bakı")) {
-    return "Bakı";
-  }
-
-  return normalized.split(",")[0]?.trim() || normalized;
-}
-
 function subtractDays(days: number) {
   const date = new Date();
   date.setDate(date.getDate() - days);
@@ -212,6 +148,12 @@ function parseRelativeDate(value: string) {
   const match = folded.match(/(\d+)\s+(hour|hours|day|days|week|weeks|month|months)\s+ago/);
 
   if (!match) {
+    if (folded.includes("bu gün") || folded.includes("bugün") || folded === "today") {
+      return subtractDays(0);
+    }
+    if (folded.includes("dünən")) {
+      return subtractDays(1);
+    }
     if (folded.includes("yesterday")) {
       return subtractDays(1);
     }
@@ -254,6 +196,30 @@ function parseAbsoluteAzDate(value: string) {
   return new Date(Date.UTC(year, month, day)).toISOString().slice(0, 10);
 }
 
+function parseNumericDate(value: string) {
+  const match = value.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
+
+  if (!match) {
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const year = Number(match[3]);
+
+  if (
+    !Number.isFinite(day) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(year) ||
+    month < 0 ||
+    month > 11
+  ) {
+    return null;
+  }
+
+  return new Date(Date.UTC(year, month, day)).toISOString().slice(0, 10);
+}
+
 function normalizePostedAt(rawValue: string | null | undefined) {
   const value = normalizeText(rawValue);
 
@@ -271,6 +237,11 @@ function normalizePostedAt(rawValue: string | null | undefined) {
     return absolute;
   }
 
+  const numeric = parseNumericDate(value);
+  if (numeric) {
+    return numeric;
+  }
+
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return value;
   }
@@ -278,221 +249,558 @@ function normalizePostedAt(rawValue: string | null | undefined) {
   return new Date().toISOString().slice(0, 10);
 }
 
-function computeDeadline(postedAt: string) {
-  const date = new Date(postedAt);
-  date.setDate(date.getDate() + 30);
-  return date.toISOString().slice(0, 10);
-}
+function findMatchingCompanyName(companyName: string) {
+  const normalized = normalizeCompanyName(companyName);
 
-function buildSummary(title: string, companyName: string, sourceName: string) {
-  return createLocalizedText(
-    `${companyName} komandasında açıq olan ${title} rolu CareerApple-da gənclər üçün seçilmiş fürsət kimi təqdim olunur.`,
-    `The ${title} role at ${companyName} is presented on CareerApple as a selected opportunity for early-career talent.`,
-    `Роль ${title} в ${companyName} представлена на CareerApple как отобранная возможность для early-career аудитории.`
-  );
-}
-
-function buildResponsibilities(title: string, category: ReturnType<typeof inferCategory>) {
-  const categoryLabel = getPrimaryLocalizedText(category);
-
-  return [
-    `${categoryLabel} istiqamətində komanda tapşırıqlarını dəstəkləmək`,
-    `${title} roluna uyğun gündəlik koordinasiya və hesabat işində iştirak etmək`,
-    "Mentor və komanda lead-lərdən gələn feedback əsasında işini iterasiya etmək"
-  ];
-}
-
-function buildRequirements(level: Job["level"], category: ReturnType<typeof inferCategory>) {
-  const categoryLabel = getPrimaryLocalizedText(category);
-
-  return [
-    `${categoryLabel} və ya əlaqəli sahədə baza bilikləri`,
-    `${level} səviyyəsinə uyğun operativ öyrənmə və ünsiyyət bacarığı`,
-    "Azərbaycan və ingilis dillərində aydın yazılı və şifahi ünsiyyət"
-  ];
-}
-
-function buildBenefits(sourceName: string) {
-  return [
-    "CareerApple-da seçilmiş fürsətlər lentində görünürlük",
-    "Etibarlı şirkət təqdimatı ilə daha güclü ilk təəssürat",
-    `${sourceName} üzərində birbaşa müraciət imkanı`
-  ];
-}
-
-function buildTags(title: string, sourceName: string, level: Job["level"], category: ReturnType<typeof inferCategory>) {
-  const tags = [sourceName, level, getPrimaryLocalizedText(category), ...title.split(/[\s/()-]+/)];
-  return Array.from(
-    new Set(
-      tags
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .slice(0, 6)
-    )
-  );
-}
-
-function findMatchingCompanySlug(companyName: string | null | undefined) {
-  const target = normalizeCompanyName(companyName ?? "");
-
-  if (!target) {
+  if (!normalized) {
     return null;
   }
 
-  const candidates = listCompanies().map((company) => ({
-    slug: company.slug,
+  const companies = listCompanies().map((company) => ({
     name: company.name,
     normalized: normalizeCompanyName(company.name)
   }));
 
-  const exact = candidates.find((candidate) => candidate.normalized === target);
+  const exact = companies.find((company) => company.normalized === normalized);
   if (exact) {
-    return exact.slug;
+    return exact.name;
   }
 
-  const partialMatches = candidates
-    .filter(
-      (candidate) =>
-        target.includes(candidate.normalized) || candidate.normalized.includes(target)
-    )
-    .sort((left, right) => right.normalized.length - left.normalized.length);
-
-  return partialMatches[0]?.slug ?? null;
+  return (
+    companies
+      .filter(
+        (company) =>
+          normalized.includes(company.normalized) || company.normalized.includes(normalized)
+      )
+      .sort((left, right) => right.normalized.length - left.normalized.length)[0]?.name ?? null
+  );
 }
 
-function pushUnmatchedCompany(
-  registry: Map<string, { displayName: string; sources: Set<string>; titles: Set<string> }>,
-  companyName: string,
-  sourceName: string,
-  title: string
-) {
-  const key = normalizeCompanyName(companyName) || companyName;
-  const current = registry.get(key) ?? {
-    displayName: companyName,
-    sources: new Set<string>(),
-    titles: new Set<string>()
-  };
-  current.sources.add(sourceName);
-  current.titles.add(title);
-  registry.set(key, current);
-}
-
-export async function syncScrapedJobs(options?: { dryRun?: boolean }): Promise<ScrapeSyncResult> {
-  const dryRun = Boolean(options?.dryRun);
-  const unmatchedCompanies = new Map<string, { displayName: string; sources: Set<string>; titles: Set<string> }>();
-  const errors: string[] = [];
-  const importedJobs: ScrapeSyncResult["importedJobs"] = [];
-  const sourceSummaries: ScrapeSyncResult["sources"] = [];
-  let totalScraped = 0;
+function summarizeDiscovery(rawJobs: RawIngestedJob[]) {
+  const unmatchedRegistry = new Map<string, { name: string; sources: Set<string>; sampleTitles: Set<string> }>();
   let matchedCount = 0;
-  let importedCount = 0;
-  let updatedCount = 0;
 
-  for (const source of scrapeSources) {
-    let scrapedCount = 0;
+  for (const job of rawJobs) {
+    if (findMatchingCompanyName(job.companyName)) {
+      matchedCount += 1;
+      continue;
+    }
+
+    const key = normalizeCompanyName(job.companyName) || job.companyName;
+    const current = unmatchedRegistry.get(key) ?? {
+      name: job.companyName,
+      sources: new Set<string>(),
+      sampleTitles: new Set<string>()
+    };
+    current.sources.add(job.sourceName);
+    current.sampleTitles.add(job.title);
+    unmatchedRegistry.set(key, current);
+  }
+
+  return {
+    matchedCount,
+    unmatchedCompanies: Array.from(unmatchedRegistry.values()).map((item) => ({
+      name: item.name,
+      sources: Array.from(item.sources),
+      sampleTitles: Array.from(item.sampleTitles).slice(0, 3)
+    }))
+  };
+}
+
+function ensureSourceHealthSchema() {
+  const db = getPlatformDatabase();
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS source_health (
+      source_id TEXT PRIMARY KEY,
+      source_name TEXT NOT NULL,
+      source_domain TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      country_or_market TEXT,
+      extraction_method TEXT,
+      reliability_score REAL,
+      freshness_score REAL,
+      supports_job_detail_pages TEXT,
+      supports_apply_links TEXT,
+      last_checked_at TEXT,
+      last_success_at TEXT,
+      last_scraped_count INTEGER NOT NULL DEFAULT 0,
+      parser_status TEXT,
+      last_error TEXT,
+      updated_at TEXT NOT NULL
+    )
+  `);
+}
+
+function resolveRuntimeParserStatus(source: ScrapeSource, error: string | null) {
+  if (error) {
+    if (
+      /restricted|403|404|dns|unreachable|forbidden|access[_ ]denied|not_ingestable/i.test(error)
+    ) {
+      return "blocked";
+    }
+
+    return "degraded";
+  }
+
+  return source.parserStatus ?? "ready";
+}
+
+function recordSourceHealth(source: ScrapeSource, input: { scrapedCount: number; error: string | null }) {
+  ensureSourceHealthSchema();
+  const db = getPlatformDatabase();
+  const checkedAt = nowIsoTimestamp();
+  const parserStatus = resolveRuntimeParserStatus(source, input.error);
+
+  db.prepare(
+    `INSERT INTO source_health (
+      source_id, source_name, source_domain, source_type, country_or_market, extraction_method,
+      reliability_score, freshness_score, supports_job_detail_pages, supports_apply_links,
+      last_checked_at, last_success_at, last_scraped_count, parser_status, last_error, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(source_id) DO UPDATE SET
+      source_name = excluded.source_name,
+      source_domain = excluded.source_domain,
+      source_type = excluded.source_type,
+      country_or_market = excluded.country_or_market,
+      extraction_method = excluded.extraction_method,
+      reliability_score = excluded.reliability_score,
+      freshness_score = excluded.freshness_score,
+      supports_job_detail_pages = excluded.supports_job_detail_pages,
+      supports_apply_links = excluded.supports_apply_links,
+      last_checked_at = excluded.last_checked_at,
+      last_success_at = COALESCE(excluded.last_success_at, source_health.last_success_at),
+      last_scraped_count = excluded.last_scraped_count,
+      parser_status = excluded.parser_status,
+      last_error = excluded.last_error,
+      updated_at = excluded.updated_at`
+  ).run(
+    source.id,
+    source.name,
+    source.sourceDomain,
+    source.sourceType,
+    source.countryOrMarket ?? null,
+    source.discoveryMethod ?? source.adapter,
+    source.reliabilityScore ?? null,
+    source.freshnessScore ?? null,
+    source.hasDetailPages,
+    source.hasApplyUrls,
+    checkedAt,
+    input.error ? null : checkedAt,
+    input.scrapedCount,
+    parserStatus,
+    input.error,
+    checkedAt
+  );
+}
+
+function getSourceHealthIndex() {
+  ensureSourceHealthSchema();
+  const db = getPlatformDatabase();
+  const rows = db.prepare(
+    `SELECT source_id, last_checked_at, last_success_at, last_scraped_count, parser_status, last_error
+     FROM source_health`
+  ).all() as SourceHealthRow[];
+
+  return new Map(rows.map((row) => [row.source_id, row]));
+}
+
+export function getScrapeSourceInventoryWithHealth() {
+  const healthIndex = getSourceHealthIndex();
+  const complianceIndex = getSourceComplianceIndex();
+  return getScrapeSourceInventory().map((source) => {
+    const health = healthIndex.get(source.id);
+    const compliance = complianceIndex.get(source.id);
+    return {
+      ...source,
+      extractionMethod: source.discoveryMethod ?? source.adapter,
+      supportsJobDetailPages: source.hasDetailPages,
+      supportsApplyLinks: source.hasApplyUrls,
+      lastCheckedAt: health?.last_checked_at ?? null,
+      lastSuccessAt: health?.last_success_at ?? null,
+      lastScrapedCount: typeof health?.last_scraped_count === "number" ? health.last_scraped_count : 0,
+      lastError: health?.last_error ?? null,
+      parserStatus: health?.parser_status ?? source.parserStatus ?? null,
+      termsUrl: compliance?.termsUrl ?? source.termsUrl ?? null,
+      privacyUrl: compliance?.privacyUrl ?? source.privacyUrl ?? null,
+      robotsUrl: compliance?.robotsUrl ?? source.robotsUrl ?? null,
+      legalReviewStatus: compliance?.legalReviewStatus ?? source.legalReviewStatus ?? null,
+      legalReviewNotes: compliance?.legalReviewNotes ?? source.legalReviewNotes ?? null,
+      allowedIngestionMethod: compliance?.allowedIngestionMethod ?? source.allowedIngestionMethod ?? null,
+      lastLegalCheckedAt: compliance?.lastLegalCheckedAt ?? source.lastLegalCheckedAt ?? null
+    };
+  });
+}
+
+async function runPythonScraper(source: ScrapeSource): Promise<ScrapeRunResult> {
+  const outputPath = path.join(
+    process.cwd(),
+    "data",
+    `scrape-${source.id.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.json`
+  );
+  const pythonBinary = resolvePythonBinary();
+  const scriptPath = path.join(process.cwd(), "scrape_youth_jobs.py");
+
+  await execFileAsync(
+    pythonBinary,
+    [scriptPath, source.url, "--output", outputPath, "--timeout", "25", "--filter-mode", "all"],
+    {
+      cwd: process.cwd(),
+      maxBuffer: 1024 * 1024 * 8,
+      timeout: 120_000,
+      killSignal: "SIGKILL"
+    }
+  );
+
+  const raw = await fs.readFile(outputPath, "utf8");
+  const parsed = JSON.parse(raw);
+  const scraperRecords = Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
+
+  // Step 1: Deterministic extraction from scraper output
+  const extractedRecords = extractFromScraperOutput(scraperRecords, source.url, source.name);
+  const validatedRecords = await validateExtractedJobRecords(extractedRecords);
+
+  const extraction: ExtractionRunResult = {
+    source_id: source.id,
+    source_name: source.name,
+    source_url: source.url,
+    adapter: source.adapter,
+    extracted_at: new Date().toISOString(),
+    records: validatedRecords,
+    error: null
+  };
+
+  // Step 2: Bridge to RawIngestedJob with date normalization
+  const jobs: RawIngestedJob[] = validatedRecords.map((record) => {
+    const dateRaw = record._debug.date_raw as string | null;
+    return toRawIngestedJob(record, source.kind, {
+      postedAt: normalizePostedAt(dateRaw),
+      trustTier: source.trustTier,
+      adapter: source.adapter,
+      sourceId: source.id,
+      companySiteHint: source.url
+    });
+  });
+
+  return { source, jobs, extraction };
+}
+
+async function runSource(source: ScrapeSource) {
+  if (source.adapter === "html-discovery" || source.adapter === "json-feed") {
+    return runSourceAdapter(source, { validateUrls: false });
+  }
+
+  return runPythonScraper(source);
+}
+
+function selectScrapeSources(sourceIds?: string[]) {
+  const enabledSources = getEnabledScrapeSources();
+
+  if (!sourceIds || sourceIds.length === 0) {
+    return enabledSources;
+  }
+
+  const requestedIds = new Set(sourceIds.map((value) => value.trim()).filter(Boolean));
+  if (requestedIds.size === 0) {
+    return enabledSources;
+  }
+
+  const inventory = getScrapeSourceInventory();
+  const selected = inventory.filter((source) => requestedIds.has(source.id));
+  const invalid = Array.from(requestedIds).filter((id) => !selected.some((source) => source.id === id));
+  const disabled = selected.filter(
+    (source) => source.enabled === false || !source.reliableEnough || !source.extractionReady
+  );
+
+  if (invalid.length > 0) {
+    throw new Error(`unknown_source_ids:${invalid.join(",")}`);
+  }
+
+  if (disabled.length > 0) {
+    throw new Error(`sources_not_ingestable:${disabled.map((source) => source.id).join(",")}`);
+  }
+
+  return enabledSources.filter((source) => requestedIds.has(source.id));
+}
+
+export async function syncScrapedJobs(options?: SyncScrapedJobsOptions): Promise<ScrapeSyncResult> {
+  const dryRun = Boolean(options?.dryRun);
+  const revalidateBeforeIngest = Boolean(options?.revalidateBeforeIngest);
+  const requestedSources = selectScrapeSources(options?.sourceIds);
+  ensureSourceHealthSchema();
+  const rawJobs: RawIngestedJob[] = [];
+  const sourceSummaries: ScrapeSyncResult["sources"] = [];
+  const errors: string[] = [];
+  const complianceReviews = await reviewSourceComplianceBatch(requestedSources);
+  const complianceIndex = new Map<string, SourceComplianceReview>(
+    complianceReviews.map((review) => [review.sourceId, review])
+  );
+  const runnableSources = requestedSources.filter((source) => {
+    const review = complianceIndex.get(source.id);
+    return review ? isComplianceStatusAllowed(review.legalReviewStatus) : false;
+  });
+
+  if (revalidateBeforeIngest) {
+    try {
+      await revalidatePublishedJobApplyUrls();
+    } catch (error) {
+      errors.push(
+        `published-link-revalidation: ${error instanceof Error ? error.message : "revalidation_failed"}`
+      );
+    }
+  }
+
+  for (const source of requestedSources) {
+    const compliance = complianceIndex.get(source.id);
+    if (!compliance || !isComplianceStatusAllowed(compliance.legalReviewStatus)) {
+      const message = compliance
+        ? `compliance:${compliance.legalReviewStatus}`
+        : "compliance:review_missing";
+      errors.push(`${source.name}: ${message}`);
+      recordSourceHealth(source, { scrapedCount: 0, error: message });
+      sourceSummaries.push({
+        id: source.id,
+        name: source.name,
+        url: source.url,
+        sourceDomain: source.sourceDomain,
+        sourceType: source.sourceType,
+        countryOrMarket: source.countryOrMarket,
+        policy: source.policy,
+        discoveryMethod: source.discoveryMethod,
+        extractionMethod: source.discoveryMethod ?? source.adapter,
+        kind: source.kind,
+        adapter: source.adapter,
+        trustTier: source.trustTier,
+        hasDetailPages: source.hasDetailPages,
+        hasApplyUrls: source.hasApplyUrls,
+        supportsJobDetailPages: source.hasDetailPages,
+        supportsApplyLinks: source.hasApplyUrls,
+        reliableEnough: source.reliableEnough,
+        extractionReady: source.extractionReady,
+        reliabilityScore: source.reliabilityScore,
+        freshnessScore: source.freshnessScore,
+        parserStatus: "blocked",
+        lastCheckedAt: nowIsoTimestamp(),
+        termsUrl: compliance?.termsUrl ?? null,
+        privacyUrl: compliance?.privacyUrl ?? null,
+        robotsUrl: compliance?.robotsUrl ?? null,
+        legalReviewStatus: compliance?.legalReviewStatus ?? null,
+        legalReviewNotes: compliance?.legalReviewNotes ?? "Source skipped because legal review is missing or restrictive.",
+        allowedIngestionMethod: compliance?.allowedIngestionMethod ?? null,
+        lastLegalCheckedAt: compliance?.lastLegalCheckedAt ?? null,
+        restrictedReason: source.restrictedReason,
+        scrapedCount: 0,
+        error: message
+      });
+      continue;
+    }
 
     try {
-      const result = await runPythonScraper(source);
-      scrapedCount = result.jobs.length;
-
-      totalScraped += result.jobs.length;
-
-      for (const job of result.jobs) {
-        const title = normalizeText(job.job_title);
-        const companyName = normalizeText(job.company_name);
-        const sourceUrl = normalizeText(job.job_url);
-
-        if (!title || !companyName || !sourceUrl) {
-          continue;
-        }
-
-        const companySlug = findMatchingCompanySlug(companyName);
-
-        if (!companySlug) {
-          pushUnmatchedCompany(unmatchedCompanies, companyName, source.name, title);
-          continue;
-        }
-
-        matchedCount += 1;
-
-        const level = inferLevel(title);
-        const category = inferCategory(title);
-        const postedAt = normalizePostedAt(job.publication_or_deadline_date);
-        const input: JobInput = {
-          title: normalizeLocalizedText(title, "en"),
-          companySlug,
-          city: inferCity(job.location),
-          workModel: inferWorkModel(title, job.location),
-          level,
-          category,
-          postedAt,
-          deadline: computeDeadline(postedAt),
-          summary: buildSummary(title, companyName, source.name),
-          responsibilities: buildResponsibilities(title, category),
-          requirements: buildRequirements(level, category),
-          benefits: buildBenefits(source.name),
-          tags: buildTags(title, source.name, level, category),
-          directCompanyUrl: listCompanies().find((company) => company.slug === companySlug)?.website,
-          sourceName: source.name,
-          sourceUrl
-        };
-
-        if (dryRun) {
-          importedJobs.push({
-            title,
-            companyName,
-            sourceName: source.name,
-            action: "preview"
-          });
-          continue;
-        }
-
-        const syncResult = upsertScrapedJob(input);
-        if (syncResult.item) {
-          if (syncResult.action === "created") {
-            importedCount += 1;
-          } else {
-            updatedCount += 1;
-          }
-
-          importedJobs.push({
-            title,
-            companyName,
-            sourceName: source.name,
-            action: syncResult.action
-          });
-        }
-      }
-
+      const result = await runSource(source);
+      rawJobs.push(...result.jobs);
+      recordSourceHealth(source, { scrapedCount: result.jobs.length, error: null });
       sourceSummaries.push({
+        id: source.id,
         name: source.name,
         url: source.url,
-        scrapedCount
+        sourceDomain: source.sourceDomain,
+        sourceType: source.sourceType,
+        countryOrMarket: source.countryOrMarket,
+        policy: source.policy,
+        discoveryMethod: source.discoveryMethod,
+        extractionMethod: source.discoveryMethod ?? source.adapter,
+        kind: source.kind,
+        adapter: source.adapter,
+        trustTier: source.trustTier,
+        hasDetailPages: source.hasDetailPages,
+        hasApplyUrls: source.hasApplyUrls,
+        supportsJobDetailPages: source.hasDetailPages,
+        supportsApplyLinks: source.hasApplyUrls,
+        reliableEnough: source.reliableEnough,
+        extractionReady: source.extractionReady,
+        reliabilityScore: source.reliabilityScore,
+        freshnessScore: source.freshnessScore,
+        parserStatus: source.parserStatus,
+        lastCheckedAt: nowIsoTimestamp(),
+        termsUrl: compliance.termsUrl,
+        privacyUrl: compliance.privacyUrl,
+        robotsUrl: compliance.robotsUrl,
+        legalReviewStatus: compliance.legalReviewStatus,
+        legalReviewNotes: compliance.legalReviewNotes,
+        allowedIngestionMethod: compliance.allowedIngestionMethod,
+        lastLegalCheckedAt: compliance.lastLegalCheckedAt,
+        restrictedReason: source.restrictedReason,
+        scrapedCount: result.jobs.length,
+        error: null
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Naməlum yeniləmə xətası";
+      const message = error instanceof Error ? error.message : "source_failed";
       errors.push(`${source.name}: ${message}`);
+      recordSourceHealth(source, { scrapedCount: 0, error: message });
       sourceSummaries.push({
+        id: source.id,
         name: source.name,
         url: source.url,
-        scrapedCount
+        sourceDomain: source.sourceDomain,
+        sourceType: source.sourceType,
+        countryOrMarket: source.countryOrMarket,
+        policy: source.policy,
+        discoveryMethod: source.discoveryMethod,
+        extractionMethod: source.discoveryMethod ?? source.adapter,
+        kind: source.kind,
+        adapter: source.adapter,
+        trustTier: source.trustTier,
+        hasDetailPages: source.hasDetailPages,
+        hasApplyUrls: source.hasApplyUrls,
+        supportsJobDetailPages: source.hasDetailPages,
+        supportsApplyLinks: source.hasApplyUrls,
+        reliableEnough: source.reliableEnough,
+        extractionReady: source.extractionReady,
+        reliabilityScore: source.reliabilityScore,
+        freshnessScore: source.freshnessScore,
+        parserStatus: resolveRuntimeParserStatus(source, message),
+        lastCheckedAt: nowIsoTimestamp(),
+        termsUrl: compliance.termsUrl,
+        privacyUrl: compliance.privacyUrl,
+        robotsUrl: compliance.robotsUrl,
+        legalReviewStatus: compliance.legalReviewStatus,
+        legalReviewNotes: compliance.legalReviewNotes,
+        allowedIngestionMethod: compliance.allowedIngestionMethod,
+        lastLegalCheckedAt: compliance.lastLegalCheckedAt,
+        restrictedReason: source.restrictedReason,
+        scrapedCount: 0,
+        error: message
       });
     }
   }
 
+  const dedupedRawJobs = Array.from(
+    new Map(rawJobs.map((job) => [buildRawJobIdentity(job), job])).values()
+  );
+  const discovery = summarizeDiscovery(dedupedRawJobs);
+
+  if (dryRun) {
+    const preview = await previewRawJobs(dedupedRawJobs);
+    return {
+      ...preview,
+      matchedCount: discovery.matchedCount,
+      unmatchedCompanies: discovery.unmatchedCompanies,
+      errors: [...preview.errors, ...errors],
+      sources: sourceSummaries
+    };
+  }
+
+  const run = createIngestionRun({
+    dryRun: false,
+    sourceCount: runnableSources.length,
+    notes: {
+      sourceIds: runnableSources.map((source) => source.id),
+      totalDiscovered: dedupedRawJobs.length
+    }
+  });
+
+  if (!run) {
+    throw new Error("ingestion_run_not_created");
+  }
+
+  const db = getPlatformDatabase();
+  const enqueueStatement = db.prepare(
+    `SELECT COUNT(*) AS total
+     FROM job_candidates
+     WHERE id = ?`
+  );
+  const importedJobs = dedupedRawJobs.slice(0, 12).map((job) => {
+    const existing = enqueueStatement.get(buildRawJobIdentity(job)) as { total?: number } | undefined;
+    return {
+      title: job.title,
+      companyName: job.companyName,
+      sourceName: job.sourceName,
+      action: existing?.total ? ("updated" as const) : ("created" as const)
+    };
+  });
+
+  enqueueRawJobs(run.id, dedupedRawJobs);
+  // Keep maintenance work decoupled from the active discovery run.
+  // Otherwise a fresh source refresh is polluted by unrelated historical
+  // revalidations and failed retries, which delays or blocks publication of
+  // newly discovered jobs from the requested sources.
+  requeueRecoverableFailedCandidates();
+  queueDueRevalidations();
+  const worker = schedulePipelineProcessing(run.id);
+  await Promise.race([worker, new Promise((resolve) => setTimeout(resolve, 400))]);
+  const liveRun = getIngestionRun(run.id) ?? run;
+
   return {
-    dryRun,
-    importedCount,
-    updatedCount,
-    matchedCount,
-    totalScraped,
-    sources: sourceSummaries,
-    importedJobs: importedJobs.slice(0, 12),
-    unmatchedCompanies: Array.from(unmatchedCompanies.values()).map((entry) => ({
-      name: entry.displayName,
-      sources: Array.from(entry.sources),
-      sampleTitles: Array.from(entry.titles).slice(0, 3)
-    })),
-    errors
+    message:
+      liveRun.status === "completed" || liveRun.status === "completed_with_errors"
+        ? "Yeniləmə tamamlandı."
+        : "Yeniləmə təhlükəsiz emal növbəsinə alındı.",
+    dryRun: false,
+    importedCount: liveRun.publishedCount,
+    updatedCount: 0,
+    matchedCount: discovery.matchedCount,
+    totalScraped: dedupedRawJobs.length,
+    importedJobs,
+    unmatchedCompanies: discovery.unmatchedCompanies,
+    errors,
+    run: liveRun,
+    sources: sourceSummaries
+  };
+}
+
+export async function runDailySourceCycle(): Promise<DailySourceCycleResult> {
+  const inventory = getScrapeSourceInventory();
+  const complianceReviews = await reviewSourceComplianceBatch(inventory);
+  const complianceIndex = new Map(complianceReviews.map((review) => [review.sourceId, review]));
+  const checkedAt = nowIsoTimestamp();
+
+  const activeSources = inventory.filter((source) => {
+    const review = complianceIndex.get(source.id);
+    return (
+      source.enabled !== false &&
+      source.reliableEnough &&
+      source.extractionReady &&
+      Boolean(review && isComplianceStatusAllowed(review.legalReviewStatus))
+    );
+  });
+
+  const skippedSources = inventory
+    .filter((source) => !activeSources.some((candidate) => candidate.id === source.id))
+    .map((source) => {
+      const review = complianceIndex.get(source.id);
+      const reason =
+        source.enabled === false
+          ? source.disabledReason ?? "disabled"
+          : !source.reliableEnough
+            ? "reliability_insufficient"
+            : !source.extractionReady
+              ? "extractor_not_ready"
+              : review
+                ? `compliance:${review.legalReviewStatus}`
+                : "compliance:review_missing";
+
+      recordSourceHealth(source, { scrapedCount: 0, error: reason });
+
+      return {
+        id: source.id,
+        name: source.name,
+        reason,
+        legalReviewStatus: review?.legalReviewStatus ?? null,
+        allowedIngestionMethod: review?.allowedIngestionMethod ?? null,
+        lastCheckedAt: checkedAt
+      };
+    });
+
+  const ingestion = await syncScrapedJobs({
+    sourceIds: activeSources.map((source) => source.id)
+  });
+  const revalidation = await revalidatePublishedJobApplyUrls({ force: true });
+
+  return {
+    reviewedSourceCount: inventory.length,
+    activeSourceCount: activeSources.length,
+    skippedSourceCount: skippedSources.length,
+    skippedSources,
+    ingestion,
+    revalidation
   };
 }

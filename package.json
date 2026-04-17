@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "ingest": "npx --yes tsx scripts/run-ingestion.ts",
+    "ingest:dry": "npx --yes tsx scripts/run-ingestion.ts --dry-run",
+    "revalidate:jobs": "npx --yes tsx scripts/run-revalidation.ts",
+    "review:sources": "npx --yes tsx scripts/review-sources.ts",
+    "source-cycle:daily": "npx --yes tsx scripts/run-daily-source-cycle.ts"
   },
   "dependencies": {
     "lucide-react": "^0.542.0",

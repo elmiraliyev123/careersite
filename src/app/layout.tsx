@@ -9,6 +9,10 @@ import { localeCookieName, resolveLocale } from "@/lib/i18n";
 import { getCompanyCategories } from "@/lib/platform";
 import { getSessionRole } from "@/lib/session";
 
+import { AdminEditToolbar } from "@/components/admin-edit-toolbar";
+import { CmsProvider } from "@/components/cms-provider";
+import { getCmsDocument } from "@/lib/platform-database";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,20 +23,28 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const role = await getSessionRole();
+  const isAdmin = role === "admin";
   const cookieStore = await cookies();
   const locale = resolveLocale(cookieStore.get(localeCookieName)?.value);
   const companyCategories = getCompanyCategories();
+  
+  const cmsDoc = getCmsDocument("site-content");
+  const publishedData = cmsDoc?.publishedData || {};
+  const draftData = isAdmin ? (cmsDoc?.draftData || publishedData) : {};
 
   return (
     <html lang={locale}>
       <body>
         <I18nProvider initialLocale={locale}>
-          <div className="app-shell">
-            <SiteHeader role={role} companyCategories={companyCategories} />
-            <div className="page-content">{children}</div>
-            <SavedJobsDock />
-            <SiteFooter />
-          </div>
+          <CmsProvider isAdmin={isAdmin} initialPublishedData={publishedData} initialDraftData={draftData}>
+            <div className="app-shell">
+              <SiteHeader role={role} companyCategories={companyCategories} />
+              <div className="page-content">{children}</div>
+              <SavedJobsDock />
+              <SiteFooter />
+            </div>
+            <AdminEditToolbar />
+          </CmsProvider>
         </I18nProvider>
       </body>
     </html>

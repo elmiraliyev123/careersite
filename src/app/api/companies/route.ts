@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { createCompany, listCompanies } from "@/lib/platform-database";
+import { getCompanies } from "@/lib/platform";
+import { createCompany } from "@/lib/platform-database";
 import { requireAdminMutation } from "@/lib/request-security";
 import { validateCompanyInput } from "@/lib/platform-validation";
 
@@ -8,7 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const companies = listCompanies();
+  const companies = getCompanies();
 
   return NextResponse.json({
     total: companies.length,

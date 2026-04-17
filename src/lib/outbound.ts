@@ -59,6 +59,23 @@ export function buildOutboundHref({
     return normalizedTarget.startsWith("/") ? normalizedTarget : fallbackHref;
   }
 
+  // Additional safety: reject placeholder and generic listing URLs
+  // These should never reach users as redirect targets
+  try {
+    const parsed = new URL(normalizedTarget);
+    const pathname = parsed.pathname.replace(/\/+$/, "") || "/";
+    if (
+      pathname === "/" &&
+      !parsed.search &&
+      !parsed.hash
+    ) {
+      // Bare homepages should not be redirect targets
+      return fallbackHref;
+    }
+  } catch {
+    return fallbackHref;
+  }
+
   const searchParams = new URLSearchParams({
     url: normalizedTarget,
     company: companyName?.trim() || getHostnameLabel(normalizedTarget) || "CareerApple"

@@ -45,7 +45,7 @@ export function JobCard({ job, company, sourcePath }: JobCardProps) {
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const companyLinkRef = useRef<HTMLAnchorElement | null>(null);
-  const applyHref = isSafeExternalUrl(job.applyUrl?.trim() ?? "") ? job.applyUrl!.trim() : "";
+  const applyHref = isSafeExternalUrl(job.finalVerifiedUrl?.trim() ?? "") ? job.finalVerifiedUrl!.trim() : "";
   const outboundApplyHref = applyHref
     ? buildOutboundHref({
         targetUrl: applyHref,
@@ -104,7 +104,9 @@ export function JobCard({ job, company, sourcePath }: JobCardProps) {
           <span className="job-card__brand-copy">
             <span className="job-card__company-name-row">
               <strong>{localizedCompany.name}</strong>
-              <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+              {localizedCompany.verified !== false ? (
+                <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+              ) : null}
             </span>
             <span>{translateSector(locale, localizedCompany.sector)}</span>
           </span>
@@ -113,7 +115,9 @@ export function JobCard({ job, company, sourcePath }: JobCardProps) {
 
       <div className="job-card__body">
         <h3>{localizedJob.title}</h3>
-        <p className="job-card__summary">{localizedJob.summary}</p>
+        {localizedJob.summary ? (
+          <p className="job-card__summary">{localizedJob.summary}</p>
+        ) : null}
         {visibleTags.length > 0 ? (
           <div className="job-card__tags" aria-label={t("jobDetail.matchingTags")}>
             {visibleTags.map((tag) => (

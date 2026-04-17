@@ -34,15 +34,20 @@ export function JobDetailPageClient({
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const sourcePath = `/jobs/${job.slug}`;
-  const originalListingHref = job.sourceUrl
-    ? buildOutboundHref({
-        targetUrl: job.sourceUrl,
-        companyName: localizedCompany?.name ?? job.companySlug,
-        logoUrl: company?.logo,
-        sourcePath,
-        fallbackHref: sourcePath
-      })
-    : null;
+  const showCompanyProfileNote =
+    Boolean(localizedCompany) &&
+    localizedCompany!.verified === false &&
+    localizedCompany!.about.trim().length > 0;
+  const originalListingHref =
+    job.finalVerifiedUrl && job.jobDetailUrl && job.jobDetailUrl === job.finalVerifiedUrl
+      ? buildOutboundHref({
+          targetUrl: job.finalVerifiedUrl,
+          companyName: localizedCompany?.name ?? job.companySlug,
+          logoUrl: company?.logo,
+          sourcePath,
+          fallbackHref: sourcePath
+        })
+      : null;
 
   return (
     <main className="section job-detail-page">
@@ -66,11 +71,13 @@ export function JobDetailPageClient({
             <h1>{localizedJob.title}</h1>
             <div className="detail-hero__company-row">
               <p className="detail-hero__company">{localizedCompany?.name}</p>
-              {localizedCompany ? (
+              {localizedCompany?.verified !== false ? (
                 <VerifiedBadge compact label={t("labels.verifiedCompany")} />
               ) : null}
             </div>
-            <p className="detail-hero__summary">{localizedJob.summary}</p>
+            {localizedJob.summary ? (
+              <p className="detail-hero__summary">{localizedJob.summary}</p>
+            ) : null}
 
             <div className="detail-hero__meta">
               <span>
@@ -97,7 +104,7 @@ export function JobDetailPageClient({
             <div className="detail-hero__desktop-apply">
               <ApplyJobButton
                 slug={job.slug}
-                href={job.applyUrl ?? ""}
+                href={job.finalVerifiedUrl ?? ""}
                 companyName={localizedCompany?.name ?? job.companySlug}
                 companyLogo={company?.logo}
                 sourcePath={sourcePath}
@@ -123,35 +130,41 @@ export function JobDetailPageClient({
         />
 
         <div className="detail-grid">
-          <section className="detail-panel">
-            <p className="eyebrow">{t("labels.responsibilities")}</p>
-            <h2>{t("jobDetail.whatYouWillDo")}</h2>
-            <ul className="bullet-list">
-              {localizedJob.responsibilities.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
+          {localizedJob.responsibilities.length > 0 ? (
+            <section className="detail-panel">
+              <p className="eyebrow">{t("labels.responsibilities")}</p>
+              <h2>{t("jobDetail.whatYouWillDo")}</h2>
+              <ul className="bullet-list">
+                {localizedJob.responsibilities.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-          <section className="detail-panel">
-            <p className="eyebrow">{t("labels.requirements")}</p>
-            <h2>{t("jobDetail.whatIsExpected")}</h2>
-            <ul className="bullet-list">
-              {localizedJob.requirements.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
+          {localizedJob.requirements.length > 0 ? (
+            <section className="detail-panel">
+              <p className="eyebrow">{t("labels.requirements")}</p>
+              <h2>{t("jobDetail.whatIsExpected")}</h2>
+              <ul className="bullet-list">
+                {localizedJob.requirements.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-          <section className="detail-panel">
-            <p className="eyebrow">{t("labels.benefits")}</p>
-            <h2>{t("jobDetail.whatYouGain")}</h2>
-            <ul className="bullet-list">
-              {localizedJob.benefits.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
+          {localizedJob.benefits.length > 0 ? (
+            <section className="detail-panel">
+              <p className="eyebrow">{t("labels.benefits")}</p>
+              <h2>{t("jobDetail.whatYouGain")}</h2>
+              <ul className="bullet-list">
+                {localizedJob.benefits.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <aside className="detail-panel detail-panel--sticky">
             <p className="eyebrow">{t("labels.skills")}</p>
@@ -164,11 +177,13 @@ export function JobDetailPageClient({
               ))}
             </div>
 
-            {localizedCompany ? (
+            {localizedCompany && showCompanyProfileNote ? (
               <div className="company-mini">
                 <div className="company-mini__title">
                   <h3>{localizedCompany.name}</h3>
-                  <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                  {localizedCompany.verified !== false ? (
+                    <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                  ) : null}
                 </div>
                 <p>{localizedCompany.about}</p>
               </div>
@@ -187,7 +202,7 @@ export function JobDetailPageClient({
             </Link>
           </div>
 
-          <div className="card-grid card-grid--jobs mobile-snap-row">
+          <div className="card-grid card-grid--jobs recommendations-grid mobile-snap-row">
             {recommendations.map((item) => (
               <JobCard
                 key={item.job.slug}
@@ -203,7 +218,7 @@ export function JobDetailPageClient({
       <div className="job-detail__mobile-apply">
         <ApplyJobButton
           slug={job.slug}
-          href={job.applyUrl ?? ""}
+          href={job.finalVerifiedUrl ?? ""}
           companyName={localizedCompany?.name ?? job.companySlug}
           companyLogo={company?.logo}
           sourcePath={sourcePath}

@@ -12,7 +12,7 @@ export function PlaybookPageClient() {
   const articles = getLocalizedPlaybookArticles(locale);
 
   return (
-    <main className="section">
+    <main className="section playbook-page">
       <div className="shell stack-lg">
         <div className="page-hero playbook-hero">
           <p className="eyebrow">{t("playbook.eyebrow")}</p>

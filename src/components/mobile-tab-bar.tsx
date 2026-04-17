@@ -66,7 +66,7 @@ export function MobileTabBar() {
             href={href}
             className={`relative flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[20px] px-2 text-[0.72rem] font-semibold tracking-[0.08em] transition ${
               active
-                ? "bg-[#32CD32]/14 text-[#32CD32] shadow-[0_0_22px_rgba(50,205,50,0.18)]"
+                ? "bg-[#60A5FA]/14 text-[#60A5FA] shadow-[0_0_22px_rgba(96,165,250,0.25)]"
                 : "text-white/65 active:scale-[0.98] active:bg-white/5 focus-visible:bg-white/5"
             }`}
             aria-current={active ? "page" : undefined}
@@ -74,7 +74,7 @@ export function MobileTabBar() {
             <span className="relative inline-flex items-center justify-center">
               <Icon size={20} />
               {badge ? (
-                <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#32CD32] px-1 text-[0.62rem] font-bold leading-none text-[#071007]">
+                <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#60A5FA] px-1 text-[0.62rem] font-bold leading-none text-[#071321]">
                   {badge}
                 </span>
               ) : null}

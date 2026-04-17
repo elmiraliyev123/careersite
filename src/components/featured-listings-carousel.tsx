@@ -69,7 +69,9 @@ export function FeaturedListingsCarousel({ items }: FeaturedListingsCarouselProp
                       <div className="featured-banner__copy">
                         <div className="featured-banner__company-row">
                           <p className="featured-banner__company">{localizedCompany.name}</p>
-                          <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                          {localizedCompany.verified !== false ? (
+                            <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                          ) : null}
                         </div>
                         <p className="featured-banner__sector">
                           {translateSector(locale, company.sector)}

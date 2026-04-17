@@ -64,7 +64,7 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
       {items.map(({ job, company }) => {
         const localizedJob = getLocalizedJob(job, locale);
         const localizedCompany = getLocalizedCompany(company, locale);
-        const applyHref = isSafeExternalUrl(job.applyUrl?.trim() ?? "") ? job.applyUrl!.trim() : "";
+        const applyHref = isSafeExternalUrl(job.finalVerifiedUrl?.trim() ?? "") ? job.finalVerifiedUrl!.trim() : "";
         const outboundApplyHref = applyHref
           ? buildOutboundHref({
               targetUrl: applyHref,
@@ -90,7 +90,9 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
                 <span className="internship-card__brand-copy">
                   <span className="internship-card__company-row">
                     <strong>{localizedCompany.name}</strong>
-                    <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                    {localizedCompany.verified !== false ? (
+                      <VerifiedBadge compact label={t("labels.verifiedCompany")} />
+                    ) : null}
                   </span>
                   <span>{localizedCompany.tagline}</span>
                 </span>

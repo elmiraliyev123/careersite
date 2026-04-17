@@ -32,7 +32,7 @@ export function SavedJobsPageClient({ jobs, companies }: SavedJobsPageClientProp
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return (
-    <main className="section">
+    <main className="section saved-page">
       <div className="shell stack-lg">
         <div className="page-hero">
           <p className="eyebrow">{t("nav.saved")}</p>
@@ -49,7 +49,7 @@ export function SavedJobsPageClient({ jobs, companies }: SavedJobsPageClientProp
             </Link>
           </div>
         ) : (
-          <div className="card-grid card-grid--jobs mobile-snap-row">
+          <div className="card-grid card-grid--jobs saved-jobs-grid mobile-snap-row">
             {savedJobs.map(({ job, company }) => (
               <JobCard key={job.slug} job={job} company={company} sourcePath="/saved" />
             ))}

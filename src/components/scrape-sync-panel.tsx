@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ScrapeSourceSummary = {
   name: string;
@@ -30,11 +30,64 @@ type SyncResult = {
     sampleTitles: string[];
   }>;
   errors: string[];
+  run?: {
+    id: string;
+    status: string;
+    queuedCount: number;
+    processedCount: number;
+    publishedCount: number;
+    rejectedCount: number;
+    duplicateCount: number;
+    errorCount: number;
+  } | null;
 } | null;
 
 export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
   const [result, setResult] = useState<SyncResult>(null);
   const [mode, setMode] = useState<"preview" | "sync" | null>(null);
+
+  useEffect(() => {
+    if (!result?.run?.id) {
+      return undefined;
+    }
+
+    if (!["queued", "running"].includes(result.run.status)) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      void (async () => {
+        try {
+          const response = await fetch(`/api/scrape?runId=${encodeURIComponent(result.run?.id ?? "")}`, {
+            cache: "no-store"
+          });
+          const payload = await response.json();
+
+          if (!response.ok || !payload.run) {
+            return;
+          }
+
+          setResult((current) =>
+            current
+              ? {
+                  ...current,
+                  run: payload.run,
+                  importedCount: payload.run.publishedCount,
+                  message:
+                    payload.run.status === "completed" || payload.run.status === "completed_with_errors"
+                      ? "Yeniləmə tamamlandı."
+                      : "Yeniləmə fon emalında davam edir."
+                }
+              : current
+          );
+        } catch {
+          // Ignore transient polling errors. Manual refresh remains available.
+        }
+      })();
+    }, 2000);
+
+    return () => window.clearInterval(interval);
+  }, [result?.run?.id, result?.run?.status]);
 
   function getActionLabel(action: "created" | "updated" | "preview") {
     if (action === "created") {
@@ -134,6 +187,12 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
             {result.message}
           </p>
 
+          {result.run ? (
+            <p className="site-footer__copy">
+              Run status: <strong>{result.run.status}</strong> • {result.run.processedCount}/{result.run.queuedCount} emal olundu
+            </p>
+          ) : null}
+
           <div className="dashboard-panel--stats">
             <article className="stat-card">
               <div>
@@ -150,7 +209,7 @@ export function ScrapeSyncPanel({ sources }: ScrapeSyncPanelProps) {
             <article className="stat-card">
               <div>
                 <strong>{result.importedCount + result.updatedCount}</strong>
-                <span>{result.dryRun ? "öncədən baxış" : "yaradıldı / yeniləndi"}</span>
+                <span>{result.dryRun ? "öncədən baxış" : "yayımlanan elan"}</span>
               </div>
             </article>
           </div>

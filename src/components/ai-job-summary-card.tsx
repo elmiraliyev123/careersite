@@ -41,27 +41,35 @@ export function AiJobSummaryCard({
 
   const mission = firstSentence(summary) || firstMeaningfulLine(responsibilities);
   const dealbreaker = firstMeaningfulLine(requirements);
-  const cultureVibe =
-    firstMeaningfulLine(benefits) ||
-    t("jobDetail.aiSummaryCultureFallback", { company: companyName, workModel });
+  const cultureVibe = firstMeaningfulLine(benefits);
 
   const points = [
-    {
-      Icon: Target,
-      title: t("jobDetail.aiSummaryMission"),
-      copy: mission
-    },
-    {
-      Icon: TriangleAlert,
-      title: t("jobDetail.aiSummaryDealbreaker"),
-      copy: dealbreaker
-    },
-    {
-      Icon: Sparkles,
-      title: t("jobDetail.aiSummaryCulture"),
-      copy: cultureVibe
-    }
-  ] satisfies Array<{ Icon: LucideIcon; title: string; copy: string }>;
+    mission
+      ? {
+          Icon: Target,
+          title: t("jobDetail.aiSummaryMission"),
+          copy: mission
+        }
+      : null,
+    dealbreaker
+      ? {
+          Icon: TriangleAlert,
+          title: t("jobDetail.aiSummaryDealbreaker"),
+          copy: dealbreaker
+        }
+      : null,
+    cultureVibe
+      ? {
+          Icon: Sparkles,
+          title: t("jobDetail.aiSummaryCulture"),
+          copy: cultureVibe
+        }
+      : null
+  ].filter((point): point is { Icon: LucideIcon; title: string; copy: string } => Boolean(point));
+
+  if (points.length === 0) {
+    return null;
+  }
 
   return (
     <section className="ai-summary-card">

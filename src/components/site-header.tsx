@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-import { CompaniesMegaMenu } from "@/components/companies-mega-menu";
 import { useI18n } from "@/components/i18n-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SessionActions } from "@/components/session-actions";
+import { InlineText } from "@/components/cms/inline-text";
+import { InlineImage } from "@/components/cms/inline-image";
+import { InlineList } from "@/components/cms/inline-list";
+import { useCms } from "@/components/cms-provider";
 import { type SessionRole } from "@/lib/session";
 
 type SiteHeaderProps = {
@@ -45,6 +48,9 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
   const pathname = usePathname();
   const focusedHeader = getFocusedHeaderState(pathname);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/adminlog");
+  const { draftData } = useCms();
+  void companyCategories;
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -81,6 +87,10 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
     };
   }, [isMobileMenuOpen]);
 
+  if (isAdminRoute) {
+    return null;
+  }
+
   if (focusedHeader?.hidden) {
     return null;
   }
@@ -97,8 +107,8 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
           <div className="focused-header__context">
             <p>{t(focusedHeader.eyebrowKey)}</p>
             <Link href="/" className="focused-header__brand">
-              <span className="brand__mark">CA</span>
-              <span className="brand__text">CareerApple</span>
+              <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={24} height={24} />
+              <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
             </Link>
           </div>
         </div>
@@ -106,20 +116,21 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
     );
   }
 
-  const primaryLinks = [
+  const defaultPrimaryLinks = [
     { href: "/jobs", label: t("nav.jobs") },
     { href: "/companies", label: t("nav.companies") },
     { href: "/karyera-meslehetleri", label: t("nav.careerTips") },
     { href: "/for-employers", label: t("nav.employers") }
   ];
+  const primaryLinks = draftData?.site?.primaryLinks ?? defaultPrimaryLinks;
 
   return (
     <>
       <header className="mobile-header">
         <div className="shell mobile-header__inner">
-          <Link href="/" className="brand">
-            <span className="brand__mark">CA</span>
-            <span className="brand__text">CareerApple</span>
+          <Link href="/" className="brand brand--refined">
+            <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={24} height={24} />
+            <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
           </Link>
 
           <button
@@ -186,23 +197,28 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
         </div>
       ) : null}
 
-      <header className="site-header">
+      <header className="site-header site-header--refined">
         <div className="shell site-header__inner">
-          <Link href="/" className="brand">
-            <span className="brand__mark">CA</span>
-            <span className="brand__text">CareerApple</span>
+          <Link href="/" className="brand brand--refined">
+            <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={32} height={32} />
+            <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
           </Link>
 
-          <nav className="site-nav" aria-label={t("nav.mainNavigation")}>
-            <Link href="/jobs">{t("nav.jobs")}</Link>
-            <CompaniesMegaMenu categories={companyCategories} />
-            <Link href="/info/students/tecrube-proqramlari">{t("nav.students")}</Link>
-            <Link href="/karyera-meslehetleri">{t("nav.careerTips")}</Link>
-          </nav>
+          <InlineList
+            contentKey="site.primaryLinks"
+            defaultItems={defaultPrimaryLinks}
+            listClassName="site-nav site-nav--refined"
+            itemTemplate={{ href: "/new-link", label: "New Link" }}
+            renderItem={(item, i) => (
+              <Link key={i} href={item.href} className="site-nav__link">
+                {item.label}
+              </Link>
+            )}
+          />
 
-          <div className="site-header__actions">
-            <LanguageSwitcher />
-            <Link href="/for-employers" className="button button--ghost">
+          <div className="site-header__actions site-header__actions--refined">
+            <LanguageSwitcher className="language-switcher--refined" />
+            <Link href="/for-employers" className="site-header__employer-link">
               {t("nav.employers")}
             </Link>
             <SessionActions role={role} />

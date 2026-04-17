@@ -31,6 +31,18 @@ function getAdminPassword() {
   return null;
 }
 
+function getAdminUsername() {
+  if (process.env.ADMIN_LOGIN_USERNAME) {
+    return process.env.ADMIN_LOGIN_USERNAME;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return "admin";
+  }
+
+  return null;
+}
+
 function signPayload(payload: string, secret: string) {
   return createHmac("sha256", secret).update(payload).digest("hex");
 }
@@ -47,17 +59,18 @@ function safeCompare(left: string, right: string) {
 }
 
 export function isAdminAuthConfigured() {
-  return Boolean(getSessionSecret() && getAdminPassword());
+  return Boolean(getSessionSecret() && getAdminPassword() && getAdminUsername());
 }
 
-export function verifyAdminPassword(password: string) {
+export function verifyAdminCredentials(username: string, password: string) {
   const expected = getAdminPassword();
+  const expectedUsername = getAdminUsername();
 
-  if (!expected) {
+  if (!expected || !expectedUsername) {
     return false;
   }
 
-  return safeCompare(password, expected);
+  return safeCompare(username, expectedUsername) && safeCompare(password, expected);
 }
 
 export function createSessionToken(role: SessionRole) {

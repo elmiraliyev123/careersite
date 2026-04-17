@@ -31,7 +31,7 @@ export function JobsPageClient({
   const { locale, t } = useI18n();
 
   return (
-    <main className="section">
+    <main className="section jobs-page">
       <div className="shell stack-lg">
         <div className="page-hero">
           <p className="eyebrow">{t("jobsPage.eyebrow")}</p>
@@ -39,7 +39,7 @@ export function JobsPageClient({
           <p>{t("jobsPage.copy")}</p>
         </div>
 
-        <form className="filters-panel" action="/jobs">
+        <form className="filters-panel filters-panel--jobs" action="/jobs">
           <label className="field">
             <span>{t("labels.roleOrSkill")}</span>
             <input defaultValue={query} name="q" type="text" placeholder={t("labels.roleExample")} />
@@ -109,7 +109,7 @@ export function JobsPageClient({
             <p>{t("jobsPage.emptyCopy")}</p>
           </div>
         ) : (
-          <div className="card-grid card-grid--jobs mobile-snap-row">
+          <div className="card-grid card-grid--jobs jobs-results-grid">
             {jobs.map(({ job, company }) => (
               <JobCard key={job.slug} job={job} company={company} sourcePath="/jobs" />
             ))}

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { createJob, listCompanies, listJobs } from "@/lib/platform-database";
+import { revalidatePublishedJobApplyUrls } from "@/lib/job-pipeline";
+import { createJob, listJobs } from "@/lib/platform-database";
+import { getFeaturedCompanies } from "@/lib/platform";
 import { requireAdminMutation } from "@/lib/request-security";
 import { validateJobInput } from "@/lib/platform-validation";
 
@@ -8,6 +10,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  await revalidatePublishedJobApplyUrls().catch(() => null);
+
   const jobs = listJobs().map((job) => {
     const { salary: _salary, ...rest } = job;
     return rest;
@@ -16,7 +20,7 @@ export async function GET() {
   return NextResponse.json({
     total: jobs.length,
     items: jobs,
-    featuredCompanyTotal: listCompanies().filter((company) => company.featured).length
+    featuredCompanyTotal: getFeaturedCompanies().length
   });
 }
 
