@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Clock3, Sparkles } from "lucide-react";
+import { ArrowRight, Clock3, Sparkles } from "lucide-react";
 
 import { CompanyLogoImage } from "@/components/company-logo-image";
+import { CompanyNameWithBadge } from "@/components/company-name-with-badge";
 import { useI18n } from "@/components/i18n-provider";
-import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import { formatLocalizedDate, translateLevel, translateWorkModel } from "@/lib/i18n";
-import { buildOutboundHref, isSafeExternalUrl } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
+import { getMeaningfulText, isMeaningfulLevel } from "@/lib/ui-display";
 
 type NewInternshipsCarouselProps = {
   items: Array<{ job: Job; company: Company }>;
@@ -64,16 +64,11 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
       {items.map(({ job, company }) => {
         const localizedJob = getLocalizedJob(job, locale);
         const localizedCompany = getLocalizedCompany(company, locale);
-        const applyHref = isSafeExternalUrl(job.finalVerifiedUrl?.trim() ?? "") ? job.finalVerifiedUrl!.trim() : "";
-        const outboundApplyHref = applyHref
-          ? buildOutboundHref({
-              targetUrl: applyHref,
-              companyName: localizedCompany.name,
-              logoUrl: company.logo,
-              sourcePath: "/jobs",
-              fallbackHref: `/jobs/${job.slug}`
-            })
-          : "";
+        const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
+        const workModelLabel = getMeaningfulText(translateWorkModel(locale, job.workModel));
+        const summary = getMeaningfulText(localizedJob.summary);
+        const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
+        const companyTagline = getMeaningfulText(localizedCompany.tagline);
 
         return (
           <article key={job.slug} className="internship-card" data-internship-slide="true">
@@ -88,57 +83,52 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
                   />
                 </span>
                 <span className="internship-card__brand-copy">
-                  <span className="internship-card__company-row">
-                    <strong>{localizedCompany.name}</strong>
-                    {localizedCompany.verified !== false ? (
-                      <VerifiedBadge compact label={t("labels.verifiedCompany")} />
-                    ) : null}
-                  </span>
-                  <span>{localizedCompany.tagline}</span>
+                  <CompanyNameWithBadge
+                    name={localizedCompany.name}
+                    verified={localizedCompany.verified}
+                    badgeLabel={t("labels.verifiedCompany")}
+                    compact
+                    className="internship-card__company-row"
+                  />
+                  {companyTagline ? <span>{companyTagline}</span> : null}
                 </span>
               </Link>
             </div>
 
             <div className="internship-card__body">
               <div className="job-pill-row">
-                <span className="job-pill job-pill--live">
-                  <span className="job-pill__dot" />
-                  {translateLevel(locale, job.level)}
-                </span>
-                <span className="job-pill">
-                  <Sparkles size={14} />
-                  {translateWorkModel(locale, job.workModel)}
-                </span>
+                {levelLabel ? (
+                  <span className="job-pill job-pill--live">
+                    <span className="job-pill__dot" />
+                    {levelLabel}
+                  </span>
+                ) : null}
+                {workModelLabel ? (
+                  <span className="job-pill">
+                    <Sparkles size={14} />
+                    {workModelLabel}
+                  </span>
+                ) : null}
               </div>
 
               <div className="internship-card__copy">
                 <h3>{localizedJob.title}</h3>
-                <p>{localizedJob.summary}</p>
+                {summary ? <p>{summary}</p> : null}
               </div>
             </div>
 
             <div className="internship-card__foot">
-              <span>
-                <Clock3 size={14} />
-                {t("labels.deadline")}: {formatLocalizedDate(job.deadline, locale)}
-              </span>
-
-              {applyHref ? (
-                <Link
-                  href={outboundApplyHref}
-                  prefetch={false}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="internship-card__apply"
-                >
-                  <span>{t("actions.applyNow")}</span>
-                  <ArrowUpRight size={15} />
-                </Link>
-              ) : (
-                <span className="internship-card__apply internship-card__apply--disabled" aria-disabled="true">
-                  <span>{t("actions.applyLinkInactiveShort")}</span>
+              {deadlineLabel ? (
+                <span>
+                  <Clock3 size={14} />
+                  {t("labels.deadline")}: {deadlineLabel}
                 </span>
-              )}
+              ) : null}
+
+              <Link href={`/jobs/${job.slug}`} className="internship-card__apply">
+                <span>{t("actions.viewDetails")}</span>
+                <ArrowRight size={15} />
+              </Link>
             </div>
           </article>
         );

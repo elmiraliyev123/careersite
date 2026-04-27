@@ -65,7 +65,17 @@ type CompanyFormState = {
   wikipediaSourceUrl: string;
 };
 
-const jobLevelOptions: Job["level"][] = ["Təcrübə", "Junior", "Trainee", "Yeni məzun", "Mid", "Senior", "Manager", "Naməlum"];
+const jobLevelOptions: Job["level"][] = [
+  "internship",
+  "trainee",
+  "junior",
+  "entry_level",
+  "new_graduate",
+  "mid",
+  "senior",
+  "manager",
+  "unknown"
+];
 const workModelOptions: Job["workModel"][] = ["Ofisdən", "Hibrid", "Uzaqdan"];
 
 function todayValue() {
@@ -95,7 +105,7 @@ function createEmptyJobForm(companySlug = ""): JobFormState {
     companySlug,
     city: "Bakı",
     workModel: "Hibrid",
-    level: "Təcrübə",
+    level: "internship",
     category: "",
     postedAt: todayValue(),
     deadline: defaultDeadlineValue(),

@@ -7,7 +7,7 @@ import { Edit2 } from "lucide-react";
 type InlineTextProps = {
   contentKey: string;
   defaultValue: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
   className?: string;
   multiline?: boolean;
 };

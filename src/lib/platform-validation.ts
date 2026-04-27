@@ -2,6 +2,7 @@ import type { Company, Job } from "@/data/platform";
 import { normalizeLocalizedText, normalizeLocalizedTextList } from "@/lib/localized-content";
 import { normalizeJobModerationStatus } from "@/lib/moderation";
 import { sanitizeText, sanitizeTextList } from "@/lib/text-sanitizer";
+import { normalizeLocationName, normalizeRoleLevel } from "@/lib/ui-display";
 
 export type CompanyInput = Omit<Company, "slug">;
 export type JobInput = Omit<Job, "slug" | "featured">;
@@ -18,7 +19,17 @@ type ValidationFailure = {
 
 type ValidationResult<T> = ValidationSuccess<T> | ValidationFailure;
 
-const jobLevels = new Set<Job["level"]>(["Təcrübə", "Junior", "Trainee", "Yeni məzun", "Mid", "Senior", "Manager", "Naməlum"]);
+const jobLevels = new Set<Job["level"]>([
+  "internship",
+  "trainee",
+  "junior",
+  "entry_level",
+  "new_graduate",
+  "mid",
+  "senior",
+  "manager",
+  "unknown"
+]);
 const workModels = new Set<Job["workModel"]>(["Ofisdən", "Hibrid", "Uzaqdan"]);
 
 function getTrimmedString(value: unknown) {
@@ -216,12 +227,14 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
 
   const city = requiredString(record.city, "Şəhər");
   if (typeof city !== "string") return { ok: false, message: city };
+  const normalizedCity = normalizeLocationName(city) ?? city;
 
   const workModel = requiredString(record.workModel, "İş modeli");
   if (typeof workModel !== "string") return { ok: false, message: workModel };
 
   const level = requiredString(record.level, "Səviyyə");
   if (typeof level !== "string") return { ok: false, message: level };
+  const normalizedLevel = normalizeRoleLevel(level);
 
   const category = requiredLocalizedText(record.category, "Kateqoriya", "az");
   if (typeof category === "string") return { ok: false, message: category };
@@ -250,8 +263,8 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
     return { ok: false, message: "İş modeli yalnız Ofisdən, Hibrid və ya Uzaqdan ola bilər." };
   }
 
-  if (!jobLevels.has(level as Job["level"])) {
-    return { ok: false, message: "Səviyyə yalnız Təcrübə, Junior, Trainee və ya Yeni məzun ola bilər." };
+  if (!jobLevels.has(normalizedLevel)) {
+    return { ok: false, message: "Səviyyə yalnız kontrollu rol tipindən seçilə bilər." };
   }
 
   if (!isIsoDate(postedAt) || !isIsoDate(deadline)) {
@@ -267,9 +280,9 @@ export function validateJobInput(payload: unknown): ValidationResult<JobInput> {
     data: {
       title,
       companySlug,
-      city,
+      city: normalizedCity,
       workModel: workModel as Job["workModel"],
-      level: level as Job["level"],
+      level: normalizedLevel,
       category,
       postedAt,
       deadline,

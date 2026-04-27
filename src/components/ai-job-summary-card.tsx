@@ -6,12 +6,10 @@ import { useI18n } from "@/components/i18n-provider";
 import { sanitizeText } from "@/lib/text-sanitizer";
 
 type AiJobSummaryCardProps = {
-  companyName: string;
   summary: string;
   requirements: string[];
   benefits: string[];
   responsibilities: string[];
-  workModel: string;
 };
 
 function firstMeaningfulLine(values: string[]) {
@@ -30,12 +28,10 @@ function firstSentence(value: string) {
 }
 
 export function AiJobSummaryCard({
-  companyName,
   summary,
   requirements,
   benefits,
-  responsibilities,
-  workModel
+  responsibilities
 }: AiJobSummaryCardProps) {
   const { t } = useI18n();
 
@@ -79,7 +75,6 @@ export function AiJobSummaryCard({
         <div>
           <p className="eyebrow">{t("jobDetail.aiSummaryEyebrow")}</p>
           <h2>{t("jobDetail.aiSummaryTitle")}</h2>
-          <p className="ai-summary-card__intro">{t("jobDetail.aiSummaryCopy")}</p>
         </div>
       </div>
 

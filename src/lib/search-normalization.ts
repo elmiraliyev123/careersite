@@ -47,6 +47,14 @@ const SYNONYM_GROUPS = [
 ];
 
 const EN_TO_AZ_DISPLAY_TERMS: Array<[string, string]> = [
+  ["deadline to apply", "son müraciət"],
+  ["deadline", "son müraciət"],
+  ["listed via", "mənbə"],
+  ["posted", "paylaşılıb"],
+  ["apply now", "indi müraciət et"],
+  ["view details", "ətraflı bax"],
+  ["quick overview", "qısa baxış"],
+  ["core mission", "əsas rol"],
   ["software engineer", "proqram mühəndisi"],
   ["software developer", "proqramçı"],
   ["customer support", "müştəri dəstəyi"],
@@ -97,6 +105,14 @@ const AZ_TO_EN_DISPLAY_TERMS: Array<[string, string]> = [
 ];
 
 const EN_TO_RU_DISPLAY_TERMS: Array<[string, string]> = [
+  ["deadline to apply", "срок подачи"],
+  ["deadline", "срок подачи"],
+  ["listed via", "источник"],
+  ["posted", "опубликовано"],
+  ["apply now", "подать заявку"],
+  ["view details", "подробнее"],
+  ["quick overview", "краткий обзор"],
+  ["core mission", "основная роль"],
   ["software engineer", "инженер-программист"],
   ["software developer", "разработчик ПО"],
   ["customer support", "поддержка клиентов"],

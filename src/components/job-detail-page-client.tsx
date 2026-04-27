@@ -1,14 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, ExternalLink, MapPin } from "lucide-react";
 
 import { AiJobSummaryCard } from "@/components/ai-job-summary-card";
 import { ApplyJobButton } from "@/components/apply-job-button";
+import { CompanyNameWithBadge } from "@/components/company-name-with-badge";
 import { JobCard } from "@/components/job-card";
 import { SaveJobButton } from "@/components/save-job-button";
 import { useI18n } from "@/components/i18n-provider";
-import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import {
   formatLocalizedDate,
@@ -16,8 +17,16 @@ import {
   translateLevel,
   translateWorkModel
 } from "@/lib/i18n";
-import { buildOutboundHref } from "@/lib/outbound";
+import { buildOutboundHref, isSafeExternalUrl } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
+import {
+  getDisplaySourceLabel,
+  getMeaningfulTaxonomyValue,
+  getMeaningfulText,
+  getPublicLocationLabel,
+  isMeaningfulLevel,
+  normalizeDisplayTags
+} from "@/lib/ui-display";
 
 type JobDetailPageClientProps = {
   job: Job;
@@ -34,20 +43,37 @@ export function JobDetailPageClient({
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const sourcePath = `/jobs/${job.slug}`;
-  const showCompanyProfileNote =
-    Boolean(localizedCompany) &&
-    localizedCompany!.verified === false &&
-    localizedCompany!.about.trim().length > 0;
+  const levelChip = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
+  const workModelChip = getMeaningfulText(translateWorkModel(locale, job.workModel));
+  const categoryChip = getMeaningfulTaxonomyValue(localizedJob.category);
+  const summary = getMeaningfulText(localizedJob.summary);
+  const cityLabel = getPublicLocationLabel(translateCity(locale, job.city));
+  const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
+  const postedLabel = getMeaningfulText(formatLocalizedDate(job.postedAt, locale));
+  const sourceLabel = getDisplaySourceLabel(job);
+  const matchingTags = localizedJob.tags;
+  const heroChips = normalizeDisplayTags(
+    [levelChip, workModelChip, categoryChip].filter((value): value is string => Boolean(value)),
+    locale
+  );
+  const hasHeroChips = heroChips.length > 0;
+  const showSkillsPanel = matchingTags.length > 0;
+  const originalListingTarget = job.jobDetailUrl ?? job.sourceListingUrl ?? job.sourceUrl ?? null;
   const originalListingHref =
-    job.finalVerifiedUrl && job.jobDetailUrl && job.jobDetailUrl === job.finalVerifiedUrl
+    originalListingTarget &&
+    originalListingTarget !== job.finalVerifiedUrl &&
+    isSafeExternalUrl(originalListingTarget)
       ? buildOutboundHref({
-          targetUrl: job.finalVerifiedUrl,
+          targetUrl: originalListingTarget,
           companyName: localizedCompany?.name ?? job.companySlug,
           logoUrl: company?.logo,
           sourcePath,
           fallbackHref: sourcePath
         })
       : null;
+  const [visibleRecommendationCount, setVisibleRecommendationCount] = useState(3);
+  const visibleRecommendations = recommendations.slice(0, visibleRecommendationCount);
+  const hasMoreRecommendations = visibleRecommendationCount < recommendations.length;
 
   return (
     <main className="section job-detail-page">
@@ -62,41 +88,49 @@ export function JobDetailPageClient({
 
         <section className="detail-hero">
           <div className="detail-hero__content">
-            <div className="chip-row">
-              <span className="chip chip--accent">{translateLevel(locale, job.level)}</span>
-              <span className="chip">{translateWorkModel(locale, job.workModel)}</span>
-              <span className="chip">{localizedJob.category}</span>
-            </div>
-
-            <h1>{localizedJob.title}</h1>
-            <div className="detail-hero__company-row">
-              <p className="detail-hero__company">{localizedCompany?.name}</p>
-              {localizedCompany?.verified !== false ? (
-                <VerifiedBadge compact label={t("labels.verifiedCompany")} />
-              ) : null}
-            </div>
-            {localizedJob.summary ? (
-              <p className="detail-hero__summary">{localizedJob.summary}</p>
+            {hasHeroChips ? (
+              <div className="chip-row">
+                {heroChips.map((chip, index) => (
+                  <span key={chip} className={`chip${index === 0 ? " chip--accent" : ""}`}>
+                    {chip}
+                  </span>
+                ))}
+              </div>
             ) : null}
 
+            <h1>{localizedJob.title}</h1>
+            {localizedCompany?.name ? (
+              <div className="detail-hero__company-row">
+                <CompanyNameWithBadge
+                  name={localizedCompany.name}
+                  verified={localizedCompany.verified}
+                  badgeLabel={t("labels.verifiedCompany")}
+                  compact
+                />
+              </div>
+            ) : null}
+            {summary ? <p className="detail-hero__summary">{summary}</p> : null}
+
             <div className="detail-hero__meta">
-              <span>
-                <MapPin size={16} />
-                {translateCity(locale, job.city)}
-              </span>
-              <span>
-                <CalendarDays size={16} />
-                {t("labels.deadline")}: {formatLocalizedDate(job.deadline, locale)}
-              </span>
-              <span>
-                <Clock3 size={16} />
-                {t("labels.posted")}: {formatLocalizedDate(job.postedAt, locale)}
-              </span>
-              {job.sourceName ? (
+              {cityLabel ? (
                 <span>
-                  {t("labels.source")}: {job.sourceName}
+                  <MapPin size={16} />
+                  {cityLabel}
                 </span>
               ) : null}
+              {deadlineLabel ? (
+                <span>
+                  <CalendarDays size={16} />
+                  {t("labels.deadline")}: {deadlineLabel}
+                </span>
+              ) : null}
+              {postedLabel ? (
+                <span>
+                  <Clock3 size={16} />
+                  {t("labels.posted")}: {postedLabel}
+                </span>
+              ) : null}
+              {sourceLabel ? <span>{t("labels.source")}: {sourceLabel}</span> : null}
             </div>
           </div>
 
@@ -121,12 +155,10 @@ export function JobDetailPageClient({
         </section>
 
         <AiJobSummaryCard
-          companyName={localizedCompany?.name ?? job.companySlug}
           summary={localizedJob.summary}
           requirements={localizedJob.requirements}
           benefits={localizedJob.benefits}
           responsibilities={localizedJob.responsibilities}
-          workModel={translateWorkModel(locale, job.workModel)}
         />
 
         <div className="detail-grid">
@@ -166,29 +198,24 @@ export function JobDetailPageClient({
             </section>
           ) : null}
 
-          <aside className="detail-panel detail-panel--sticky">
-            <p className="eyebrow">{t("labels.skills")}</p>
-            <h2>{t("jobDetail.matchingTags")}</h2>
-            <div className="chip-row">
-              {localizedJob.tags.map((tag) => (
-                <span key={tag} className="chip">
-                  {tag}
-                </span>
-              ))}
-            </div>
+          {showSkillsPanel ? (
+            <aside className="detail-panel detail-panel--sticky">
+              {matchingTags.length > 0 ? (
+                <>
+                  <p className="eyebrow">{t("labels.skills")}</p>
+                  <h2>{t("jobDetail.matchingTags")}</h2>
+                  <div className="chip-row">
+                    {matchingTags.map((tag) => (
+                      <span key={tag} className="chip">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : null}
 
-            {localizedCompany && showCompanyProfileNote ? (
-              <div className="company-mini">
-                <div className="company-mini__title">
-                  <h3>{localizedCompany.name}</h3>
-                  {localizedCompany.verified !== false ? (
-                    <VerifiedBadge compact label={t("labels.verifiedCompany")} />
-                  ) : null}
-                </div>
-                <p>{localizedCompany.about}</p>
-              </div>
-            ) : null}
-          </aside>
+            </aside>
+          ) : null}
         </div>
 
         <section className="stack-md">
@@ -202,8 +229,8 @@ export function JobDetailPageClient({
             </Link>
           </div>
 
-          <div className="card-grid card-grid--jobs recommendations-grid mobile-snap-row">
-            {recommendations.map((item) => (
+          <div className="card-grid card-grid--jobs recommendations-grid">
+            {visibleRecommendations.map((item) => (
               <JobCard
                 key={item.job.slug}
                 job={item.job}
@@ -212,6 +239,22 @@ export function JobDetailPageClient({
               />
             ))}
           </div>
+
+          {hasMoreRecommendations ? (
+            <div className="load-more-row">
+              <button
+                type="button"
+                className="button button--ghost"
+                onClick={() =>
+                  setVisibleRecommendationCount((current) =>
+                    Math.min(current + 3, recommendations.length)
+                  )
+                }
+              >
+                {t("actions.showMore")}
+              </button>
+            </div>
+          ) : null}
         </section>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { useI18n } from "@/components/i18n-provider";
@@ -122,7 +122,10 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
     { href: "/karyera-meslehetleri", label: t("nav.careerTips") },
     { href: "/for-employers", label: t("nav.employers") }
   ];
-  const primaryLinks = draftData?.site?.primaryLinks ?? defaultPrimaryLinks;
+  const primaryLinks = (draftData?.site?.primaryLinks ?? defaultPrimaryLinks) as Array<{
+    href: string;
+    label: string;
+  }>;
 
   return (
     <>
@@ -166,6 +169,14 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
 
           <div className="mobile-drawer__inner">
             <div className="mobile-drawer__top">
+              <Link
+                href="/"
+                className="brand brand--refined mobile-drawer__brand"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={24} height={24} />
+                <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
+              </Link>
               <button
                 type="button"
                 className="mobile-drawer__close"
@@ -176,21 +187,26 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
               </button>
             </div>
 
-            <nav className="mobile-drawer__nav" aria-label={t("nav.mainNavigation")}>
-              {primaryLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="mobile-drawer__link"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="mobile-drawer__body">
+              <nav className="mobile-drawer__nav" aria-label={t("nav.mainNavigation")}>
+                {primaryLinks.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="mobile-drawer__link"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="mobile-drawer__section mobile-drawer__section--language">
+                <LanguageSwitcher compact onSelect={() => setIsMobileMenuOpen(false)} />
+              </div>
+            </div>
 
             <div className="mobile-drawer__footer">
-              <LanguageSwitcher compact onSelect={() => setIsMobileMenuOpen(false)} />
               <SessionActions role={role} />
             </div>
           </div>

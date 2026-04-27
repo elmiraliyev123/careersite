@@ -3,6 +3,14 @@ import type { Locale } from "@/lib/i18n";
 import { getLocalizedText, getLocalizedTextList } from "@/lib/localized-content";
 import { translateJobDisplayText } from "@/lib/search-normalization";
 import { sanitizeText, sanitizeTextList } from "@/lib/text-sanitizer";
+import {
+  dedupeDisplayTextList,
+  getMeaningfulMetadataValue,
+  getMeaningfulProfileText,
+  normalizeDisplayTags,
+  normalizeLocationName,
+  normalizeRoleLevel
+} from "@/lib/ui-display";
 
 type LocalizedValue = Partial<Record<Locale, string>>;
 
@@ -44,37 +52,46 @@ export function getLocalizedCompany(company: Company, locale: Locale): Localized
   return {
     ...company,
     name: sanitizeText(company.name),
-    sector: sanitizeText(company.sector),
-    location: sanitizeText(company.location),
-    tagline: sanitizeText(resolveLocalizedContent(locale, company.tagline, localized?.tagline)),
-    about: sanitizeText(resolveLocalizedContent(locale, company.about, localized?.about), {
-      multiline: true
-    }),
+    sector: getMeaningfulMetadataValue(company.sector) ?? "",
+    location: normalizeLocationName(company.location) ?? "",
+    tagline: getMeaningfulProfileText(resolveLocalizedContent(locale, company.tagline, localized?.tagline)) ?? "",
+    about:
+      getMeaningfulProfileText(resolveLocalizedContent(locale, company.about, localized?.about), {
+        multiline: true
+      }) ?? "",
     wikipediaSummary: sanitizeText(company.wikipediaSummary, { multiline: true }) || undefined,
-    focusAreas: sanitizeTextList(company.focusAreas),
-    youthOffer: sanitizeTextList(company.youthOffer),
-    benefits: sanitizeTextList(company.benefits),
-    industryTags: sanitizeTextList(company.industryTags ?? [company.sector])
+    focusAreas: dedupeDisplayTextList(sanitizeTextList(company.focusAreas)),
+    youthOffer: dedupeDisplayTextList(sanitizeTextList(company.youthOffer)),
+    benefits: dedupeDisplayTextList(sanitizeTextList(company.benefits)),
+    industryTags: dedupeDisplayTextList(
+      sanitizeTextList(company.industryTags ?? [company.sector]).flatMap((item) => {
+        const value = getMeaningfulMetadataValue(item);
+        return value ? [value] : [];
+      })
+    )
   };
 }
 
 export function getLocalizedJob(job: Job, locale: Locale): LocalizedJob {
   const title = translateJobDisplayText(getLocalizedText(job.title, locale), locale);
   const summary = translateJobDisplayText(getLocalizedText(job.summary, locale), locale);
-  const tags = getLocalizedTextList(job.tags, locale).map((tag) =>
-    translateJobDisplayText(tag, locale)
+  const category = translateJobDisplayText(getLocalizedText(job.category, locale), locale);
+  const tags = normalizeDisplayTags(
+    getLocalizedTextList(job.tags, locale).map((tag) => translateJobDisplayText(tag, locale)),
+    locale
   );
 
   return {
     ...job,
     title,
     summary,
-    category: getLocalizedText(job.category, locale),
+    category,
     tags,
-    city: sanitizeText(job.city),
-    responsibilities: sanitizeTextList(job.responsibilities, { multiline: true }),
-    requirements: sanitizeTextList(job.requirements, { multiline: true }),
-    benefits: sanitizeTextList(job.benefits, { multiline: true }),
+    city: normalizeLocationName(job.city) ?? "",
+    level: normalizeRoleLevel(job.level),
+    responsibilities: dedupeDisplayTextList(job.responsibilities, { multiline: true }),
+    requirements: dedupeDisplayTextList(job.requirements, { multiline: true }),
+    benefits: dedupeDisplayTextList(job.benefits, { multiline: true }),
     applyUrl: job.applyUrl,
     directCompanyUrl: job.directCompanyUrl
   };

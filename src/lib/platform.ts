@@ -16,6 +16,12 @@ import {
   listJobs
 } from "@/lib/platform-database";
 import { matchesExpandedQuery } from "@/lib/search-normalization";
+import {
+  getMeaningfulMetadataValue,
+  isAllFilterValue,
+  normalizeLocationName,
+  normalizeRoleLevel
+} from "@/lib/ui-display";
 
 type JobFilters = {
   query?: string;
@@ -24,29 +30,14 @@ type JobFilters = {
   workModel?: string;
 };
 
-const youthLevels = new Set<Job["level"]>(["Təcrübə", "Junior", "Trainee", "Yeni məzun"]);
-const strictInternshipLevels = new Set<Job["level"]>(["Təcrübə", "Trainee", "Yeni məzun"]);
-const youthFriendlyCompanySlugs = new Set([
-  "kapital-bank",
-  "abb",
-  "accessbank",
-  "unibank",
-  "pasha-bank",
-  "azercell",
-  "bakcell",
-  "bravo-supermarket",
-  "araz-supermarket",
-  "baku-electronics",
-  "veys-loglu-group",
-  "azersun-holding",
-  "deloitte-azerbaijan",
-  "ey-azerbaijan",
-  "kpmg-azerbaijan",
-  "pwc-azerbaijan",
-  "bp-azerbaijan",
-  "bank-of-baku",
-  "yelo-bank"
+const youthLevels = new Set<Job["level"]>([
+  "internship",
+  "trainee",
+  "junior",
+  "entry_level",
+  "new_graduate"
 ]);
+const strictInternshipLevels = new Set<Job["level"]>(["internship", "trainee", "new_graduate"]);
 const earlyCareerSignalPatterns = [
   /\bintern(?:ship)?\b/i,
   /\btrainee\b/i,
@@ -61,6 +52,13 @@ const earlyCareerSignalPatterns = [
   /\bkiçik\s+mütəxəssis\b/i,
   /\bмладш/i,
   /\bстаж(?:ер|ировка)?\b/i
+];
+const earlyCareerExclusionPatterns = [
+  /\b(?:senior|lead|principal|head of|director)\b/i,
+  /\b(?:manager|menecer|rəhbər|rehber)\b/i,
+  /\bjunior\b.{0,80}\bmentor/i,
+  /\bmentor(?:luq|ing)?\b.{0,80}\bjunior\b/i,
+  /\bcode review\b/i
 ];
 const azerbaijanCitySet = new Set([
   "Bakı",
@@ -113,20 +111,23 @@ function getEffectiveCompanyVerification(company: Company, jobs: Job[]) {
 }
 
 function buildYouthSignalHaystack(job: Job, company?: Company | null) {
+  void company;
+
   return [
     getAllLocalizedTextValues(job.title).join(" "),
     getAllLocalizedTextValues(job.summary).join(" "),
-    getAllLocalizedTextValues(job.category).join(" "),
-    getAllLocalizedTextValuesFromList(job.tags).join(" "),
-    job.companyName ?? "",
-    company?.name ?? "",
-    company?.sector ?? "",
-    job.sourceName ?? ""
+    job.responsibilities.join(" "),
+    job.requirements.join(" "),
+    job.benefits.join(" ")
   ].join(" ");
 }
 
 function hasStrongEarlyCareerSignal(job: Job, company?: Company | null) {
   const haystack = buildYouthSignalHaystack(job, company);
+  if (earlyCareerExclusionPatterns.some((pattern) => pattern.test(haystack))) {
+    return false;
+  }
+
   return earlyCareerSignalPatterns.some((pattern) => pattern.test(haystack));
 }
 
@@ -135,17 +136,91 @@ function isAzerbaijanRelevantCity(city: string) {
 }
 
 function normalizeCityForFilter(city: string) {
-  const trimmed = city.trim();
-  if (!trimmed) {
+  return normalizeLocationName(city);
+}
+
+function isPublicJobForAzerbaijan(job: Job) {
+  const normalizedCity = normalizeCityForFilter(job.city);
+
+  if (normalizedCity && isAzerbaijanRelevantCity(normalizedCity)) {
+    return true;
+  }
+
+  return (
+    job.workModel === "Uzaqdan" &&
+    (job.trustBadges?.includes("azerbaijan_relevant") ||
+      job.trustBadges?.includes("baku_relevant") ||
+      /(?:\.az\b|azerbaijan|azərbaycan|baku|bakı)/i.test(
+        [job.sourceUrl, job.sourceListingUrl, job.jobDetailUrl, job.sourceName, job.companyName]
+          .filter(Boolean)
+          .join(" ")
+      ))
+  );
+}
+
+function normalizeDomainIdentity(value: string | null | undefined) {
+  if (!value) {
     return null;
   }
 
-  const lowered = trimmed.toLowerCase();
-  if (["baku", "bakı", "bakı şəhəri", "baki", "az"].includes(lowered)) {
-    return "Bakı";
-  }
+  try {
+    const url = new URL(value.includes("://") ? value : `https://${value}`);
+    const hostname = url.hostname
+      .replace(/^www\./, "")
+      .replace(/^careers?\./, "")
+      .replace(/^jobs?\./, "")
+      .replace(/^job-boards?\./, "")
+      .replace(/^boards?\./, "")
+      .replace(/^api\./, "")
+      .toLowerCase();
 
-  return trimmed;
+    const atsDomains = [
+      "greenhouse.io",
+      "lever.co",
+      "myworkdayjobs.com",
+      "smartrecruiters.com",
+      "recruitee.com",
+      "jobvite.com",
+      "glorri.com",
+      "glorri.az",
+      "careers-page.com"
+    ];
+
+    if (atsDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))) {
+      return null;
+    }
+
+    return hostname.includes(".") ? hostname : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeCompanyNameIdentity(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ə/g, "e")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ş/g, "s")
+    .replace(/ç/g, "c")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
+    .replace(/[^a-z0-9\s]+/g, " ")
+    .replace(/\b(llc|ltd|inc|plc|company|group|holdings?)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getCompanyCanonicalKey(company: Company) {
+  return (
+    normalizeDomainIdentity(company.companyDomain) ??
+    normalizeDomainIdentity(company.website) ??
+    normalizeDomainIdentity(company.profileSourceUrl) ??
+    normalizeCompanyNameIdentity(company.name)
+  );
 }
 
 function sortByNewestDate<T extends { createdAt?: string }>(items: T[]) {
@@ -195,7 +270,37 @@ function sortJobsByFreshness(items: Job[]) {
 
 function filterPublicCompanies(companies: Company[], jobs: Job[]) {
   const activeCompanySlugs = new Set(jobs.map((job) => job.companySlug));
-  return companies.filter((company) => activeCompanySlugs.has(company.slug));
+  const roleCounts = getCompanyRoleCountIndex(jobs);
+  const byCanonicalKey = new Map<string, Company>();
+
+  for (const company of companies) {
+    if (!activeCompanySlugs.has(company.slug)) {
+      continue;
+    }
+
+    const canonicalKey = getCompanyCanonicalKey(company) || company.slug;
+    const current = byCanonicalKey.get(canonicalKey);
+
+    if (!current) {
+      byCanonicalKey.set(canonicalKey, company);
+      continue;
+    }
+
+    const currentRoles = roleCounts.get(current.slug) ?? 0;
+    const nextRoles = roleCounts.get(company.slug) ?? 0;
+    const currentHasSector = Boolean(getMeaningfulMetadataValue(current.sector));
+    const nextHasSector = Boolean(getMeaningfulMetadataValue(company.sector));
+    const shouldReplace =
+      Number(company.verified !== false) > Number(current.verified !== false) ||
+      (company.verified === current.verified && nextRoles > currentRoles) ||
+      (company.verified === current.verified && nextRoles === currentRoles && nextHasSector && !currentHasSector);
+
+    if (shouldReplace) {
+      byCanonicalKey.set(canonicalKey, company);
+    }
+  }
+
+  return Array.from(byCanonicalKey.values());
 }
 
 function hydrateCompanyVerification(companies: Company[], jobs: Job[]) {
@@ -209,7 +314,7 @@ function getPlatformData() {
   noStore();
   void revalidatePublishedJobApplyUrls().catch(() => null);
 
-  const jobs = sortJobsByFreshness(listJobs().map(stripSalary));
+  const jobs = sortJobsByFreshness(listJobs().map(stripSalary).filter(isPublicJobForAzerbaijan));
   const companies = hydrateCompanyVerification(filterPublicCompanies(listCompanies(), jobs), jobs);
 
   return {
@@ -248,14 +353,13 @@ export function isYouthRole(job: Job) {
   const company = getCompanyBySlug(job.companySlug);
   const hasSignal = hasStrongEarlyCareerSignal(job, company);
   const confidence = Math.max(0, Math.min(job.internshipConfidence ?? 0, 1));
-  const youthPoolBoost = company && youthFriendlyCompanySlugs.has(company.slug) ? 0.08 : 0;
-  const combinedConfidence = confidence + youthPoolBoost;
+  const hasHighSourceBackedConfidence = confidence >= 0.72;
 
   if (strictInternshipLevels.has(job.level)) {
-    return hasSignal && combinedConfidence >= 0.38;
+    return (hasSignal && confidence >= 0.38) || hasHighSourceBackedConfidence;
   }
 
-  return hasSignal && combinedConfidence >= 0.26;
+  return (hasSignal && confidence >= 0.34) || hasHighSourceBackedConfidence;
 }
 
 export function getCompanies(): Company[] {
@@ -346,7 +450,13 @@ export function getCompanyCategories() {
   const categoryMap = new Map<string, number>();
 
   for (const company of getCompanies()) {
-    categoryMap.set(company.sector, (categoryMap.get(company.sector) ?? 0) + 1);
+    const sector = getMeaningfulMetadataValue(company.sector);
+
+    if (!sector) {
+      continue;
+    }
+
+    categoryMap.set(sector, (categoryMap.get(sector) ?? 0) + 1);
   }
 
   return Array.from(categoryMap.entries())
@@ -362,6 +472,8 @@ export function getCompanyCategories() {
 
 export function filterJobs(filters: JobFilters): Job[] {
   const query = filters.query?.trim().toLowerCase();
+  const requestedCity = isAllFilterValue(filters.city) ? null : normalizeCityForFilter(filters.city ?? "");
+  const requestedLevel = isAllFilterValue(filters.level) ? null : normalizeRoleLevel(filters.level);
 
   return getJobs().filter((job) => {
     const company = getCompanyBySlug(job.companySlug);
@@ -383,11 +495,12 @@ export function filterJobs(filters: JobFilters): Job[] {
       localizedTextIncludes(job.category, query) ||
       matchesExpandedQuery(queryDocument, query);
 
-    const matchesCity = !filters.city || filters.city === "Hamısı" || job.city === filters.city;
-    const matchesLevel = !filters.level || filters.level === "Hamısı" || job.level === filters.level;
+    const matchesCity = !requestedCity || normalizeCityForFilter(job.city) === requestedCity;
+    const matchesLevel = !requestedLevel || requestedLevel === "unknown" || job.level === requestedLevel;
     const matchesWorkModel =
       !filters.workModel ||
       filters.workModel === "Hamısı" ||
+      filters.workModel === "all" ||
       job.workModel === filters.workModel;
 
     return matchesQuery && matchesCity && matchesLevel && matchesWorkModel;
@@ -404,14 +517,14 @@ export function getRecommendedJobs(currentJob: Job): Job[] {
         (job.level === currentJob.level ||
           getAllLocalizedTextValues(job.category).some((category) => comparableCategories.has(category)))
     )
-    .slice(0, 3);
+    .slice(0, 12);
 }
 
 export function getHomeStats() {
   const allJobs = getJobs();
   const allCompanies = getCompanies();
   const internshipRoles = allJobs.filter((job) => strictInternshipLevels.has(job.level) && isYouthRole(job)).length;
-  const traineeRoles = allJobs.filter((job) => job.level === "Trainee" && isYouthRole(job)).length;
+  const traineeRoles = allJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length;
   const remoteFriendly = allJobs.filter((job) => job.workModel === "Uzaqdan").length;
 
   return {

@@ -26,6 +26,17 @@ export type Company = {
   updatedAt?: string;
 };
 
+export type JobLevel =
+  | "internship"
+  | "trainee"
+  | "junior"
+  | "entry_level"
+  | "new_graduate"
+  | "mid"
+  | "senior"
+  | "manager"
+  | "unknown";
+
 export type Job = {
   slug: string;
   title: LocalizedContentValue;
@@ -33,7 +44,7 @@ export type Job = {
   companyName?: string;
   city: string;
   workModel: "Ofisdən" | "Hibrid" | "Uzaqdan";
-  level: "Təcrübə" | "Junior" | "Trainee" | "Yeni məzun" | "Mid" | "Senior" | "Manager" | "Naməlum";
+  level: JobLevel;
   category: LocalizedContentValue;
   salary?: string;
   postedAt: string;
@@ -408,7 +419,7 @@ export const jobs: Job[] = [
     companySlug: "notion",
     city: "San Fransisko",
     workModel: "Hibrid",
-    level: "Təcrübə",
+    level: "internship",
     category: localizedCategories.dataAnalytics,
     salary: "$2,300 / ay",
     postedAt: "2026-03-14",
@@ -444,7 +455,7 @@ export const jobs: Job[] = [
     companySlug: "figma",
     city: "San Fransisko",
     workModel: "Hibrid",
-    level: "Junior",
+    level: "junior",
     category: localizedCategories.design,
     salary: "$3,100 / ay",
     postedAt: "2026-03-12",
@@ -480,7 +491,7 @@ export const jobs: Job[] = [
     companySlug: "revolut",
     city: "London",
     workModel: "Hibrid",
-    level: "Trainee",
+    level: "trainee",
     category: localizedCategories.marketing,
     salary: "£2,400 / ay",
     postedAt: "2026-03-15",
@@ -516,7 +527,7 @@ export const jobs: Job[] = [
     companySlug: "shopify",
     city: "Dublin",
     workModel: "Ofisdən",
-    level: "Təcrübə",
+    level: "internship",
     category: localizedCategories.operations,
     salary: "1,200 AZN / ay",
     postedAt: "2026-03-11",
@@ -551,7 +562,7 @@ export const jobs: Job[] = [
     companySlug: "wise",
     city: "Tallinn",
     workModel: "Uzaqdan",
-    level: "Junior",
+    level: "junior",
     category: localizedCategories.riskCompliance,
     salary: "€2,100 / ay",
     postedAt: "2026-03-10",
@@ -586,7 +597,7 @@ export const jobs: Job[] = [
     companySlug: "notion",
     city: "Dublin",
     workModel: "Hibrid",
-    level: "Trainee",
+    level: "trainee",
     category: localizedCategories.productOperations,
     salary: "€2,450 / ay",
     postedAt: "2026-03-09",
@@ -621,7 +632,7 @@ export const jobs: Job[] = [
     companySlug: "figma",
     city: "London",
     workModel: "Uzaqdan",
-    level: "Yeni məzun",
+    level: "new_graduate",
     category: localizedCategories.research,
     salary: "£2,000 / ay",
     postedAt: "2026-03-13",
@@ -656,7 +667,7 @@ export const jobs: Job[] = [
     companySlug: "revolut",
     city: "Varşava",
     workModel: "Hibrid",
-    level: "Trainee",
+    level: "trainee",
     category: localizedCategories.businessAnalytics,
     salary: "€2,300 / ay",
     postedAt: "2026-03-08",
@@ -691,7 +702,7 @@ export const jobs: Job[] = [
     companySlug: "shopify",
     city: "London",
     workModel: "Hibrid",
-    level: "Təcrübə",
+    level: "internship",
     category: localizedCategories.customerExperience,
     salary: "900 AZN / ay",
     postedAt: "2026-03-16",
@@ -718,6 +729,6 @@ export const jobs: Job[] = [
   }
 ];
 
-export const jobLevels = ["Hamısı", "Təcrübə", "Junior", "Trainee", "Yeni məzun", "Mid", "Senior", "Manager", "Naməlum"] as const;
+export const jobLevels = ["all", "internship", "trainee", "junior", "new_graduate", "mid", "senior", "manager"] as const;
 export const workModels = ["Hamısı", "Ofisdən", "Hibrid", "Uzaqdan"] as const;
 export const cities = ["Hamısı", "Bakı"] as const;

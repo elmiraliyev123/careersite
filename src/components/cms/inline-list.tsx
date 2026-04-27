@@ -6,7 +6,7 @@ import { List, Plus, Trash2, GripVertical, Check } from "lucide-react";
 
 type InlineListProps = {
   contentKey: string;
-  defaultItems: any[];
+  defaultItems: readonly any[];
   renderItem: (item: any, index: number) => React.ReactNode;
   itemTemplate?: any;
   containerClassName?: string;
@@ -30,7 +30,7 @@ export function InlineList({
     if (currentList) currentList = currentList[part];
   }
   
-  const items = Array.isArray(currentList) ? currentList : defaultItems;
+  const items = Array.isArray(currentList) ? currentList : Array.from(defaultItems);
 
   const handleUpdateItem = (index: number, newValue: any) => {
     const newItems = [...items];

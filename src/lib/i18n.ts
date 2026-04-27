@@ -56,14 +56,32 @@ const localizedMonthNames: Record<Locale, string[]> = {
 };
 
 const levelKeyMap: Record<string, string> = {
+  all: "all",
   Hamısı: "all",
+  internship: "internship",
   Təcrübə: "internship",
+  junior: "junior",
   Junior: "junior",
+  trainee: "trainee",
   Trainee: "trainee",
-  "Yeni məzun": "graduate"
+  entry_level: "entryLevel",
+  "entry-level": "entryLevel",
+  "Entry level": "entryLevel",
+  new_graduate: "graduate",
+  "Yeni məzun": "graduate",
+  mid: "mid",
+  Mid: "mid",
+  senior: "senior",
+  Senior: "senior",
+  manager: "manager",
+  Manager: "manager",
+  Menecer: "manager",
+  unknown: "unknown",
+  Naməlum: "unknown"
 };
 
 const workModelKeyMap: Record<string, string> = {
+  all: "all",
   Hamısı: "all",
   Ofisdən: "onsite",
   Hibrid: "hybrid",
@@ -71,8 +89,15 @@ const workModelKeyMap: Record<string, string> = {
 };
 
 const cityKeyMap: Record<string, string> = {
+  all: "all",
   Hamısı: "all",
   Bakı: "baku",
+  Baku: "baku",
+  Baki: "baku",
+  "Bakı şəhəri": "baku",
+  Azərbaycan: "azerbaijan",
+  Azerbaijan: "azerbaijan",
+  AZ: "azerbaijan",
   "San Fransisko": "sanFrancisco",
   London: "london",
   Tallinn: "tallinn",

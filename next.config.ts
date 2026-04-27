@@ -4,6 +4,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(process.cwd()),
+  devIndicators: false,
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {

@@ -17,6 +17,7 @@ import {
   type JobModerationStatus
 } from "@/lib/moderation";
 import type { CompanyInput, JobInput } from "@/lib/platform-validation";
+import { getMeaningfulMetadataValue, normalizeLocationName, normalizeRoleLevel } from "@/lib/ui-display";
 import { isVerifiedRedirectTarget } from "@/lib/url-sanitizer";
 
 type CompanyRow = {
@@ -426,6 +427,9 @@ function setupDatabase(db: DatabaseSync) {
   cleanupMalformedOrphanJobs(db);
   cleanupTemplatedCompanyFields(db);
   cleanupTemplatedCompanyAbout(db);
+  cleanupGeneratedCompanyProfileContent(db);
+  cleanupCompanyDomainHints(db);
+  normalizeStoredJobLevels(db);
   backfillApplyUrls(db);
   backfillCompanyVerificationFromPublicJobs(db);
   backfillCompanySourceProfiles(db);
@@ -467,18 +471,22 @@ function parseList(value: string) {
 }
 
 function isYouthLevel(level: string) {
-  return ["Təcrübə", "Junior", "Trainee", "Yeni məzun"].includes(level);
+  return ["internship", "trainee", "junior", "entry_level", "new_graduate"].includes(
+    normalizeRoleLevel(level)
+  );
 }
 
 function mapCompanyRow(row: CompanyRow): Company {
+  const sector = getMeaningfulMetadataValue(row.sector) ?? "";
+
   return {
     slug: row.slug,
     name: row.name,
     tagline: row.tagline,
-    sector: row.sector,
-    industryTags: row.industry_tags ? parseList(row.industry_tags) : [row.sector],
+    sector,
+    industryTags: row.industry_tags ? parseList(row.industry_tags) : sector ? [sector] : [],
     size: row.size,
-    location: row.location,
+    location: normalizeLocationName(row.location) ?? "",
     logo: row.logo,
     cover: row.cover,
     website: row.website,
@@ -516,9 +524,9 @@ function mapJobRow(row: JobRow): Job {
     title: parseLocalizedText(row.title),
     companySlug: row.company_slug,
     companyName: row.company_name ?? undefined,
-    city: row.city,
+    city: normalizeLocationName(row.city) ?? "",
     workModel: row.work_model as Job["workModel"],
-    level: row.level as Job["level"],
+    level: normalizeRoleLevel(row.level),
     category: parseLocalizedText(row.category),
     postedAt: row.posted_at,
     deadline: row.deadline,
@@ -1030,6 +1038,91 @@ function cleanupTemplatedCompanyAbout(db: DatabaseSync) {
   writeMetadataValue(db, "templated_company_about_cleanup_v1", "1");
 }
 
+function cleanupGeneratedCompanyProfileContent(db: DatabaseSync) {
+  if (readMetadataValue(db, "generated_company_profile_content_cleanup_v1") === "1") {
+    return;
+  }
+
+  db.prepare(
+    `UPDATE companies
+     SET tagline = CASE
+           WHEN tagline LIKE 'Açıq rollar % mənbəsindən toplanır.%' THEN ''
+           ELSE tagline
+         END,
+         about = CASE
+           WHEN about LIKE 'Bu profil yalnız təsdiqlənmiş vakansiya mənbələrinə əsaslanan minimal faktları göstərir.%'
+             OR about LIKE 'Bu minimal profil yalnız %'
+             OR about LIKE 'Bu şirkət profili avtomatik yaradılıb%'
+           THEN ''
+           ELSE about
+         END,
+         size = CASE
+           WHEN size IN ('Naməlum', 'Unknown', 'unknown') THEN ''
+           ELSE size
+         END,
+         industry_tags = CASE
+           WHEN sector IN ('Other', 'Naməlum sektor', 'Unknown sector', '') THEN ?
+           ELSE industry_tags
+         END,
+         updated_at = ?
+     WHERE tagline LIKE 'Açıq rollar % mənbəsindən toplanır.%'
+        OR about LIKE 'Bu profil yalnız təsdiqlənmiş vakansiya mənbələrinə əsaslanan minimal faktları göstərir.%'
+        OR about LIKE 'Bu minimal profil yalnız %'
+        OR about LIKE 'Bu şirkət profili avtomatik yaradılıb%'
+        OR size IN ('Naməlum', 'Unknown', 'unknown')
+        OR sector IN ('Other', 'Naməlum sektor', 'Unknown sector', '')`
+  ).run(serializeList([]), todayIsoDate());
+
+  writeMetadataValue(db, "generated_company_profile_content_cleanup_v1", "1");
+}
+
+function cleanupCompanyDomainHints(db: DatabaseSync) {
+  if (readMetadataValue(db, "company_domain_hint_cleanup_v1") === "1") {
+    return;
+  }
+
+  db.exec(`
+    UPDATE companies
+    SET company_domain = NULL,
+        updated_at = date('now')
+    WHERE company_domain IS NOT NULL
+      AND (
+        company_domain IN ('greenhouse.io', 'lever.co', 'myworkdayjobs.com', 'smartrecruiters.com', 'recruitee.com', 'jobvite.com', 'glorri.com', 'glorri.az', 'careers-page.com')
+        OR company_domain LIKE '%.greenhouse.io'
+        OR company_domain LIKE '%.lever.co'
+        OR company_domain LIKE '%.myworkdayjobs.com'
+        OR company_domain LIKE '%.smartrecruiters.com'
+        OR company_domain LIKE '%.recruitee.com'
+        OR company_domain LIKE '%.jobvite.com'
+        OR company_domain LIKE '%.glorri.com'
+        OR company_domain LIKE '%.glorri.az'
+      )
+  `);
+
+  writeMetadataValue(db, "company_domain_hint_cleanup_v1", "1");
+}
+
+function normalizeStoredJobLevels(db: DatabaseSync) {
+  db.exec(`
+    UPDATE jobs
+    SET level = CASE
+      WHEN level IN ('internship', 'trainee', 'junior', 'entry_level', 'new_graduate', 'mid', 'senior', 'manager', 'unknown') THEN level
+      WHEN level IN ('Təcrübə', 'Internship', 'Intern', 'intern', 'Staj', 'staj', 'Təcrübəçi') THEN 'internship'
+      WHEN level IN ('Trainee', 'trainee', 'Management Trainee') THEN 'trainee'
+      WHEN level IN ('Junior', 'junior') THEN 'junior'
+      WHEN level IN ('Entry level', 'Entry-level', 'entry level', 'Assistant', 'Associate') THEN 'entry_level'
+      WHEN level IN ('Yeni məzun', 'New graduate', 'Graduate', 'graduate') THEN 'new_graduate'
+      WHEN level IN ('Mid', 'Middle', 'mid') THEN 'mid'
+      WHEN level IN ('Senior', 'senior') THEN 'senior'
+      WHEN level IN ('Manager', 'Menecer', 'manager') THEN 'manager'
+      WHEN level IN ('Naməlum', 'Unknown', 'unknown') THEN 'unknown'
+      ELSE 'unknown'
+    END
+    WHERE level IS NULL
+       OR level NOT IN ('internship', 'trainee', 'junior', 'entry_level', 'new_graduate', 'mid', 'senior', 'manager', 'unknown')
+  `);
+}
+
 function backfillCompanyVerificationFromPublicJobs(db: DatabaseSync) {
   if (readMetadataValue(db, "company_verification_backfill_v1") === "1") {
     return;
@@ -1107,7 +1200,8 @@ function backfillCompanySourceProfiles(db: DatabaseSync) {
       evidenceUrl: profileSourceUrl,
       sourceName: profileSourceUrl
     });
-    const nextSector = row.sector?.trim() && row.sector !== "Other" ? row.sector : inferredSector;
+    const currentSector = getMeaningfulMetadataValue(row.sector);
+    const nextSector = currentSector ?? inferredSector;
     const nextWebsite = row.website?.trim() || profileSourceUrl;
     const nextAbout =
       row.about?.trim() && row.about !== "Bu profil yalnız təsdiqlənmiş vakansiya mənbələrinə əsaslanan minimal faktları göstərir."
@@ -1325,7 +1419,7 @@ function syncCompanyJobFeaturedFlag(companySlug: string, companyFeatured: boolea
   db.prepare(
     `UPDATE jobs
      SET featured = CASE
-       WHEN ? = 1 AND level IN ('Təcrübə', 'Junior', 'Trainee', 'Yeni məzun') THEN 1
+       WHEN ? = 1 AND level IN ('internship', 'junior', 'trainee', 'entry_level', 'new_graduate') THEN 1
        ELSE 0
      END
      WHERE company_slug = ?`
@@ -1346,7 +1440,15 @@ function normalizeCompanyLookupValue(value: string) {
 
 function normalizeDomainLookupValue(value: string | null | undefined) {
   const domain = extractCompanyDomain(value);
-  return domain?.replace(/^careers?\./, "").replace(/^jobs?\./, "").replace(/^job-boards?\./, "").replace(/^boards?\./, "").replace(/^api\./, "") ?? null;
+  const normalized =
+    domain
+      ?.replace(/^careers?\./, "")
+      .replace(/^jobs?\./, "")
+      .replace(/^job-boards?\./, "")
+      .replace(/^boards?\./, "")
+      .replace(/^api\./, "") ?? null;
+
+  return normalized && !isKnownAtsDomain(normalized) ? normalized : null;
 }
 
 function isKnownAtsDomain(domain: string | null | undefined) {
@@ -1653,15 +1755,12 @@ export function ensureSourceDerivedCompany(input: {
   sourceName?: string | null;
 }) {
   const db = getDatabase();
-  const sourceName = input.sourceName?.trim() || "verified source";
   const inferredSector = inferCompanySectorFromEvidence({
     companyName: input.companyName,
     evidenceUrl: input.evidenceUrl,
     sourceName: input.sourceName
   });
-  const minimalAbout =
-    `Bu minimal profil yalnız ${sourceName} mənbəsində görünən vakansiya sübutuna əsaslanır. ` +
-    "Rəsmi şirkət məlumatı ayrıca təsdiqlənmədikcə əlavə bölmələr göstərilmir.";
+  const minimalAbout = "";
   const existing = findCompanyByCanonicalIdentity({
     companyName: input.companyName,
     evidenceUrl: input.evidenceUrl
@@ -1669,9 +1768,11 @@ export function ensureSourceDerivedCompany(input: {
 
   if (existing) {
     const nextTagline =
-      existing.tagline.trim() || `Açıq rollar ${sourceName} mənbəsindən toplanır.`;
-    const nextSector = existing.sector.trim() && existing.sector !== "Other" ? existing.sector : inferredSector;
-    const nextLocation = existing.location.trim() || input.location?.trim() || "Azərbaycan";
+      existing.tagline.trim() && !existing.tagline.startsWith("Açıq rollar ")
+        ? existing.tagline
+        : "";
+    const nextSector = getMeaningfulMetadataValue(existing.sector) ?? inferredSector;
+    const nextLocation = normalizeLocationName(existing.location) ?? normalizeLocationName(input.location) ?? "Azərbaycan";
     const nextWebsite = existing.website.trim() || input.evidenceUrl;
     const nextProfileSourceUrl = pickCompanyProfileSourceUrl(nextWebsite, input.evidenceUrl);
     const nextCompanyDomain =
@@ -1717,9 +1818,9 @@ export function ensureSourceDerivedCompany(input: {
 
   const slug = nextUniqueSlug(input.companyName, "companies");
   const createdAt = todayIsoDate();
-  const location = input.location?.trim() || "Azərbaycan";
+  const location = normalizeLocationName(input.location) ?? "Azərbaycan";
   const sector = inferredSector;
-  const tagline = `Açıq rollar ${sourceName} mənbəsindən toplanır.`;
+  const tagline = "";
   const about = minimalAbout;
 
   db.prepare(
@@ -1733,7 +1834,7 @@ export function ensureSourceDerivedCompany(input: {
     tagline,
     sector,
     serializeList(sector === "Other" ? [] : [sector]),
-    "Naməlum",
+    "",
     location,
     "",
     "/hero_bg.webp",

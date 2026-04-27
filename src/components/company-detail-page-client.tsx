@@ -1,16 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Globe, MapPin, Users } from "lucide-react";
 
 import { CompanyLogoImage } from "@/components/company-logo-image";
+import { CompanyNameWithBadge } from "@/components/company-name-with-badge";
 import { JobCard } from "@/components/job-card";
 import { useI18n } from "@/components/i18n-provider";
-import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import { translateSector } from "@/lib/i18n";
 import { buildOutboundHref } from "@/lib/outbound";
 import { getLocalizedCompany } from "@/lib/platform-localization";
+import {
+  dedupeDisplayTextList,
+  getDisplayDomain,
+  getMeaningfulMetadataValue,
+  getMeaningfulTaxonomyValue,
+  getMeaningfulText,
+  getPublicLocationLabel,
+  isGenericTaxonomyValue,
+  isUnknownValue
+} from "@/lib/ui-display";
+
+const INITIAL_ROLES = 3;
+const ROLES_BATCH = 3;
 
 type CompanyDetailPageClientProps = {
   company: Company;
@@ -19,6 +33,8 @@ type CompanyDetailPageClientProps = {
 
 export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClientProps) {
   const { locale, t } = useI18n();
+  const [visibleRoleCount, setVisibleRoleCount] = useState(INITIAL_ROLES);
+
   const localizedCompany = getLocalizedCompany(company, locale);
   const companyLinkTarget = company.profileSourceUrl ?? company.website;
   const companyLinkHref = buildOutboundHref({
@@ -30,8 +46,24 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
   });
   const primaryLinkLabel = localizedCompany.verified === false ? t("labels.source") : t("actions.officialSite");
   const hasSourceBackedSummary = Boolean(company.wikipediaSourceUrl && localizedCompany.wikipediaSummary);
-  const hasMinimalProfileNote = localizedCompany.verified === false && Boolean(localizedCompany.about.trim());
-  const evidenceTags = (localizedCompany.industryTags ?? []).filter(Boolean);
+  const sectorLabel = getMeaningfulTaxonomyValue(localizedCompany.sector);
+  const evidenceTags = dedupeDisplayTextList(localizedCompany.industryTags ?? []).filter(
+    (item) =>
+      !isUnknownValue(item) &&
+      !isGenericTaxonomyValue(item) &&
+      item.toLowerCase() !== sectorLabel?.toLowerCase()
+  );
+  const websiteDomain = getDisplayDomain(companyLinkTarget);
+  const sizeLabel = getMeaningfulMetadataValue(company.size);
+  const locationLabel = getPublicLocationLabel(localizedCompany.location);
+  const tagline = getMeaningfulText(localizedCompany.tagline);
+
+  const visibleJobs = jobs.slice(0, visibleRoleCount);
+  const hasMoreJobs = visibleRoleCount < jobs.length;
+
+  function loadMoreJobs() {
+    setVisibleRoleCount((prev) => Math.min(prev + ROLES_BATCH, jobs.length));
+  }
 
   return (
     <main className="section company-detail-page">
@@ -46,8 +78,10 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
           <span>{localizedCompany.name}</span>
         </div>
 
+        {/* HERO / IDENTITY */}
         <section className="detail-hero">
           <div className="detail-hero__content">
+            {/* Brand row: logo + name + badge */}
             <div className="company-profile__brand">
               <span className="company-profile__logo">
                 <CompanyLogoImage
@@ -58,31 +92,42 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
                 />
               </span>
               <div className="stack-sm">
-                <div className="company-profile__title">
-                  <h1>{localizedCompany.name}</h1>
-                  {localizedCompany.verified !== false ? (
-                    <VerifiedBadge compact profile label={t("labels.verifiedCompany")} />
-                  ) : null}
-                </div>
-                <p className="detail-hero__summary">{localizedCompany.tagline}</p>
+                {/* CompanyNameWithBadge: badge is always directly beside the name, never floats */}
+                <CompanyNameWithBadge
+                  name={localizedCompany.name}
+                  verified={localizedCompany.verified}
+                  badgeLabel={t("labels.verifiedCompany")}
+                  profile
+                  compact
+                  className="company-profile__title"
+                />
+                {tagline ? <p className="detail-hero__summary">{tagline}</p> : null}
               </div>
             </div>
 
+            {/* Meta: size, location, website */}
             <div className="detail-hero__meta">
-              <span>
-                <Users size={16} />
-                {company.size}
-              </span>
-              <span>
-                <MapPin size={16} />
-                {company.location}
-              </span>
-              <span>
-                <Globe size={16} />
-                {company.website.replace("https://", "")}
-              </span>
+              {sizeLabel ? (
+                <span>
+                  <Users size={16} />
+                  {sizeLabel}
+                </span>
+              ) : null}
+              {locationLabel ? (
+                <span>
+                  <MapPin size={16} />
+                  {locationLabel}
+                </span>
+              ) : null}
+              {websiteDomain ? (
+                <span>
+                  <Globe size={16} />
+                  {websiteDomain}
+                </span>
+              ) : null}
             </div>
 
+            {/* Action buttons */}
             <div className="company-detail__actions-row">
               <Link href={companyLinkHref} prefetch={false} className="button button--primary">
                 <Globe size={16} />
@@ -94,23 +139,38 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
               </Link>
             </div>
 
-            <div className="chip-row company-detail__hero-tags hide-scrollbar">
+            {/* Role count + sector chips — centered on mobile */}
+            <div className="chip-row company-detail__hero-tags hide-scrollbar company-detail__chips-centered">
               <span className="chip chip--accent">{t("labels.openRoles", { count: jobs.length })}</span>
-              <span className="chip">{translateSector(locale, company.sector)}</span>
+              {sectorLabel ? <span className="chip">{translateSector(locale, sectorLabel)}</span> : null}
               {evidenceTags.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
               ))}
-              {localizedCompany.verified !== false ? localizedCompany.benefits.map((item) => (
-                <span key={item} className="chip">
-                  {item}
-                </span>
-              )) : null}
             </div>
+
+            {/* Wikipedia short note — appears directly below actions/chips */}
+            {hasSourceBackedSummary ? (
+              <div className="company-detail__short-note">
+                <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
+                <p className="info-copy company-detail__short-note-text">
+                  {localizedCompany.wikipediaSummary}
+                </p>
+                <a
+                  href={company.wikipediaSourceUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-link"
+                >
+                  {t("companyPage.wikipediaSource")} <ExternalLink size={15} />
+                </a>
+              </div>
+            ) : null}
           </div>
         </section>
 
+        {/* OPEN ROLES SECTION — with load-more */}
         <section className="stack-md company-detail-jobs-section">
           <div className="section-heading">
             <div>
@@ -125,61 +185,49 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
               <p>{t("companyPage.emptyCopy")}</p>
             </div>
           ) : (
-            <div className="card-grid card-grid--jobs company-detail-jobs-grid hide-scrollbar">
-              {jobs.map((job) => (
-                <JobCard
-                  key={job.slug}
-                  job={job}
-                  company={company}
-                  sourcePath={`/companies/${company.slug}`}
-                />
-              ))}
-            </div>
+            <>
+              <div className="card-grid card-grid--jobs company-detail-jobs-grid hide-scrollbar">
+                {visibleJobs.map((job) => (
+                  <JobCard
+                    key={job.slug}
+                    job={job}
+                    company={company}
+                    sourcePath={`/companies/${company.slug}`}
+                  />
+                ))}
+              </div>
+
+              {hasMoreJobs ? (
+                <div className="load-more-row">
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    onClick={loadMoreJobs}
+                  >
+                    {t("actions.showMore")}
+                  </button>
+                </div>
+              ) : null}
+            </>
           )}
         </section>
 
+        {/* SIDEBAR INFO PANEL (desktop) */}
         <div className="detail-grid company-detail-info-grid">
-          {hasMinimalProfileNote ? (
-            <section className="detail-panel">
-              <p className="eyebrow">{t("companyPage.aboutEyebrow")}</p>
-              <h2>{t("companyPage.aboutTitle")}</h2>
-              <p className="info-copy">{localizedCompany.about}</p>
-            </section>
-          ) : null}
-
-          {hasSourceBackedSummary ? (
-            <section className="detail-panel">
-              <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
-              <h2>{t("companyPage.overviewTitle")}</h2>
-              <div className="stack-sm">
-                <p className="info-copy">{localizedCompany.wikipediaSummary}</p>
-                <a
-                  href={company.wikipediaSourceUrl!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-link"
-                >
-                  {t("companyPage.wikipediaSource")} <ExternalLink size={15} />
-                </a>
-              </div>
-            </section>
-          ) : null}
-
           <aside className="detail-panel detail-panel--sticky company-detail__role-summary">
-            <p className="eyebrow">{localizedCompany.verified === false ? t("labels.source") : t("companyPage.openRolesEyebrow")}</p>
+            <p className="eyebrow">
+              {localizedCompany.verified === false ? t("labels.source") : t("companyPage.openRolesEyebrow")}
+            </p>
             <h2>{t("labels.openRoles", { count: jobs.length })}</h2>
-            <div className="chip-row">
-              <span className="chip chip--accent">{translateSector(locale, company.sector)}</span>
+            <div className="chip-row company-detail__sidebar-chips">
+              {sectorLabel ? (
+                <span className="chip chip--accent">{translateSector(locale, sectorLabel)}</span>
+              ) : null}
               {evidenceTags.map((item) => (
                 <span key={item} className="chip">
                   {item}
                 </span>
               ))}
-              {localizedCompany.verified !== false ? localizedCompany.benefits.map((item) => (
-                <span key={item} className="chip">
-                  {item}
-                </span>
-              )) : null}
             </div>
             <div className="stack-sm">
               <Link href={companyLinkHref} prefetch={false} className="text-link">

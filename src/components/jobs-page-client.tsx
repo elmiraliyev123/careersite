@@ -1,11 +1,15 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { JobCard } from "@/components/job-card";
 import { FeaturedEmployersCloud } from "@/components/featured-employers-cloud";
 import { useI18n } from "@/components/i18n-provider";
 import { NewInternshipsCarousel } from "@/components/new-internships-carousel";
 import { jobLevels, workModels, type Company, type Job } from "@/data/platform";
 import { translateCity, translateLevel, translateWorkModel } from "@/lib/i18n";
+
+const INITIAL_JOBS = 5;
+const JOBS_BATCH = 10;
 
 type JobsPageClientProps = {
   jobs: Array<{ job: Job; company?: Company | null }>;
@@ -29,6 +33,19 @@ export function JobsPageClient({
   newestInternships
 }: JobsPageClientProps) {
   const { locale, t } = useI18n();
+  const [visibleCount, setVisibleCount] = useState(INITIAL_JOBS);
+
+  // Reset visible count when filters or search change
+  useEffect(() => {
+    setVisibleCount(INITIAL_JOBS);
+  }, [query, city, level, workModel]);
+
+  const visibleJobs = jobs.slice(0, visibleCount);
+  const hasMore = visibleCount < jobs.length;
+
+  function loadMore() {
+    setVisibleCount((prev) => Math.min(prev + JOBS_BATCH, jobs.length));
+  }
 
   return (
     <main className="section jobs-page">
@@ -109,11 +126,25 @@ export function JobsPageClient({
             <p>{t("jobsPage.emptyCopy")}</p>
           </div>
         ) : (
-          <div className="card-grid card-grid--jobs jobs-results-grid">
-            {jobs.map(({ job, company }) => (
-              <JobCard key={job.slug} job={job} company={company} sourcePath="/jobs" />
-            ))}
-          </div>
+          <>
+            <div className="card-grid card-grid--jobs jobs-results-grid">
+              {visibleJobs.map(({ job, company }) => (
+                <JobCard key={job.slug} job={job} company={company} sourcePath="/jobs" />
+              ))}
+            </div>
+
+            {hasMore ? (
+              <div className="load-more-row">
+                <button
+                  type="button"
+                  className="button button--ghost"
+                  onClick={loadMore}
+                >
+                  {t("actions.showMore")}
+                </button>
+              </div>
+            ) : null}
+          </>
         )}
 
         <section className="stack-md jobs-page__featured-employers">

@@ -1,14 +1,14 @@
 "use client";
 
 import type { MouseEvent, RefObject } from "react";
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import Link from "next/link";
-import { ArrowUpRight, GraduationCap, MapPin, Sparkles, Zap } from "lucide-react";
+import { CalendarDays, MapPin, Sparkles } from "lucide-react";
 
 import { CompanyLogoImage } from "@/components/company-logo-image";
+import { CompanyNameWithBadge } from "@/components/company-name-with-badge";
 import { useI18n } from "@/components/i18n-provider";
 import { SaveJobButton } from "@/components/save-job-button";
-import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company, Job } from "@/data/platform";
 import {
   formatLocalizedDate,
@@ -17,8 +17,13 @@ import {
   translateSector,
   translateWorkModel
 } from "@/lib/i18n";
-import { buildOutboundHref, isSafeExternalUrl } from "@/lib/outbound";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
+import {
+  getMeaningfulTaxonomyValue,
+  getMeaningfulText,
+  getPublicLocationLabel,
+  isMeaningfulLevel
+} from "@/lib/ui-display";
 
 type JobCardProps = {
   job: Job;
@@ -32,30 +37,24 @@ function setSpotlightPosition(event: MouseEvent<HTMLElement>) {
   event.currentTarget.style.setProperty("--pointer-y", `${event.clientY - bounds.top}px`);
 }
 
-function getWorkModelIcon(workModel: Job["workModel"]) {
-  if (workModel === "Hibrid") {
-    return <Zap size={14} />;
-  }
-
-  return <Sparkles size={14} />;
-}
-
-export function JobCard({ job, company, sourcePath }: JobCardProps) {
+function JobCardComponent({ job, company }: JobCardProps) {
   const { locale, t } = useI18n();
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const companyLinkRef = useRef<HTMLAnchorElement | null>(null);
-  const applyHref = isSafeExternalUrl(job.finalVerifiedUrl?.trim() ?? "") ? job.finalVerifiedUrl!.trim() : "";
-  const outboundApplyHref = applyHref
-    ? buildOutboundHref({
-        targetUrl: applyHref,
-        companyName: localizedCompany?.name ?? job.companySlug,
-        logoUrl: company?.logo,
-        sourcePath,
-        fallbackHref: sourcePath ?? `/jobs/${job.slug}`
-      })
-    : "";
-  const visibleTags = localizedJob.tags.slice(0, 3);
+  const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
+  const workModelLabel = getMeaningfulText(translateWorkModel(locale, job.workModel));
+  const visibleTags = (localizedJob.tags.length > 0
+    ? localizedJob.tags
+    : [levelLabel, workModelLabel].filter((value): value is string => Boolean(value))
+  ).slice(0, 3);
+  const companySector = localizedCompany
+    ? getMeaningfulTaxonomyValue(localizedCompany.sector)
+    : null;
+  const summary = getMeaningfulText(localizedJob.summary);
+  const cityLabel = getPublicLocationLabel(translateCity(locale, job.city));
+  const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
+  const hasMeta = Boolean(cityLabel || workModelLabel || deadlineLabel);
 
   return (
     <article
@@ -69,20 +68,17 @@ export function JobCard({ job, company, sourcePath }: JobCardProps) {
       <span className="job-card__spotlight" aria-hidden="true" />
 
       <div className="job-card__top">
-        <div className="job-pill-row">
-          <span className="job-pill job-pill--live">
-            <span className="job-pill__dot" />
-            {t("labels.activeStatus")}
-          </span>
-          <span className="job-pill">
-            <GraduationCap size={14} />
-            {translateLevel(locale, job.level)}
-          </span>
-          <span className="job-pill">
-            {getWorkModelIcon(job.workModel)}
-            {translateWorkModel(locale, job.workModel)}
-          </span>
-        </div>
+        {visibleTags.length > 0 ? (
+          <div className="job-card__tags job-card__tags--top" aria-label={t("jobDetail.matchingTags")}>
+            {visibleTags.map((tag) => (
+              <span key={`${job.slug}-${tag}`} className="job-card__tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span aria-hidden="true" />
+        )}
 
         <SaveJobButton
           job={job}
@@ -102,70 +98,53 @@ export function JobCard({ job, company, sourcePath }: JobCardProps) {
             />
           </span>
           <span className="job-card__brand-copy">
-            <span className="job-card__company-name-row">
-              <strong>{localizedCompany.name}</strong>
-              {localizedCompany.verified !== false ? (
-                <VerifiedBadge compact label={t("labels.verifiedCompany")} />
-              ) : null}
-            </span>
-            <span>{translateSector(locale, localizedCompany.sector)}</span>
+            <CompanyNameWithBadge
+              name={localizedCompany.name}
+              verified={localizedCompany.verified}
+              badgeLabel={t("labels.verifiedCompany")}
+              compact
+              className="job-card__company-name-row"
+            />
+            {companySector ? <span>{translateSector(locale, companySector)}</span> : null}
           </span>
         </Link>
       ) : null}
 
       <div className="job-card__body">
         <h3>{localizedJob.title}</h3>
-        {localizedJob.summary ? (
-          <p className="job-card__summary">{localizedJob.summary}</p>
-        ) : null}
-        {visibleTags.length > 0 ? (
-          <div className="job-card__tags" aria-label={t("jobDetail.matchingTags")}>
-            {visibleTags.map((tag) => (
-              <span key={`${job.slug}-${tag}`} className="job-card__tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        ) : null}
+        {summary ? <p className="job-card__summary">{summary}</p> : null}
       </div>
 
-      <div className="job-card__meta">
-        <span>
-          <MapPin size={16} />
-          {translateCity(locale, job.city)}
-        </span>
-        <span>
-          <Sparkles size={16} />
-          {localizedJob.category}
-        </span>
-        <span>{t("labels.deadline")}: {formatLocalizedDate(job.deadline, locale)}</span>
-      </div>
+      {hasMeta ? (
+        <div className="job-card__meta">
+          {cityLabel ? (
+            <span>
+              <MapPin size={16} />
+              {cityLabel}
+            </span>
+          ) : null}
+          {workModelLabel ? (
+            <span>
+              <Sparkles size={16} />
+              {workModelLabel}
+            </span>
+          ) : null}
+          {deadlineLabel ? (
+            <span>
+              <CalendarDays size={16} />
+              {t("labels.deadline")}: {deadlineLabel}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="job-card__bottom">
         <Link href={`/jobs/${job.slug}`} className="job-card__detail-link">
           {t("actions.viewDetails")}
         </Link>
-
-        {applyHref ? (
-          <Link
-            href={outboundApplyHref}
-            prefetch={false}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="job-card__apply"
-          >
-            <span className="job-card__apply-icon">⚡</span>
-            <span className="job-card__apply-label">{t("actions.applyNow")}</span>
-            <ArrowUpRight size={16} />
-          </Link>
-        ) : (
-          <span className="job-card__apply job-card__apply--disabled" aria-disabled="true">
-            <span className="job-card__apply-label job-card__apply-label--visible">
-              {t("actions.applyLinkInactiveShort")}
-            </span>
-          </span>
-        )}
       </div>
     </article>
   );
 }
+
+export const JobCard = memo(JobCardComponent);

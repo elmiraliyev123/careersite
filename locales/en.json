@@ -40,8 +40,9 @@
     "openFreshListings": "Open fresh listings",
     "exploreEmployers": "Go to employer page",
     "learnMore": "Learn more",
+    "showMore": "Show more",
     "copyPrompt": "Copy prompt",
-    "copyPromptCta": "✨ Copy Prompt",
+    "copyPromptCta": "Copy prompt",
     "copied": "Copied"
   },
   "labels": {
@@ -148,13 +149,13 @@
     "matchingTags": "Tags that fit this role",
     "nextRolesTitle": "Roles you can explore next",
     "companyOverview": "Quick company overview",
-    "aiSummaryEyebrow": "AI Analysis",
-    "aiSummaryTitle": "✨ Quick overview",
-    "aiSummaryCopy": "Understand the role in seconds and decide faster whether it fits you.",
+    "aiSummaryEyebrow": "Source-based overview",
+    "aiSummaryTitle": "Quick overview",
+    "aiSummaryCopy": "Key points from the source listing.",
     "aiSummaryMission": "Core mission",
     "aiSummaryDealbreaker": "Key skill",
     "aiSummaryCulture": "Culture vibe",
-    "aiSummaryCultureFallback": "{company} expects a {workModel} rhythm with strong ownership from this role."
+    "aiSummaryCultureFallback": ""
   },
   "savedPage": {
     "title": "Keep your saved roles in one place",
@@ -171,6 +172,10 @@
     "invalidEyebrow": "Redirect error",
     "invalidTitle": "This outbound link is not valid",
     "invalidCopy": "The URL could not be verified or does not use a safe format. Return to jobs and start the redirect again."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "copy": "The job or company you were looking for may no longer be available."
   },
   "playbook": {
     "eyebrow": "Career Playbook",
@@ -195,13 +200,13 @@
     "feature3Copy": "Company pages feel more polished, more credible, and more aligned with what early-career talent wants to see.",
     "ctaEyebrow": "Next step",
     "ctaTitle": "Present your team with more confidence and meet the right candidates sooner.",
-    "ctaCopy": "CareerApple helps employers turn open roles into a cleaner, more premium experience for early-career talent.",
+    "ctaCopy": "CareerApple helps employers present early-career roles clearly and reach better-fit candidates faster.",
     "ctaSecondary": "See fresh jobs"
   },
   "footer": {
     "eyebrow": "CareerApple",
     "introTitle": "The early-career platform for internships and first jobs",
-    "introCopy": "CareerApple brings internship, trainee, and junior openings together with verified employer profiles in one premium platform for early-career talent.",
+    "introCopy": "CareerApple brings internship, trainee, and junior openings together with verified employer profiles for early-career talent.",
     "quickLinks": {
       "jobs": "New jobs",
       "employers": "For employers",
@@ -218,7 +223,7 @@
       "tecrube-proqramlari": "Internship programs",
       "kim-ishe-goturur": "Who's hiring",
       "karyera-meslehetleri": "Career tips",
-      "careerapple-ai": "CareerApple AI",
+      "careerapple-ai": "Role matching",
       "fellowship-proqrami": "Fellowship program",
       "imkanlar": "Opportunities",
       "qiymetlendirme": "Pricing",
@@ -259,9 +264,14 @@
     "levels": {
       "all": "All",
       "internship": "Internship",
-      "junior": "Junior",
       "trainee": "Trainee",
-      "graduate": "Graduate"
+      "junior": "Junior",
+      "entryLevel": "Entry level",
+      "graduate": "New graduate",
+      "mid": "Mid",
+      "senior": "Senior",
+      "manager": "Manager",
+      "unknown": "Unknown"
     },
     "workModels": {
       "all": "All",
@@ -272,6 +282,7 @@
     "cities": {
       "all": "All",
       "baku": "Baku",
+      "azerbaijan": "Azerbaijan",
       "sanFrancisco": "San Francisco",
       "london": "London",
       "tallinn": "Tallinn",

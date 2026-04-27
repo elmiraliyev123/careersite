@@ -18,7 +18,7 @@ import { InlineText } from "@/components/cms/inline-text";
 import { InlineList } from "@/components/cms/inline-list";
 import { InlineBackground } from "@/components/cms/inline-background";
 import { useCms } from "@/components/cms-provider";
-import { VerifiedBadge } from "@/components/verified-badge";
+import { CompanyNameWithBadge } from "@/components/company-name-with-badge";
 import { type Company, jobLevels, type Job, workModels } from "@/data/platform";
 import {
   formatLocalizedDate,
@@ -28,6 +28,14 @@ import {
   translateWorkModel
 } from "@/lib/i18n";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
+import {
+  getDisplaySourceLabel,
+  getMeaningfulTaxonomyValue,
+  getMeaningfulText,
+  getPublicLocationLabel,
+  isMeaningfulLevel,
+  normalizeDisplayTags
+} from "@/lib/ui-display";
 
 type HomePageClientProps = {
   stats: {
@@ -63,10 +71,10 @@ type LocaleCopy = {
 const copyByLocale: Record<"az" | "en" | "ru", LocaleCopy> = {
   az: {
     heroEyebrow: "Vakansiyalar",
-    heroTitle: ["Gənclər üçün", "açıq rolları filtrlə", "və müraciət et"],
+    heroTitle: ["Uyğun vakansiyanı", "tap və", "müraciət et"],
     heroCopy:
-      "Təcrübə, trainee, junior və yeni məzun rolları bir yerdə görmək üçün aşağıdakı filtrlərdən istifadə et.",
-    searchPlaceholder: "Məsələn: intern, designer, analyst",
+      "İş, təcrübə, junior və peşəkar rolları etibarlı mənbələrdən bir yerdə axtar, filtrlə və müqayisə et.",
+    searchPlaceholder: "Məsələn: staj, dizayner, analitik",
     jobsEyebrow: "Seçilmiş vakansiyalar",
     jobsTitle: "Gənclər üçün təcrübə elanları",
     companiesEyebrow: "Seçilmiş şirkətlər",
@@ -83,15 +91,15 @@ const copyByLocale: Record<"az" | "en" | "ru", LocaleCopy> = {
         copy: "İş modeli, kateqoriya, lokasiya və son müraciət tarixi vakansiya kartında açıq göstərilir."
       },
       {
-        title: "Azerbaycan bazarına fokus",
-        copy: "Yerli işəgötürənlər, regional board-lar və rəsmi karyera səhifələri eyni axında toplanır."
+        title: "Azərbaycan bazarına fokus",
+        copy: "Yerli işəgötürənlər, regional elan saytları və rəsmi karyera səhifələri eyni axında toplanır."
       },
       {
         title: "Şirkət konteksti",
-        copy: "Vakansiyanı görməzdən əvvəl komandanı, sektoru və açıq rol sayını daha aydın başa düşürsən."
+        copy: "Vakansiyaya keçməzdən əvvəl şirkəti, sahəni və açıq rol sayını görürsən."
       }
     ],
-    jobSourceLabel: "Elan platforması",
+    jobSourceLabel: "Mənbə",
     deadlineLabel: "Son müraciət",
     companyVacanciesSuffix: "aktiv vakansiya",
     emptyJobs: "Hazırda bu görünüş üçün uyğun vakansiya yoxdur."
@@ -175,7 +183,7 @@ export function HomePageClient({
   heroCities: _heroCities,
   availableCities
 }: HomePageClientProps) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const { isEditMode, draftData } = useCms();
   const copy = copyByLocale[locale];
   const heroJobs = featuredJobItems.slice(0, 8);
@@ -184,6 +192,9 @@ export function HomePageClient({
   const cmsCities = draftData?.filters?.cities ?? availableCities;
   const cmsLevels = draftData?.filters?.levels ?? jobLevels;
   const cmsModels = draftData?.filters?.models ?? workModels;
+  const filterCities = availableCities;
+  const filterLevels = jobLevels;
+  const filterModels = workModels;
 
   return (
     <main className="home-refined">
@@ -213,7 +224,7 @@ export function HomePageClient({
         <div className="shell home-refined__shell">
           <form className="home-filter-bar" action="/jobs">
             <label className="home-filter-bar__field home-filter-bar__field--search">
-              <span>Rol və ya bacarıq</span>
+              <span>{t("labels.roleOrSkill")}</span>
               <div className="home-filter-bar__input-wrap">
                 <Search size={16} />
                 <input name="q" type="text" placeholder={copy.searchPlaceholder} />
@@ -221,7 +232,7 @@ export function HomePageClient({
             </label>
 
             <label className="home-filter-bar__field">
-              <span>{isEditMode ? "Şəhərləri Redaktə Et" : "Şəhər"}</span>
+              <span>{isEditMode ? "Şəhərləri Redaktə Et" : t("labels.city")}</span>
               {isEditMode && (
                 <InlineList 
                   contentKey="filters.cities" 
@@ -230,8 +241,8 @@ export function HomePageClient({
                   itemTemplate="Yeni Şəhər"
                 />
               )}
-              <select name="city" defaultValue={cmsCities[0]} disabled={isEditMode}>
-                {cmsCities.map((city: string) => (
+              <select name="city" defaultValue={filterCities[0] ?? "Hamısı"} disabled={isEditMode}>
+                {filterCities.map((city: string) => (
                   <option key={city} value={city}>
                     {translateCity(locale, city)}
                   </option>
@@ -240,7 +251,7 @@ export function HomePageClient({
             </label>
 
             <label className="home-filter-bar__field">
-              <span>{isEditMode ? "Səviyyələri Redaktə Et" : "Səviyyə"}</span>
+              <span>{isEditMode ? "Səviyyələri Redaktə Et" : t("labels.level")}</span>
               {isEditMode && (
                 <InlineList 
                   contentKey="filters.levels" 
@@ -249,8 +260,8 @@ export function HomePageClient({
                   itemTemplate="Yeni Səviyyə"
                 />
               )}
-              <select name="level" defaultValue={cmsLevels[0]} disabled={isEditMode}>
-                {cmsLevels.map((level: string) => (
+              <select name="level" defaultValue={filterLevels[0]} disabled={isEditMode}>
+                {filterLevels.map((level: string) => (
                   <option key={level} value={level}>
                     {translateLevel(locale, level)}
                   </option>
@@ -259,7 +270,7 @@ export function HomePageClient({
             </label>
 
             <label className="home-filter-bar__field">
-              <span>{isEditMode ? "İş Modeli Redaktə Et" : "İş modeli"}</span>
+              <span>{isEditMode ? "İş Modeli Redaktə Et" : t("labels.workModel")}</span>
               {isEditMode && (
                 <InlineList 
                   contentKey="filters.models" 
@@ -268,8 +279,8 @@ export function HomePageClient({
                   itemTemplate="Yeni İş Modeli"
                 />
               )}
-              <select name="workModel" defaultValue={cmsModels[0]} disabled={isEditMode}>
-                {cmsModels.map((model: string) => (
+              <select name="workModel" defaultValue={filterModels[0]} disabled={isEditMode}>
+                {filterModels.map((model: string) => (
                   <option key={model} value={model}>
                     {translateWorkModel(locale, model)}
                   </option>
@@ -278,7 +289,7 @@ export function HomePageClient({
             </label>
 
             <button type="submit" className="home-filter-bar__submit">
-              Filtrlə
+              {t("actions.filter")}
             </button>
           </form>
         </div>
@@ -298,26 +309,35 @@ export function HomePageClient({
               slides={heroJobs.map(({ job, company }) => {
                 const localizedJob = getLocalizedJob(job, locale);
                 const localizedCompany = getLocalizedCompany(company, locale);
-                const roleTags = [
-                  translateLevel(locale, localizedJob.level),
-                  localizedCompany.name,
-                  translateWorkModel(locale, localizedJob.workModel)
-                ];
+                const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, localizedJob.level) : null;
+                const workModelLabel = getMeaningfulText(translateWorkModel(locale, localizedJob.workModel));
+                const roleTags = [levelLabel, workModelLabel].filter(
+                  (value): value is string => Boolean(value)
+                );
+                const visibleTags = normalizeDisplayTags(roleTags, locale).slice(0, 3);
+                const companySector = getMeaningfulTaxonomyValue(localizedCompany.sector);
+                const summary = getMeaningfulText(localizedJob.summary);
+                const cityLabel = getPublicLocationLabel(translateCity(locale, localizedJob.city));
+                const categoryLabel = getMeaningfulTaxonomyValue(localizedJob.category);
+                const sourceLabel = getDisplaySourceLabel(job);
+                const deadlineLabel = getMeaningfulText(formatLocalizedDate(localizedJob.deadline, locale));
 
                 return {
                   key: job.slug,
                   content: (
                     <Link href={`/jobs/${job.slug}`} className="home-job-card">
-                      <div className="home-job-card__tags">
-                        {roleTags.map((tag, index) => (
-                          <span
-                            key={`${job.slug}-${tag}`}
-                            className={`home-job-card__tag${index === 0 ? " home-job-card__tag--accent" : ""}`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                      {visibleTags.length > 0 ? (
+                        <div className="home-job-card__tags">
+                          {visibleTags.map((tag, index) => (
+                            <span
+                              key={`${job.slug}-${tag}`}
+                              className={`home-job-card__tag${index === 0 ? " home-job-card__tag--accent" : ""}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
 
                       <div className="home-job-card__company-row">
                         <span className="home-job-card__company-brand">
@@ -330,25 +350,34 @@ export function HomePageClient({
                               className="home-job-card__company-logo-image"
                             />
                           </span>
-                          <span className="home-job-card__company-name">{localizedCompany.name}</span>
-                          {localizedCompany.verified !== false ? <VerifiedBadge compact /> : null}
+                          <CompanyNameWithBadge
+                            name={localizedCompany.name}
+                            verified={localizedCompany.verified}
+                            badgeLabel={t("labels.verifiedCompany")}
+                            compact
+                            nameClassName="home-job-card__company-name"
+                          />
                         </span>
                       </div>
 
-                      <p className="home-job-card__department">
-                        {translateSector(locale, localizedCompany.sector)}
-                      </p>
+                      {companySector ? (
+                        <p className="home-job-card__department">
+                          {translateSector(locale, companySector)}
+                        </p>
+                      ) : null}
                       <h3>{localizedJob.title}</h3>
-                      <p className="home-job-card__summary">{localizedJob.summary}</p>
+                      {summary ? <p className="home-job-card__summary">{summary}</p> : null}
 
                       <div className="home-job-card__meta">
-                        <span>
-                          <MapPin size={13} />
-                          {translateCity(locale, localizedJob.city)}
-                        </span>
-                        <span>{localizedJob.category}</span>
-                        <span>{copy.jobSourceLabel}: {localizedJob.sourceName ?? "CareerApple"}</span>
-                        <span>{copy.deadlineLabel}: {formatLocalizedDate(localizedJob.deadline, locale)}</span>
+                        {cityLabel ? (
+                          <span>
+                            <MapPin size={13} />
+                            {cityLabel}
+                          </span>
+                        ) : null}
+                        {categoryLabel ? <span>{categoryLabel}</span> : null}
+                        {sourceLabel ? <span>{copy.jobSourceLabel}: {sourceLabel}</span> : null}
+                        {deadlineLabel ? <span>{copy.deadlineLabel}: {deadlineLabel}</span> : null}
                       </div>
                     </Link>
                   )
@@ -373,6 +402,7 @@ export function HomePageClient({
             viewportClassName="home-section-carousel__viewport--companies"
             slides={highlightedCompanies.map(({ company, openRoles }) => {
               const localizedCompany = getLocalizedCompany(company, locale);
+              const companySector = getMeaningfulTaxonomyValue(localizedCompany.sector);
 
               return {
                 key: company.slug,
@@ -389,14 +419,22 @@ export function HomePageClient({
                         />
                       </span>
                       <div className="home-company-card__name-wrap">
-                        <span className="home-company-card__name">{localizedCompany.name}</span>
-                        {localizedCompany.verified !== false ? <VerifiedBadge compact /> : null}
+                        <CompanyNameWithBadge
+                          name={localizedCompany.name}
+                          verified={localizedCompany.verified}
+                          badgeLabel={t("labels.verifiedCompany")}
+                          compact
+                          className="home-company-card__name-wrap"
+                          nameClassName="home-company-card__name"
+                        />
                       </div>
                     </div>
 
-                    <p className="home-company-card__sector">
-                      {translateSector(locale, localizedCompany.sector)}
-                    </p>
+                    {companySector ? (
+                      <p className="home-company-card__sector">
+                        {translateSector(locale, companySector)}
+                      </p>
+                    ) : null}
                     <p className={`home-company-card__roles${openRoles > 0 ? " home-company-card__roles--active" : ""}`}>
                       {openRoles} {copy.companyVacanciesSuffix}
                     </p>

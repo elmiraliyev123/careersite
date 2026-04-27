@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type CompanyLogoImageProps = {
   name: string;
@@ -50,6 +50,10 @@ export function CompanyLogoImage({
   const [sourceIndex, setSourceIndex] = useState(0);
   const source = sources[sourceIndex];
 
+  useEffect(() => {
+    setSourceIndex(0);
+  }, [sources]);
+
   if (!source) {
     return (
       <span
@@ -74,6 +78,8 @@ export function CompanyLogoImage({
       onError={() => {
         if (sourceIndex < sources.length - 1) {
           setSourceIndex((current) => current + 1);
+        } else {
+          setSourceIndex(sources.length);
         }
       }}
     />

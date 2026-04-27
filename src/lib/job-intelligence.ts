@@ -9,6 +9,7 @@ import {
   type SupportedLocaleCode
 } from "@/lib/localized-content";
 import { sanitizeText } from "@/lib/text-sanitizer";
+import { getMeaningfulText, normalizeDisplayTags } from "@/lib/ui-display";
 
 export type ApplyLinkStatus = "valid" | "broken" | "uncertain";
 export type ApplyLinkKind =
@@ -30,8 +31,8 @@ export type EarlyCareerLevel =
   | "internship"
   | "trainee"
   | "junior"
-  | "graduate"
-  | "assistant"
+  | "entry_level"
+  | "new_graduate"
   | "mid"
   | "senior"
   | "manager"
@@ -503,14 +504,14 @@ export function inferEarlyCareerLevel(title: string, description: string, employ
     /\b(?:new grad(?:uate)?|graduate program|graduate scheme)\b/i.test(haystack) ||
     /\byeni\s+məzun\b/i.test(haystack)
   ) {
-    return "graduate";
+    return "new_graduate";
   }
 
   if (
     /\b(?:assistant|entry[-\s]?level|associate)\b/i.test(haystack) ||
     /\bасистент\b/i.test(haystack)
   ) {
-    return "assistant";
+    return "entry_level";
   }
 
   if (
@@ -579,10 +580,10 @@ export function classifyInternshipCandidate(
     }
   }
 
-  if (["internship", "trainee", "graduate"].includes(seniorityLevel)) {
+  if (["internship", "trainee", "new_graduate"].includes(seniorityLevel)) {
     score += 0.22;
     debugFlags.push(`seniority:${seniorityLevel}`);
-  } else if (["junior", "assistant"].includes(seniorityLevel)) {
+  } else if (["junior", "entry_level"].includes(seniorityLevel)) {
     score += 0.11;
     debugFlags.push(`seniority:${seniorityLevel}`);
   } else if (["mid", "senior", "manager"].includes(seniorityLevel)) {
@@ -597,8 +598,8 @@ export function classifyInternshipCandidate(
   }
 
   const internshipConfidence = clamp(score, 0, 1);
-  const earlyCareerEligible = ["internship", "trainee", "graduate", "junior", "assistant"].includes(seniorityLevel);
-  const explicitInternshipLevel = ["internship", "trainee", "graduate"].includes(seniorityLevel);
+  const earlyCareerEligible = ["internship", "trainee", "new_graduate", "junior", "entry_level"].includes(seniorityLevel);
+  const explicitInternshipLevel = ["internship", "trainee", "new_graduate"].includes(seniorityLevel);
 
   return {
     isInternship: explicitInternshipLevel && internshipConfidence >= 0.24,
@@ -789,29 +790,33 @@ function toUiWorkModel(workMode: NormalizedWorkMode): Job["workModel"] {
 }
 
 function toUiLevel(level: EarlyCareerLevel): Job["level"] {
-  switch (level) {
+  switch (level as string) {
     case "mid":
-      return "Mid";
+      return "mid";
     case "senior":
-      return "Senior";
+      return "senior";
     case "manager":
-      return "Manager";
+      return "manager";
     case "trainee":
-      return "Trainee";
+      return "trainee";
+    case "new_graduate":
     case "graduate":
-      return "Yeni məzun";
+      return "new_graduate";
     case "junior":
+      return "junior";
+    case "entry_level":
     case "assistant":
-      return "Junior";
+      return "entry_level";
     case "unknown":
-      return "Naməlum";
+      return "unknown";
     default:
-      return "Təcrübə";
+      return "internship";
   }
 }
 
 function buildSummaryText(candidate: Pick<NormalizedJobCandidate, "companyName" | "title" | "descriptionClean">) {
-  const description = candidate.descriptionClean ? extractSentences(candidate.descriptionClean, 1)[0] : "";
+  const descriptionSeed = getMeaningfulText(candidate.descriptionClean);
+  const description = descriptionSeed ? extractSentences(descriptionSeed, 1)[0] : "";
 
   return description || "";
 }
@@ -838,12 +843,12 @@ function buildTags(
       ? "Internship"
       : candidate.seniorityLevel === "trainee"
         ? "Trainee"
-        : candidate.seniorityLevel === "graduate"
-          ? "Graduate"
-          : candidate.seniorityLevel === "junior"
-            ? "Junior"
-            : candidate.seniorityLevel === "assistant"
-              ? "Assistant"
+          : candidate.seniorityLevel === "new_graduate"
+            ? "Graduate"
+            : candidate.seniorityLevel === "junior"
+              ? "Junior"
+            : candidate.seniorityLevel === "entry_level"
+              ? "Entry level"
               : candidate.seniorityLevel === "mid"
                 ? "Mid"
                 : candidate.seniorityLevel === "senior"
@@ -859,14 +864,7 @@ function buildTags(
     ...candidate.title.split(/[\s/()-]+/)
   ];
 
-  return Array.from(
-    new Set(
-      tokens
-        .map((item) => sanitizeText(item))
-        .filter((item) => item.length >= 2)
-        .slice(0, 6)
-    )
-  );
+  return normalizeDisplayTags(tokens, "en").slice(0, 6);
 }
 
 export function buildPublishedJobDraft(

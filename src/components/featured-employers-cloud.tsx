@@ -9,6 +9,7 @@ import { VerifiedBadge } from "@/components/verified-badge";
 import type { Company } from "@/data/platform";
 import { translateSector } from "@/lib/i18n";
 import { getLocalizedCompany } from "@/lib/platform-localization";
+import { getMeaningfulTaxonomyValue } from "@/lib/ui-display";
 
 type FeaturedEmployersCloudProps = {
   items: Array<{ company: Company; openRoles: number }>;
@@ -32,6 +33,7 @@ export function FeaturedEmployersCloud({ items }: FeaturedEmployersCloudProps) {
           <div key={groupIndex} className="marquee__group" aria-hidden={groupIndex === 1}>
             {items.map(({ company, openRoles }) => {
               const localizedCompany = getLocalizedCompany(company, locale);
+              const sectorLabel = getMeaningfulTaxonomyValue(localizedCompany.sector);
 
               return (
                 <Link
@@ -55,7 +57,7 @@ export function FeaturedEmployersCloud({ items }: FeaturedEmployersCloudProps) {
                         <VerifiedBadge compact label={t("labels.verifiedCompany")} />
                       ) : null}
                     </span>
-                    <span>{translateSector(locale, company.sector)}</span>
+                    {sectorLabel ? <span>{translateSector(locale, sectorLabel)}</span> : null}
                     <span className="logo-cloud__vacancies">
                       {t("labels.activeVacancies", { count: openRoles })}
                     </span>

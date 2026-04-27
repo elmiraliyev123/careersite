@@ -8,6 +8,7 @@ import {
   getJobs,
   isYouthRole
 } from "@/lib/platform";
+import { isAllFilterValue, normalizeLocationName, normalizeRoleLevel } from "@/lib/ui-display";
 
 type JobsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -21,8 +22,10 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   const params = await searchParams;
 
   const query = getStringValue(params.q) ?? "";
-  const city = getStringValue(params.city) ?? "Hamısı";
-  const level = getStringValue(params.level) ?? "Hamısı";
+  const rawCity = getStringValue(params.city);
+  const rawLevel = getStringValue(params.level);
+  const city = isAllFilterValue(rawCity) ? "Hamısı" : normalizeLocationName(rawCity) ?? "Hamısı";
+  const level = isAllFilterValue(rawLevel) ? "all" : normalizeRoleLevel(rawLevel);
   const workModel = getStringValue(params.workModel) ?? "Hamısı";
 
   const jobs = filterJobs({ query, city, level, workModel });

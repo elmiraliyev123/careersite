@@ -49,6 +49,7 @@ import {
   listCompanies,
   refreshStoredJobVisibilityState
 } from "@/lib/platform-database";
+import { normalizeRoleLevel } from "@/lib/ui-display";
 
 type CandidateRow = {
   id: string;
@@ -628,7 +629,8 @@ function backfillLegacyJobMetadata(db: DatabaseSync) {
     const canonicalJobId = row.slug;
     const companyDomain = extractDomain(row.company_website);
     const normalizedTitle = normalizeTitle(row.title);
-    const isInternship = row.level === "Təcrübə" || row.level === "Trainee" || row.level === "Yeni məzun";
+    const normalizedLevel = normalizeRoleLevel(row.level);
+    const isInternship = ["internship", "trainee", "new_graduate"].includes(normalizedLevel);
     statement.run(
       row.slug,
       row.source_url ?? row.direct_company_url ?? null,
@@ -644,7 +646,7 @@ function backfillLegacyJobMetadata(db: DatabaseSync) {
       row.city === "Bakı" ? "Azərbaycan" : null,
       row.created_at ?? row.posted_at ?? todayIsoDate(),
       row.posted_at ?? row.created_at ?? todayIsoDate(),
-      row.level,
+      normalizedLevel,
       isInternship ? 1 : 0,
       isInternship ? 0.88 : 0.54,
       row.city === "Bakı" ? 1 : 0,

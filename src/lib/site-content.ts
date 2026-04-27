@@ -26,13 +26,13 @@ const infoSections: InfoSection[] = [
         slug: "tecrube-proqramlari",
         label: "Təcrübə proqramları",
         title: "Təcrübə proqramlarını daha ağıllı müqayisə et",
-        description: "İnternship və trainee elanlarını ilk karyera addımına uyğun şəkildə müqayisə etmək üçün qısa bələdçi.",
+        description: "Təcrübə və təcrübəçi elanlarını ilk karyera addımına uyğun şəkildə müqayisə etmək üçün qısa bələdçi.",
         intro:
           "CareerApple tələbələrə sadəcə elan siyahısı vermir. Rol səviyyəsi, iş modeli, son müraciət tarixi və şirkət etibarı bir yerdə göründüyü üçün seçim daha tez və daha inamlı olur.",
         highlights: [
-          "Təcrübə, trainee və yeni məzun rolları daha aydın müqayisə olunur.",
+          "Təcrübə, təcrübəçi və yeni məzun rolları daha aydın müqayisə olunur.",
           "Yeni elanlar və yaxın tarixli müraciətlər daha tez seçilir.",
-          "Verified badge etibarlı və aydın təqdim olunan şirkətləri fərqləndirməyə kömək edir."
+          "Təsdiqlənmiş şirkətlər ayrıca yoxlanılır."
         ],
         ctaLabel: "Vakansiyalara bax",
         ctaHref: "/jobs"
@@ -69,11 +69,11 @@ const infoSections: InfoSection[] = [
       },
       {
         slug: "careerapple-ai",
-        label: "CareerApple AI",
-        title: "CareerApple AI sənə seçim anında necə kömək edəcək",
-        description: "Gələcəkdə əlavə olunacaq ağıllı uyğunluq və CV dəstəyi barədə qısa baxış.",
+        label: "Uyğunluq dəstəyi",
+        title: "Uyğun rolları daha tez seçmək",
+        description: "Gələcək uyğunluq və CV dəstəyi barədə qısa baxış.",
         intro:
-          "CareerApple AI gələcək mərhələdə istifadəçiyə daha sürətli qərar vermək üçün düşünülür. Məqsəd uyğun rolları daha aydın göstərmək, CV-ni gücləndirmək və növbəti addımı seçməyi asanlaşdırmaqdır.",
+          "Gələcək mərhələdə məqsəd uyğun rolları daha aydın göstərmək, CV-ni gücləndirmək və növbəti addımı seçməyi asanlaşdırmaqdır.",
         highlights: [
           "Rol uyğunluğu üçün bacarıq əsaslı tövsiyələr veriləcək.",
           "CV-də boş qalan hissələr üçün redaktə təklifləri hazırlanacaq.",
@@ -101,7 +101,7 @@ const infoSections: InfoSection[] = [
         slug: "imkanlar",
         label: "İmkanlar",
         title: "İmkanlar bölməsində yalnız uyğun elanlar qalmalıdır",
-        description: "CareerApple-ın niyə yalnız internship, junior və yeni məzun rollarına fokuslandığını izah edən qısa qeyd.",
+        description: "CareerApple-ın niyə təcrübə, junior və yeni məzun rollarına fokuslandığını izah edən qısa qeyd.",
         intro:
           "Gənclər üçün platformalarda əsas problem səs-küydür. Senior və əlaqəsiz elanlar ilk iş axtaran istifadəçini yorur. Buna görə CareerApple erkən karyera rollarını daha təmiz və fokuslu şəkildə göstərir.",
         highlights: [
@@ -109,7 +109,7 @@ const infoSections: InfoSection[] = [
           "Uyğun olmayan rollar əsas lentdə diqqəti dağıtmır.",
           "Seçilmiş bannerlər daha relevant və etibarlı imkanları göstərir."
         ],
-        ctaLabel: "Featured elanlara bax",
+        ctaLabel: "Seçilmiş elanlara bax",
         ctaHref: "/"
       }
     ]
@@ -139,11 +139,11 @@ const infoSections: InfoSection[] = [
         title: "CareerApple demo istəyi və əməkdaşlıq çərçivəsi",
         description: "İşəgötürən komandalarının platformaya qoşulması üçün sadə və aydın başlanğıc.",
         intro:
-          "CareerApple şirkətlərə gənc auditoriya qarşısında daha premium görünmək üçün qurulub. Demo mərhələsi komandanın ehtiyacını anlamaq, şirkət təqdimatını gücləndirmək və doğru rolları daha yaxşı nümayiş etdirmək üçündür.",
+          "CareerApple şirkətlərə gənc auditoriya qarşısında daha aydın görünmək üçün qurulub. Demo mərhələsi komandanın ehtiyacını anlamaq və doğru rolları daha yaxşı göstərmək üçündür.",
         highlights: [
           "Şirkət təqdimatı daha aydın və etibarlı görünəcək şəkildə hazırlanır.",
           "Vakansiyalar gənc auditoriya üçün daha rahat kəşf olunan formaya salınır.",
-          "Demo mərhələsində əsas diqqət internship və yeni məzun rollarına verilir."
+          "Demo mərhələsində əsas diqqət təcrübə və yeni məzun rollarına verilir."
         ],
         ctaLabel: "Əlaqə məlumatlarına bax",
         ctaHref: "/info/support/elaqe"
@@ -167,12 +167,12 @@ const infoSections: InfoSection[] = [
         slug: "marketinq-aletleri",
         label: "Marketinq alətləri",
         title: "Gənc auditoriya üçün marketinq alətləri və paylaşım materialları",
-        description: "İşəgötürənlərin internship elanlarını daha yaxşı təqdim etməsi üçün istifadə ediləcək material seti.",
+        description: "İşəgötürənlərin təcrübə elanlarını daha yaxşı təqdim etməsi üçün istifadə ediləcək material seti.",
         intro:
           "Gənc istifadəçi üçün iş elanı sadəcə mətn deyil. Güclü başlıq, aydın xülasə, düzgün iş modeli və son tarix namizədin qərarını birbaşa gücləndirir.",
         highlights: [
           "Banner, qısa copy və etibar hissi birlikdə işləyir.",
-          "Şirkət təqdimatı daha aydın və premium görünməlidir.",
+          "Şirkət təqdimatı daha aydın görünməlidir.",
           "Müraciət keçidi birbaşa və rahat olmalıdır."
         ],
         ctaLabel: "İşəgötürən səhifəsinə keç",
@@ -184,7 +184,7 @@ const infoSections: InfoSection[] = [
         title: "Şirkət profili və elanlarda etibar qaydaları",
         description: "Etibarlı profillər və rahat müraciət təcrübəsi üçün əsas prinsiplər.",
         intro:
-          "CareerApple-da məqsəd namizədə daha etibarlı təcrübə verməkdir. Şirkət məlumatlarının aydınlığı, düzgün keçidlər və premium təqdimat bu etibarı gücləndirir.",
+          "CareerApple-da məqsəd namizədə daha etibarlı təcrübə verməkdir. Şirkət məlumatlarının aydınlığı və düzgün keçidlər bu etibarı gücləndirir.",
         highlights: [
           "Etibarlı şirkət təqdimatı namizəddə daha güclü ilk təəssürat yaradır.",
           "Müraciət linklərinin birbaşa və düzgün olması istifadəçi yolunu rahat saxlayır.",
@@ -226,7 +226,7 @@ const infoSections: InfoSection[] = [
           "Vacib seçimlər daha aydın və rahat görünəcək şəkildə saxlanılır.",
           "Məxfilik təcrübəsi istifadəçi etibarını qorumaq üçün davamlı olaraq yaxşılaşdırılır."
         ],
-        ctaLabel: "Privacy seçimlərinə bax",
+        ctaLabel: "Məxfilik seçimlərinə bax",
         ctaHref: "/info/support/maxfilik-secimlerin"
       },
       {
@@ -269,12 +269,12 @@ const infoSections: InfoSection[] = [
         slug: "haqqimizda",
         label: "Haqqımızda",
         title: "CareerApple nə üçün yaradılıb",
-        description: "Gənclər üçün internship və ilk iş axtarışını daha təmiz və relevant etmək məqsədi ilə qurulan məhsulun qısa hekayəsi.",
+        description: "Gənclər üçün təcrübə və ilk iş axtarışını daha təmiz və uyğun etmək məqsədi ilə qurulan məhsulun qısa hekayəsi.",
         intro:
           "CareerApple-ın əsas ideyası sadədir: ilk iş axtaran istifadəçiyə ən vacib olanı daha tez göstərmək. Platforma buna görə təmiz görünüş, qısa copy və yüksək uyğunluq hissi üzərində qurulub.",
         highlights: [
           "Məhsul Azərbaycan bazarı və gənc auditoriya üçün lokallaşdırılır.",
-          "İlk mərhələdə diqqət internship, trainee və junior rollarındadır.",
+          "İlk mərhələdə diqqət təcrübə, təcrübəçi və junior rollarındadır.",
           "Əsas fokus uyğun vakansiyanı daha tez tapdırmaqdır."
         ],
         ctaLabel: "Ana səhifəyə qayıt",
@@ -301,11 +301,11 @@ const infoSections: InfoSection[] = [
         title: "Media və press üçün qısa məhsul məlumatı",
         description: "CareerApple-ı təqdim etmək üçün istifadə oluna biləcək sadə məhsul mövqeləndirməsi.",
         intro:
-          "CareerApple gənclər üçün internship və ilk iş elanlarını təsdiqlənmiş işəgötürən profilləri ilə bir araya gətirən yerli karyera platformasıdır.",
+          "CareerApple gənclər üçün təcrübə və ilk iş elanlarını təsdiqlənmiş işəgötürən profilləri ilə bir araya gətirən yerli karyera platformasıdır.",
         highlights: [
-          "Məhsul copy-si qısa, local və action-first yanaşma ilə yazılır.",
-          "İstifadəçiyə görünən səhifələrdə sadə və premium dil qorunur.",
-          "Məhsul dizaynında soft-blue-on-black identikası qorunur."
+          "Məhsul dili qısa, yerli və müraciətə yönəlmiş saxlanılır.",
+          "İstifadəçiyə görünən səhifələrdə sadə və aydın dil qorunur.",
+          "Vizual sistem ağ fon, bənövşəyi vurğu və oxunaqlı kartlar üzərində qurulur."
         ],
         ctaLabel: "Brend qaydalarına bax",
         ctaHref: "/info/company/brend-qaydalari"
@@ -316,10 +316,10 @@ const infoSections: InfoSection[] = [
         title: "Blog üçün mövzu xəritəsi",
         description: "CareerApple blogunda hansı mövzuların prioritet olacağına dair qısa redaksiya istiqaməti.",
         intro:
-          "Blog CareerApple-ın etibarını və faydasını gücləndirən kontent qatıdır. İlk mərhələdə internship bazarı, CV məsləhətləri, junior müsahibə hazırlığı və işəgötürən dünyası əsas mövzulardır.",
+          "Blog CareerApple-ın etibarını və faydasını gücləndirən kontent qatıdır. İlk mərhələdə təcrübə bazarı, CV məsləhətləri, junior müsahibə hazırlığı və işəgötürən dünyası əsas mövzulardır.",
         highlights: [
-          "Azerbaijani və English terminlərin aydın lokallaşdırılması vacibdir.",
-          "Hər yazı məhsuldakı konkret user action ilə bağlanmalıdır.",
+          "Terminlər Azərbaycan dilində aydın lokallaşdırılmalıdır.",
+          "Hər yazı məhsuldakı konkret istifadəçi addımı ilə bağlanmalıdır.",
           "Blog kontenti vakansiya feed-indən ayrı, amma məhsulu gücləndirən qat kimi işləməlidir."
         ],
         ctaLabel: "Karyera məsləhətlərinə keç",
@@ -334,7 +334,7 @@ const infoSections: InfoSection[] = [
           "CareerApple vizual dili tünd fon, soft blue vurğular və aydın spacing üzərində qurulub. Məhsul dili də eyni dərəcədə sadə, sürətli və gənc auditoriya üçün anlaşılır saxlanılır.",
         highlights: [
           "San Francisco əsas tipografiya kimi istifadə olunur.",
-          "Soft blue accent yalnız vacib action və etibar hissi yaradan nöqtələrdə işlədilir.",
+          "Bənövşəyi vurğu yalnız əsas hərəkət və seçilmiş vəziyyətlərdə işlədilir.",
           "Kartlar və bannerlər sadə, sərt və yüksək kontrastlı saxlanılır."
         ],
         ctaLabel: "Ana səhifəni aç",

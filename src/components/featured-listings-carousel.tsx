@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { useI18n } from "@/components/i18n-provider";
-import { VerifiedBadge } from "@/components/verified-badge";
+import { CompanyNameWithBadge } from "@/components/company-name-with-badge";
 import type { Company, Job } from "@/data/platform";
 import {
   formatLocalizedDate,
@@ -15,6 +15,13 @@ import {
   translateWorkModel
 } from "@/lib/i18n";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
+import {
+  getDisplaySourceLabel,
+  getMeaningfulTaxonomyValue,
+  getMeaningfulText,
+  getPublicLocationLabel,
+  isMeaningfulLevel
+} from "@/lib/ui-display";
 
 type FeaturedListingsCarouselProps = {
   items: Array<{ job: Job; company: Company }>;
@@ -39,6 +46,14 @@ export function FeaturedListingsCarousel({ items }: FeaturedListingsCarouselProp
             {items.map(({ job, company }) => {
               const localizedJob = getLocalizedJob(job, locale);
               const localizedCompany = getLocalizedCompany(company, locale);
+              const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
+              const workModelLabel = getMeaningfulText(translateWorkModel(locale, job.workModel));
+              const sectorLabel = getMeaningfulTaxonomyValue(localizedCompany.sector);
+              const summary = getMeaningfulText(localizedJob.summary);
+              const cityLabel = getPublicLocationLabel(translateCity(locale, job.city));
+              const categoryLabel = getMeaningfulTaxonomyValue(localizedJob.category);
+              const sourceLabel = getDisplaySourceLabel(job);
+              const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
 
               return (
                 <Link
@@ -61,37 +76,35 @@ export function FeaturedListingsCarousel({ items }: FeaturedListingsCarouselProp
                   <div className="featured-banner__content">
                     <div className="featured-banner__lead">
                       <div className="chip-row">
-                        <span className="chip chip--accent">{translateLevel(locale, job.level)}</span>
+                        {levelLabel ? <span className="chip chip--accent">{levelLabel}</span> : null}
                         <span className="chip">{localizedCompany.name}</span>
-                        <span className="chip">{translateWorkModel(locale, job.workModel)}</span>
+                        {workModelLabel ? <span className="chip">{workModelLabel}</span> : null}
                       </div>
 
                       <div className="featured-banner__copy">
-                        <div className="featured-banner__company-row">
-                          <p className="featured-banner__company">{localizedCompany.name}</p>
-                          {localizedCompany.verified !== false ? (
-                            <VerifiedBadge compact label={t("labels.verifiedCompany")} />
-                          ) : null}
-                        </div>
-                        <p className="featured-banner__sector">
-                          {translateSector(locale, company.sector)}
-                        </p>
+                        <CompanyNameWithBadge
+                          name={localizedCompany.name}
+                          verified={localizedCompany.verified}
+                          badgeLabel={t("labels.verifiedCompany")}
+                          compact
+                          className="featured-banner__company-row"
+                          nameClassName="featured-banner__company"
+                        />
+                        {sectorLabel ? (
+                          <p className="featured-banner__sector">
+                            {translateSector(locale, sectorLabel)}
+                          </p>
+                        ) : null}
                         <h3>{localizedJob.title}</h3>
-                        <p>{localizedJob.summary}</p>
+                        {summary ? <p>{summary}</p> : null}
                       </div>
                     </div>
 
                     <div className="featured-banner__meta">
-                      <span>{translateCity(locale, job.city)}</span>
-                      <span>{localizedJob.category}</span>
-                      {job.sourceName ? (
-                        <span>
-                          {t("labels.source")}: {job.sourceName}
-                        </span>
-                      ) : null}
-                      <span>
-                        {t("labels.deadline")}: {formatLocalizedDate(job.deadline, locale)}
-                      </span>
+                      {cityLabel ? <span>{cityLabel}</span> : null}
+                      {categoryLabel ? <span>{categoryLabel}</span> : null}
+                      {sourceLabel ? <span>{t("labels.source")}: {sourceLabel}</span> : null}
+                      {deadlineLabel ? <span>{t("labels.deadline")}: {deadlineLabel}</span> : null}
                     </div>
                   </div>
                 </Link>

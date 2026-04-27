@@ -10,7 +10,7 @@ type InlineBackgroundProps = {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
 };
 
 export function InlineBackground({ contentKey, defaultImage, children, className = "", style = {}, as: Component = "div" }: InlineBackgroundProps) {

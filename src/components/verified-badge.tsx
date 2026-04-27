@@ -1,20 +1,25 @@
+import type { CSSProperties } from "react";
+
 type VerifiedBadgeProps = {
   compact?: boolean;
   label?: string;
   profile?: boolean;
+  className?: string;
 };
 
 export function VerifiedBadge({
   compact = false,
-  label = "Verified company",
-  profile = false
+  label = "Verified",
+  profile = false,
+  className = ""
 }: VerifiedBadgeProps) {
   const size = compact ? (profile ? 19 : 15) : profile ? 24 : 17;
   return (
     <span
-      className={`verified-badge${compact ? " verified-badge--compact" : ""}${profile ? " verified-badge--profile" : ""}`}
+      className={`verified-badge${compact ? " verified-badge--compact" : ""}${profile ? " verified-badge--profile" : ""}${className ? ` ${className}` : ""}`}
       aria-label={label}
       title={label}
+      style={{ "--verified-badge-size": `${size}px`, flexShrink: 0 } as CSSProperties & Record<"--verified-badge-size", string>}
     >
       <svg
         width={size}

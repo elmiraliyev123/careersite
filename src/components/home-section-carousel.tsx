@@ -78,13 +78,17 @@ export function HomeSectionCarousel({
       return;
     }
 
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
     const intervalId = window.setInterval(() => {
       if (hoverRef.current || pointerDownRef.current || Date.now() < resumeAtRef.current) {
         return;
       }
 
       scrollByDirectionRef.current(1);
-    }, 1000);
+    }, 5000);
 
     return () => {
       window.clearInterval(intervalId);
@@ -138,10 +142,10 @@ export function HomeSectionCarousel({
 
   function finishPointerInteraction(event: PointerEvent<HTMLDivElement>) {
     if (dragRef.current.pointerId === event.pointerId) {
-    dragRef.current.pointerId = -1;
-    window.setTimeout(() => {
-      suppressClickRef.current = false;
-    }, 120);
+      dragRef.current.pointerId = -1;
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 120);
     }
 
     pointerDownRef.current = false;
