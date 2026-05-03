@@ -1933,7 +1933,7 @@ export function listJobs(options: ListJobsOptions = {}) {
   const startedAt = Date.now();
   const rows = db
     .prepare(
-      `SELECT slug, title, company_slug, company_name, city, location_raw, location_normalized, location_source, work_model, level, category, posted_at, deadline,
+      `SELECT slug, title, company_slug, city, location_raw, location_normalized, location_source, work_model, level, category, posted_at, deadline,
               summary, responsibilities, requirements, benefits, tags, featured, source_name, source_kind, source_url, source_listing_url, job_detail_url,
               apply_action_url, candidate_apply_urls_json, external_apply_url, resolved_apply_url, canonical_apply_url, apply_url,
               apply_link_status, apply_link_score, apply_link_kind, apply_cta_mode, apply_link_reason, verified_apply, official_source, checked_recently_at, last_checked_at, freshness_status, expires_at, is_expired, trust_badges, trust_score, publishable,
@@ -2187,7 +2187,7 @@ export function findJobBySlug(slug: string, options?: { includeUnpublished?: boo
   const startedAt = Date.now();
   const row = db
     .prepare(
-      `SELECT slug, title, company_slug, company_name, city, location_raw, location_normalized, location_source, work_model, level, category, posted_at, deadline,
+      `SELECT slug, title, company_slug, city, location_raw, location_normalized, location_source, work_model, level, category, posted_at, deadline,
               summary, responsibilities, requirements, benefits, tags, featured, source_name, source_kind, source_url, source_listing_url, job_detail_url,
               apply_action_url, candidate_apply_urls_json, external_apply_url, resolved_apply_url, canonical_apply_url, apply_url,
               apply_link_status, apply_link_score, apply_link_kind, apply_cta_mode, apply_link_reason, verified_apply, official_source, checked_recently_at, last_checked_at, freshness_status, expires_at, is_expired, trust_badges, trust_score, publishable,

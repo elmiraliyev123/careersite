@@ -5,6 +5,18 @@ import { type CompanyInput, type JobInput } from "./platform-validation";
 
 const isPg = !!process.env.DATABASE_URL;
 
+if (isPg) {
+  console.log("PostgreSQL adapter active");
+} else if (process.env.NODE_ENV === "production") {
+  console.warn("WARNING: DATABASE_URL is missing in production. SQLite fallback is disabled.");
+} else {
+  console.log("SQLite adapter active");
+}
+
+function shouldUseSqlite() {
+  return !isPg && process.env.NODE_ENV !== "production";
+}
+
 // Re-export specific SQLite mapping logic we need for PG
 import {
   parseLocalizedText,
@@ -200,10 +212,18 @@ export async function getJobs(options?: sqliteDb.ListJobsOptions): Promise<Job[]
        params.push(options.limit);
     }
 
-    const { rows } = await p.query(query, params);
-    return rows.map(mapPgJobRow);
+    try {
+      const { rows } = await p.query(query, params);
+      return rows.map(mapPgJobRow);
+    } catch (error) {
+      console.error("PostgreSQL getJobs error:", error);
+      return [];
+    }
   }
-  return Promise.resolve(sqliteDb.listJobs(options));
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.listJobs(options));
+  }
+  return Promise.resolve([]);
 }
 
 export async function getCompanies(options?: sqliteDb.ListCompaniesOptions): Promise<Company[]> {
@@ -215,28 +235,52 @@ export async function getCompanies(options?: sqliteDb.ListCompaniesOptions): Pro
       query += " LIMIT $1";
       params.push(options.limit);
     }
-    const { rows } = await p.query(query, params);
-    return rows.map(mapPgCompanyRow);
+    try {
+      const { rows } = await p.query(query, params);
+      return rows.map(mapPgCompanyRow);
+    } catch (error) {
+      console.error("PostgreSQL getCompanies error:", error);
+      return [];
+    }
   }
-  return Promise.resolve(sqliteDb.listCompanies(options));
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.listCompanies(options));
+  }
+  return Promise.resolve([]);
 }
 
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   if (isPg) {
     const p = getPgPool();
-    const { rows } = await p.query("SELECT * FROM jobs WHERE slug = $1", [slug]);
-    return rows.length > 0 ? mapPgJobRow(rows[0]) : null;
+    try {
+      const { rows } = await p.query("SELECT * FROM jobs WHERE slug = $1", [slug]);
+      return rows.length > 0 ? mapPgJobRow(rows[0]) : null;
+    } catch (error) {
+      console.error("PostgreSQL getJobBySlug error:", error);
+      return null;
+    }
   }
-  return Promise.resolve(sqliteDb.findJobBySlug(slug) || null);
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.findJobBySlug(slug) || null);
+  }
+  return Promise.resolve(null);
 }
 
 export async function getCompanyBySlug(slug: string): Promise<Company | null> {
   if (isPg) {
     const p = getPgPool();
-    const { rows } = await p.query("SELECT * FROM companies WHERE slug = $1", [slug]);
-    return rows.length > 0 ? mapPgCompanyRow(rows[0]) : null;
+    try {
+      const { rows } = await p.query("SELECT * FROM companies WHERE slug = $1", [slug]);
+      return rows.length > 0 ? mapPgCompanyRow(rows[0]) : null;
+    } catch (error) {
+      console.error("PostgreSQL getCompanyBySlug error:", error);
+      return null;
+    }
   }
-  return Promise.resolve(sqliteDb.findCompanyBySlug(slug) || null);
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.findCompanyBySlug(slug) || null);
+  }
+  return Promise.resolve(null);
 }
 
 export async function createJob(input: JobInput): Promise<any> {
@@ -269,7 +313,10 @@ export async function createJob(input: JobInput): Promise<any> {
     const { rows } = await p.query("SELECT * FROM jobs WHERE slug = $1", [slug]);
     return mapPgJobRow(rows[0]);
   }
-  return Promise.resolve(sqliteDb.createJob(input));
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.createJob(input));
+  }
+  throw new Error("DATABASE_URL is missing. Cannot write to database in production.");
 }
 
 export async function updateJob(slug: string, input: JobInput): Promise<any> {
@@ -300,7 +347,10 @@ export async function updateJob(slug: string, input: JobInput): Promise<any> {
     const { rows } = await p.query("SELECT * FROM jobs WHERE slug = $1", [slug]);
     return mapPgJobRow(rows[0]);
   }
-  return Promise.resolve(sqliteDb.updateJob(slug, input));
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.updateJob(slug, input));
+  }
+  throw new Error("DATABASE_URL is missing. Cannot write to database in production.");
 }
 
 export async function createCompany(input: CompanyInput): Promise<any> {
@@ -330,7 +380,10 @@ export async function createCompany(input: CompanyInput): Promise<any> {
     const { rows } = await p.query("SELECT * FROM companies WHERE slug = $1", [slug]);
     return mapPgCompanyRow(rows[0]);
   }
-  return Promise.resolve(sqliteDb.createCompany(input));
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.createCompany(input));
+  }
+  throw new Error("DATABASE_URL is missing. Cannot write to database in production.");
 }
 
 export async function updateCompany(slug: string, input: CompanyInput): Promise<any> {
@@ -360,7 +413,10 @@ export async function updateCompany(slug: string, input: CompanyInput): Promise<
     const { rows } = await p.query("SELECT * FROM companies WHERE slug = $1", [slug]);
     return mapPgCompanyRow(rows[0]);
   }
-  return Promise.resolve(sqliteDb.updateCompany(slug, input));
+  if (shouldUseSqlite()) {
+    return Promise.resolve(sqliteDb.updateCompany(slug, input));
+  }
+  throw new Error("DATABASE_URL is missing. Cannot write to database in production.");
 }
 
 export async function saveScrapedJobs(jobs: any[]): Promise<void> {
@@ -395,7 +451,9 @@ export async function saveScrapedJobs(jobs: any[]): Promise<void> {
     }
     return;
   }
-  // No-op for SQLite as it's handled by other functions in pipeline
+  if (shouldUseSqlite()) {
+    // Pipeline logic handles sqlite writes directly elsewhere, but if called here it would be a no-op
+  }
   return Promise.resolve();
 }
 
