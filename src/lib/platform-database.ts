@@ -431,8 +431,6 @@ function setupDatabase(db: DatabaseSync) {
 
     CREATE INDEX IF NOT EXISTS jobs_company_slug_idx ON jobs(company_slug);
     CREATE INDEX IF NOT EXISTS jobs_deadline_idx ON jobs(deadline);
-    CREATE INDEX IF NOT EXISTS jobs_public_active_idx ON jobs(publishable, validation_status, apply_link_status, is_expired, freshness_status, deadline);
-    CREATE INDEX IF NOT EXISTS jobs_company_public_idx ON jobs(company_slug, publishable, validation_status, apply_link_status, is_expired, deadline);
     CREATE INDEX IF NOT EXISTS jobs_level_idx ON jobs(level);
     CREATE INDEX IF NOT EXISTS jobs_work_model_idx ON jobs(work_model);
     CREATE INDEX IF NOT EXISTS jobs_city_idx ON jobs(city);
@@ -510,6 +508,12 @@ function setupDatabase(db: DatabaseSync) {
   ensureColumnExists(db, "jobs", "logo_source", "TEXT");
   ensureColumnExists(db, "jobs", "logo_confidence", "REAL NOT NULL DEFAULT 0");
   ensureColumnExists(db, "jobs", "direct_company_url", "TEXT");
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS jobs_public_active_idx ON jobs(publishable, validation_status, apply_link_status, is_expired, freshness_status, deadline)"
+  );
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS jobs_company_public_idx ON jobs(company_slug, publishable, validation_status, apply_link_status, is_expired, deadline)"
+  );
   db.exec("DROP INDEX IF EXISTS jobs_source_url_unique_idx");
   db.exec("CREATE INDEX IF NOT EXISTS jobs_source_url_idx ON jobs(source_url)");
   db.exec("CREATE INDEX IF NOT EXISTS jobs_source_listing_url_idx ON jobs(source_listing_url)");

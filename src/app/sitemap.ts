@@ -4,32 +4,50 @@ import { getJobs } from "@/lib/platform";
 import { getInfoPages } from "@/lib/site-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const generatedAt = new Date();
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes: MetadataRoute.Sitemap = [
+function getStaticRoutes(): MetadataRoute.Sitemap {
+  return [
     {
       url: siteUrl,
-      lastModified: new Date()
+      lastModified: generatedAt
     },
     {
       url: `${siteUrl}/jobs`,
-      lastModified: new Date()
+      lastModified: generatedAt
+    },
+    {
+      url: `${siteUrl}/companies`,
+      lastModified: generatedAt
+    },
+    {
+      url: `${siteUrl}/karyera-meslehetleri`,
+      lastModified: generatedAt
     },
     {
       url: `${siteUrl}/for-employers`,
-      lastModified: new Date()
+      lastModified: generatedAt
     }
   ];
+}
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const staticRoutes = getStaticRoutes();
 
   const infoRoutes: MetadataRoute.Sitemap = getInfoPages().map((page) => ({
     url: `${siteUrl}/info/${page.sectionSlug}/${page.slug}`,
-    lastModified: new Date()
+    lastModified: generatedAt
   }));
 
-  const jobRoutes: MetadataRoute.Sitemap = getJobs().map((job) => ({
-    url: `${siteUrl}/jobs/${job.slug}`,
-    lastModified: new Date(job.createdAt ?? job.postedAt)
-  }));
+  try {
+    const jobRoutes: MetadataRoute.Sitemap = getJobs().map((job) => ({
+      url: `${siteUrl}/jobs/${job.slug}`,
+      lastModified: new Date(job.createdAt ?? job.postedAt)
+    }));
 
-  return [...staticRoutes, ...infoRoutes, ...jobRoutes];
+    return [...staticRoutes, ...infoRoutes, ...jobRoutes];
+  } catch (error) {
+    console.warn("Sitemap generation fell back to static routes.", error);
+    return [...staticRoutes, ...infoRoutes];
+  }
 }
