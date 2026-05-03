@@ -17,7 +17,16 @@ import {
   type JobModerationStatus
 } from "@/lib/moderation";
 import type { CompanyInput, JobInput } from "@/lib/platform-validation";
-import { getMeaningfulMetadataValue, normalizeLocationName, normalizeRoleLevel } from "@/lib/ui-display";
+import {
+  deriveLocationFromEvidence,
+  deriveWorkModelFromEvidence,
+  getWorkModelDisplayValue,
+  getMeaningfulMetadataValue,
+  normalizeLocationName,
+  normalizeRoleLevel,
+  type LocationSource,
+  type NormalizedWorkModel
+} from "@/lib/ui-display";
 import { isVerifiedRedirectTarget } from "@/lib/url-sanitizer";
 
 type CompanyRow = {
@@ -41,6 +50,7 @@ type CompanyRow = {
   benefits: string;
   featured: number;
   verified: number | null;
+  visible: number | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -71,6 +81,9 @@ type JobRow = {
   company_slug: string;
   company_name: string | null;
   city: string;
+  location_raw: string | null;
+  location_normalized: string | null;
+  location_source: LocationSource | null;
   work_model: string;
   level: string;
   category: string;
@@ -126,6 +139,13 @@ type JobRow = {
   moderation_updated_at: string | null;
   internship_confidence: number | null;
   location_confidence: number | null;
+  classification_confidence: number | null;
+  classification_reason: string | null;
+  search_keywords: string | null;
+  normalized_keywords: string | null;
+  source_language: string | null;
+  category_confidence: number | null;
+  category_reason: string | null;
   duplicate_risk: number | null;
   logo_url: string | null;
   logo_source: string | null;
@@ -148,12 +168,66 @@ export type OutboundEventInput = {
   userAgent?: string | null;
 };
 
+export type ListCompaniesOptions = {
+  limit?: number;
+  sector?: string;
+  onlyWithPublicJobs?: boolean;
+};
+
+export type ListJobsOptions = {
+  includeUnpublished?: boolean;
+  limit?: number;
+  offset?: number;
+  companySlug?: string;
+  excludeSlug?: string;
+  level?: string;
+  workModel?: string;
+  city?: string;
+  category?: string;
+};
+
 const databaseDirectory = path.join(process.cwd(), "data");
 const databasePath = path.join(databaseDirectory, "careerapple.sqlite");
 const legacyStorePath = path.join(databaseDirectory, "platform-store.json");
 
 let database: DatabaseSync | null = null;
 let initialized = false;
+
+function normalizeLimit(value: number | undefined, fallback?: number) {
+  const candidate = value ?? fallback;
+
+  if (!Number.isFinite(candidate)) {
+    return undefined;
+  }
+
+  return Math.max(1, Math.min(500, Math.floor(candidate as number)));
+}
+
+function publicJobPredicates(alias = "jobs") {
+  return [
+    `COALESCE(${alias}.publishable, 1) = 1`,
+    `COALESCE(${alias}.deadline, date('now')) >= date('now')`,
+    `COALESCE(${alias}.freshness_status, 'fresh') NOT IN ('stale', 'expired')`,
+    `COALESCE(${alias}.is_expired, 0) = 0`,
+    `COALESCE(${alias}.validation_status, 'pending') = 'verified'`,
+    `COALESCE(${alias}.apply_link_status, 'broken') = 'valid'`,
+    `COALESCE(${alias}.canonical_apply_url, ${alias}.resolved_apply_url, ${alias}.apply_url) IS NOT NULL`,
+    `trim(COALESCE(${alias}.canonical_apply_url, ${alias}.resolved_apply_url, ${alias}.apply_url)) <> ''`
+  ];
+}
+
+function logDatabaseTiming(label: string, startedAt: number, detail?: string) {
+  if (process.env.NEXT_PUBLIC_DB_TIMING === "0") {
+    return;
+  }
+
+  const elapsed = Date.now() - startedAt;
+  const shouldLog = process.env.NODE_ENV === "development" || elapsed >= 100;
+
+  if (shouldLog) {
+    console.info(`[perf:db] ${label} ${elapsed}ms${detail ? ` ${detail}` : ""}`);
+  }
+}
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -298,6 +372,7 @@ function setupDatabase(db: DatabaseSync) {
       benefits TEXT NOT NULL,
       featured INTEGER NOT NULL DEFAULT 0,
       verified INTEGER NOT NULL DEFAULT 1,
+      visible INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -356,7 +431,15 @@ function setupDatabase(db: DatabaseSync) {
 
     CREATE INDEX IF NOT EXISTS jobs_company_slug_idx ON jobs(company_slug);
     CREATE INDEX IF NOT EXISTS jobs_deadline_idx ON jobs(deadline);
+    CREATE INDEX IF NOT EXISTS jobs_public_active_idx ON jobs(publishable, validation_status, apply_link_status, is_expired, freshness_status, deadline);
+    CREATE INDEX IF NOT EXISTS jobs_company_public_idx ON jobs(company_slug, publishable, validation_status, apply_link_status, is_expired, deadline);
+    CREATE INDEX IF NOT EXISTS jobs_level_idx ON jobs(level);
+    CREATE INDEX IF NOT EXISTS jobs_work_model_idx ON jobs(work_model);
+    CREATE INDEX IF NOT EXISTS jobs_city_idx ON jobs(city);
+    CREATE INDEX IF NOT EXISTS jobs_category_idx ON jobs(category);
+    CREATE INDEX IF NOT EXISTS jobs_posted_created_idx ON jobs(posted_at DESC, created_at DESC);
     CREATE INDEX IF NOT EXISTS companies_featured_idx ON companies(featured);
+    CREATE INDEX IF NOT EXISTS companies_sector_idx ON companies(sector);
     CREATE INDEX IF NOT EXISTS company_aliases_lookup_idx ON company_aliases(normalized_alias);
     CREATE INDEX IF NOT EXISTS company_aliases_domain_idx ON company_aliases(domain_hint);
     CREATE INDEX IF NOT EXISTS outbound_events_created_at_idx ON outbound_events(created_at);
@@ -375,6 +458,7 @@ function setupDatabase(db: DatabaseSync) {
   ensureColumnExists(db, "companies", "profile_source_url", "TEXT");
   ensureColumnExists(db, "companies", "company_domain", "TEXT");
   ensureColumnExists(db, "companies", "verified", "INTEGER NOT NULL DEFAULT 1");
+  ensureColumnExists(db, "companies", "visible", "INTEGER NOT NULL DEFAULT 1");
   ensureColumnExists(db, "jobs", "source_name", "TEXT");
   ensureColumnExists(db, "jobs", "source_kind", "TEXT");
   ensureColumnExists(db, "jobs", "source_url", "TEXT");
@@ -407,8 +491,18 @@ function setupDatabase(db: DatabaseSync) {
   ensureColumnExists(db, "jobs", "moderation_status", "TEXT NOT NULL DEFAULT 'published'");
   ensureColumnExists(db, "jobs", "moderation_notes", "TEXT");
   ensureColumnExists(db, "jobs", "moderation_updated_at", "TEXT");
+  ensureColumnExists(db, "jobs", "location_raw", "TEXT");
+  ensureColumnExists(db, "jobs", "location_normalized", "TEXT");
+  ensureColumnExists(db, "jobs", "location_source", "TEXT");
   ensureColumnExists(db, "jobs", "internship_confidence", "REAL NOT NULL DEFAULT 0");
   ensureColumnExists(db, "jobs", "location_confidence", "REAL NOT NULL DEFAULT 0");
+  ensureColumnExists(db, "jobs", "classification_confidence", "REAL NOT NULL DEFAULT 0");
+  ensureColumnExists(db, "jobs", "classification_reason", "TEXT");
+  ensureColumnExists(db, "jobs", "search_keywords", "TEXT");
+  ensureColumnExists(db, "jobs", "normalized_keywords", "TEXT");
+  ensureColumnExists(db, "jobs", "source_language", "TEXT");
+  ensureColumnExists(db, "jobs", "category_confidence", "REAL NOT NULL DEFAULT 0");
+  ensureColumnExists(db, "jobs", "category_reason", "TEXT");
   ensureColumnExists(db, "jobs", "duplicate_risk", "REAL NOT NULL DEFAULT 0");
   ensureColumnExists(db, "jobs", "rejection_reason", "TEXT");
   ensureColumnExists(db, "jobs", "rejection_category", "TEXT");
@@ -500,6 +594,7 @@ function mapCompanyRow(row: CompanyRow): Company {
     benefits: parseList(row.benefits),
     featured: Boolean(row.featured),
     verified: row.verified === null ? true : Boolean(row.verified),
+    visible: row.visible === null ? true : Boolean(row.visible),
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined
   };
@@ -518,22 +613,61 @@ function mapJobRow(row: JobRow): Job {
     row.apply_cta_mode === "disabled" ||
     row.apply_link_status === "broken" ||
     !finalVerifiedUrl;
+  const title = parseLocalizedText(row.title);
+  const summary = parseLocalizedText(row.summary);
+  const responsibilities = parseList(row.responsibilities);
+  const requirements = parseList(row.requirements);
+  const benefits = parseList(row.benefits);
+  const titleText = getAllLocalizedTextValues(title).join(" ");
+  const descriptionText = [
+    getAllLocalizedTextValues(summary).join(" "),
+    responsibilities.join(" "),
+    requirements.join(" "),
+    benefits.join(" ")
+  ].join(" ");
+  const urlText = [
+    row.source_url,
+    row.source_listing_url,
+    row.job_detail_url,
+    row.apply_action_url,
+    row.external_apply_url
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const location = deriveLocationFromEvidence({
+    structuredLocation: row.location_normalized ?? row.location_raw ?? row.city,
+    title: titleText,
+    description: descriptionText,
+    url: urlText
+  });
+  const workModelType: NormalizedWorkModel = deriveWorkModelFromEvidence({
+    workModel: row.work_model,
+    title: titleText,
+    description: descriptionText,
+    city: location.city,
+    locationText: row.location_normalized ?? row.location_raw ?? row.city
+  });
+  const workModel = getWorkModelDisplayValue(workModelType) ?? "Hibrid";
 
   return {
     slug: row.slug,
-    title: parseLocalizedText(row.title),
+    title,
     companySlug: row.company_slug,
     companyName: row.company_name ?? undefined,
-    city: normalizeLocationName(row.city) ?? "",
-    workModel: row.work_model as Job["workModel"],
+    city: location.city ?? normalizeLocationName(row.city) ?? "",
+    workModel,
+    workModelType,
     level: normalizeRoleLevel(row.level),
     category: parseLocalizedText(row.category),
+    categoryConfidence:
+      typeof row.category_confidence === "number" ? row.category_confidence : undefined,
+    categoryReason: row.category_reason ?? undefined,
     postedAt: row.posted_at,
     deadline: row.deadline,
-    summary: parseLocalizedText(row.summary),
-    responsibilities: parseList(row.responsibilities),
-    requirements: parseList(row.requirements),
-    benefits: parseList(row.benefits),
+    summary,
+    responsibilities,
+    requirements,
+    benefits,
     tags: parseLocalizedTextList(row.tags),
     featured: Boolean(row.featured),
     sourceName: row.source_name ?? undefined,
@@ -576,8 +710,20 @@ function mapJobRow(row: JobRow): Job {
     moderationUpdatedAt: row.moderation_updated_at ?? undefined,
     internshipConfidence:
       typeof row.internship_confidence === "number" ? row.internship_confidence : undefined,
+    classificationConfidence:
+      typeof row.classification_confidence === "number" ? row.classification_confidence : undefined,
+    classificationReason: row.classification_reason ?? undefined,
+    searchKeywords: row.search_keywords ? parseList(row.search_keywords) : undefined,
+    normalizedKeywords: row.normalized_keywords ? parseList(row.normalized_keywords) : undefined,
+    sourceLanguage: row.source_language ?? undefined,
+    rawLocation: row.location_raw ?? undefined,
+    normalizedLocation: row.location_normalized ?? undefined,
+    normalizedCity: location.city ?? undefined,
+    locationSource: row.location_source ?? location.source,
     locationConfidence:
-      typeof row.location_confidence === "number" ? row.location_confidence : undefined,
+      typeof row.location_confidence === "number"
+        ? Math.max(row.location_confidence, location.confidence)
+        : location.confidence,
     duplicateRisk: typeof row.duplicate_risk === "number" ? row.duplicate_risk : undefined,
     logoUrl: row.logo_url ?? undefined,
     logoSource: row.logo_source ?? undefined,
@@ -594,8 +740,8 @@ function insertCompanyRecord(db: DatabaseSync, company: Company) {
   db.prepare(
     `INSERT INTO companies (
       slug, name, tagline, sector, industry_tags, size, location, logo, cover, website, profile_source_url, company_domain, about,
-      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, visible, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
       name = excluded.name,
       tagline = excluded.tagline,
@@ -616,6 +762,7 @@ function insertCompanyRecord(db: DatabaseSync, company: Company) {
       benefits = excluded.benefits,
       featured = excluded.featured,
       verified = excluded.verified,
+      visible = excluded.visible,
       updated_at = excluded.updated_at`
   ).run(
     company.slug,
@@ -638,6 +785,7 @@ function insertCompanyRecord(db: DatabaseSync, company: Company) {
     serializeList(company.benefits),
     company.featured ? 1 : 0,
     company.verified === false ? 0 : 1,
+    company.visible === false ? 0 : 1,
     company.createdAt ?? todayIsoDate(),
     company.createdAt ?? todayIsoDate()
   );
@@ -1613,7 +1761,7 @@ function findCompanyByAlias(companyName: string, evidenceUrl?: string | null) {
     `SELECT companies.slug, companies.name, companies.tagline, companies.sector, companies.industry_tags, companies.size,
             companies.location, companies.logo, companies.cover, companies.website, companies.profile_source_url,
             companies.company_domain, companies.about, companies.wikipedia_summary, companies.wikipedia_source_url,
-            companies.focus_areas, companies.youth_offer, companies.benefits, companies.featured, companies.verified,
+            companies.focus_areas, companies.youth_offer, companies.benefits, companies.featured, companies.verified, companies.visible,
             companies.created_at, companies.updated_at
      FROM company_aliases
      INNER JOIN companies ON companies.slug = company_aliases.company_slug
@@ -1666,86 +1814,225 @@ function findCompanyByCanonicalIdentity(input: { companyName: string; evidenceUr
   );
 }
 
-export function listCompanies() {
+export function listCompanies(options: ListCompaniesOptions = {}) {
   const db = getDatabase();
+  const whereParts: string[] = [];
+  const params: Array<string | number> = [];
+
+  if (options.sector) {
+    whereParts.push("sector = ?");
+    params.push(options.sector);
+  }
+
+  if (options.onlyWithPublicJobs) {
+    whereParts.push(
+      `EXISTS (
+        SELECT 1
+        FROM jobs
+        WHERE jobs.company_slug = companies.slug
+          AND ${publicJobPredicates("jobs").join("\n          AND ")}
+        LIMIT 1
+      )`
+    );
+  }
+
+  const limit = normalizeLimit(options.limit);
+  if (limit) {
+    params.push(limit);
+  }
+
+  const startedAt = Date.now();
   const rows = db
     .prepare(
       `SELECT slug, name, tagline, sector, industry_tags, size, location, logo, cover, website, profile_source_url, company_domain, about,
-              wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, created_at, updated_at
+              wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, visible, created_at, updated_at
        FROM companies
-       ORDER BY featured DESC, created_at DESC, name ASC`
+       ${whereParts.length > 0 ? `WHERE ${whereParts.join("\n         AND ")}` : ""}
+       ORDER BY featured DESC, created_at DESC, name ASC
+       ${limit ? "LIMIT ?" : ""}`
     )
-    .all() as CompanyRow[];
+    .all(...params) as CompanyRow[];
+  logDatabaseTiming("listCompanies", startedAt, `rows=${rows.length}${limit ? ` limit=${limit}` : ""}`);
 
   return rows.map(mapCompanyRow);
 }
 
-export function listJobs(options?: { includeUnpublished?: boolean }) {
+export function listJobs(options: ListJobsOptions = {}) {
   const db = getDatabase();
-  const whereClause = options?.includeUnpublished
-    ? ""
-    : `WHERE COALESCE(publishable, 1) = 1
-       AND COALESCE(deadline, date('now')) >= date('now')
-       AND COALESCE(freshness_status, 'fresh') NOT IN ('stale', 'expired')
-       AND COALESCE(is_expired, 0) = 0
-       AND COALESCE(validation_status, 'pending') = 'verified'
-       AND COALESCE(apply_link_status, 'broken') = 'valid'
-       AND COALESCE(canonical_apply_url, resolved_apply_url, apply_url) IS NOT NULL
-       AND trim(COALESCE(canonical_apply_url, resolved_apply_url, apply_url)) <> ''`;
+  const whereParts = options.includeUnpublished ? [] : publicJobPredicates("jobs");
+  const params: Array<string | number> = [];
+
+  if (options.companySlug) {
+    whereParts.push("jobs.company_slug = ?");
+    params.push(options.companySlug);
+  }
+
+  if (options.excludeSlug) {
+    whereParts.push("jobs.slug <> ?");
+    params.push(options.excludeSlug);
+  }
+
+  if (options.level) {
+    whereParts.push("jobs.level = ?");
+    params.push(options.level);
+  }
+
+  if (options.workModel) {
+    whereParts.push("jobs.work_model = ?");
+    params.push(options.workModel);
+  }
+
+  if (options.city) {
+    whereParts.push("(jobs.city = ? OR jobs.location_normalized = ? OR jobs.location_raw = ?)");
+    params.push(options.city, options.city, options.city);
+  }
+
+  if (options.category) {
+    whereParts.push("jobs.category = ?");
+    params.push(options.category);
+  }
+
+  const limit = normalizeLimit(options.limit);
+  const offset = Math.max(0, Math.floor(options.offset ?? 0));
+
+  if (limit) {
+    params.push(limit);
+  }
+
+  if (offset > 0) {
+    params.push(offset);
+  }
+
+  const startedAt = Date.now();
   const rows = db
     .prepare(
-      `SELECT slug, title, company_slug, company_name, city, work_model, level, category, posted_at, deadline,
+      `SELECT slug, title, company_slug, company_name, city, location_raw, location_normalized, location_source, work_model, level, category, posted_at, deadline,
               summary, responsibilities, requirements, benefits, tags, featured, source_name, source_kind, source_url, source_listing_url, job_detail_url,
               apply_action_url, candidate_apply_urls_json, external_apply_url, resolved_apply_url, canonical_apply_url, apply_url,
               apply_link_status, apply_link_score, apply_link_kind, apply_cta_mode, apply_link_reason, verified_apply, official_source, checked_recently_at, last_checked_at, freshness_status, expires_at, is_expired, trust_badges, trust_score, publishable,
               validation_status, needs_admin_review, scrape_error,
-              moderation_status, moderation_notes, moderation_updated_at, internship_confidence, location_confidence, duplicate_risk,
+              moderation_status, moderation_notes, moderation_updated_at, internship_confidence, location_confidence, classification_confidence, classification_reason,
+              search_keywords, normalized_keywords, source_language, category_confidence, category_reason, duplicate_risk,
               logo_url, logo_source, logo_confidence,
               direct_company_url,
               created_at, updated_at
        FROM jobs
-       ${whereClause}
-       ORDER BY posted_at DESC, created_at DESC, title ASC`
+       ${whereParts.length > 0 ? `WHERE ${whereParts.join("\n         AND ")}` : ""}
+       ORDER BY posted_at DESC, created_at DESC, title ASC
+       ${limit ? "LIMIT ?" : ""}
+       ${offset > 0 ? "OFFSET ?" : ""}`
     )
-    .all() as JobRow[];
+    .all(...params) as JobRow[];
+  logDatabaseTiming(
+    "listJobs",
+    startedAt,
+    `rows=${rows.length}${limit ? ` limit=${limit}` : ""}${options.companySlug ? ` company=${options.companySlug}` : ""}`
+  );
 
   return rows.map(mapJobRow);
 }
 
 export function findCompanyBySlug(slug: string) {
   const db = getDatabase();
+  const startedAt = Date.now();
   const row = db
     .prepare(
       `SELECT slug, name, tagline, sector, industry_tags, size, location, logo, cover, website, profile_source_url, company_domain, about,
-              wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, created_at, updated_at
+              wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, visible, created_at, updated_at
        FROM companies
        WHERE slug = ?`
     )
     .get(slug) as CompanyRow | undefined;
+  logDatabaseTiming("findCompanyBySlug", startedAt, `slug=${slug}`);
 
   return row ? mapCompanyRow(row) : undefined;
 }
 
 export function hasPublicJobForCompany(companySlug: string) {
   const db = getDatabase();
+  const startedAt = Date.now();
   const row = db
     .prepare(
       `SELECT 1
        FROM jobs
        WHERE company_slug = ?
-         AND COALESCE(publishable, 1) = 1
-         AND COALESCE(deadline, date('now')) >= date('now')
-         AND COALESCE(freshness_status, 'fresh') NOT IN ('stale', 'expired')
-         AND COALESCE(is_expired, 0) = 0
-         AND COALESCE(validation_status, 'pending') = 'verified'
-         AND COALESCE(apply_link_status, 'broken') = 'valid'
-         AND COALESCE(canonical_apply_url, resolved_apply_url, apply_url) IS NOT NULL
-         AND trim(COALESCE(canonical_apply_url, resolved_apply_url, apply_url)) <> ''
+         AND ${publicJobPredicates("jobs").join("\n         AND ")}
        LIMIT 1`
     )
     .get(companySlug) as { 1?: number } | undefined;
+  logDatabaseTiming("hasPublicJobForCompany", startedAt, `company=${companySlug}`);
 
   return Boolean(row);
+}
+
+export function countPublicJobs() {
+  const db = getDatabase();
+  const startedAt = Date.now();
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM jobs
+       WHERE ${publicJobPredicates("jobs").join("\n         AND ")}`
+    )
+    .get() as { count?: number | bigint } | undefined;
+  logDatabaseTiming("countPublicJobs", startedAt);
+
+  return Number(row?.count ?? 0);
+}
+
+export function countPublicCompanies() {
+  const db = getDatabase();
+  const startedAt = Date.now();
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM companies
+       WHERE EXISTS (
+         SELECT 1
+         FROM jobs
+         WHERE jobs.company_slug = companies.slug
+           AND ${publicJobPredicates("jobs").join("\n           AND ")}
+         LIMIT 1
+       )`
+    )
+    .get() as { count?: number | bigint } | undefined;
+  logDatabaseTiming("countPublicCompanies", startedAt);
+
+  return Number(row?.count ?? 0);
+}
+
+export function countPublicJobsByCompanySlugs(companySlugs?: string[]) {
+  const db = getDatabase();
+  const slugs = Array.from(new Set((companySlugs ?? []).filter(Boolean)));
+  const params: string[] = [];
+  const scopedCompanyClause =
+    slugs.length > 0
+      ? `AND company_slug IN (${slugs.map(() => "?").join(", ")})`
+      : "";
+
+  if (slugs.length > 0) {
+    params.push(...slugs);
+  }
+
+  const startedAt = Date.now();
+  const rows = db
+    .prepare(
+      `SELECT company_slug, COUNT(*) AS count
+       FROM jobs
+       WHERE ${publicJobPredicates("jobs").join("\n         AND ")}
+         ${scopedCompanyClause}
+       GROUP BY company_slug`
+    )
+    .all(...params) as Array<{ company_slug?: string; count?: number | bigint }>;
+  logDatabaseTiming("countPublicJobsByCompanySlugs", startedAt, `rows=${rows.length}`);
+
+  return rows.reduce<Map<string, number>>((index, row) => {
+    if (row.company_slug) {
+      index.set(row.company_slug, Number(row.count ?? 0));
+    }
+
+    return index;
+  }, new Map<string, number>());
 }
 
 export function ensureSourceDerivedCompany(input: {
@@ -1826,8 +2113,8 @@ export function ensureSourceDerivedCompany(input: {
   db.prepare(
     `INSERT INTO companies (
       slug, name, tagline, sector, industry_tags, size, location, logo, cover, website, profile_source_url, company_domain, about,
-      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, visible, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     slug,
     input.companyName,
@@ -1849,6 +2136,7 @@ export function ensureSourceDerivedCompany(input: {
     serializeList([]),
     0,
     0,
+    1,
     createdAt,
     createdAt
   );
@@ -1868,22 +2156,17 @@ export function findJobBySlug(slug: string, options?: { includeUnpublished?: boo
   const whereClause = options?.includeUnpublished
     ? "WHERE slug = ?"
     : `WHERE slug = ?
-       AND COALESCE(publishable, 1) = 1
-       AND COALESCE(deadline, date('now')) >= date('now')
-       AND COALESCE(freshness_status, 'fresh') NOT IN ('stale', 'expired')
-       AND COALESCE(is_expired, 0) = 0
-       AND COALESCE(validation_status, 'pending') = 'verified'
-       AND COALESCE(apply_link_status, 'broken') = 'valid'
-       AND COALESCE(canonical_apply_url, resolved_apply_url, apply_url) IS NOT NULL
-       AND trim(COALESCE(canonical_apply_url, resolved_apply_url, apply_url)) <> ''`;
+       AND ${publicJobPredicates("jobs").join("\n       AND ")}`;
+  const startedAt = Date.now();
   const row = db
     .prepare(
-      `SELECT slug, title, company_slug, company_name, city, work_model, level, category, posted_at, deadline,
+      `SELECT slug, title, company_slug, company_name, city, location_raw, location_normalized, location_source, work_model, level, category, posted_at, deadline,
               summary, responsibilities, requirements, benefits, tags, featured, source_name, source_kind, source_url, source_listing_url, job_detail_url,
               apply_action_url, candidate_apply_urls_json, external_apply_url, resolved_apply_url, canonical_apply_url, apply_url,
               apply_link_status, apply_link_score, apply_link_kind, apply_cta_mode, apply_link_reason, verified_apply, official_source, checked_recently_at, last_checked_at, freshness_status, expires_at, is_expired, trust_badges, trust_score, publishable,
               validation_status, needs_admin_review, scrape_error,
-              moderation_status, moderation_notes, moderation_updated_at, internship_confidence, location_confidence, duplicate_risk,
+              moderation_status, moderation_notes, moderation_updated_at, internship_confidence, location_confidence, classification_confidence, classification_reason,
+              search_keywords, normalized_keywords, source_language, category_confidence, category_reason, duplicate_risk,
               logo_url, logo_source, logo_confidence,
               direct_company_url,
               created_at, updated_at
@@ -1891,6 +2174,7 @@ export function findJobBySlug(slug: string, options?: { includeUnpublished?: boo
        ${whereClause}`
     )
     .get(slug) as JobRow | undefined;
+  logDatabaseTiming("findJobBySlug", startedAt, `slug=${slug}`);
 
   return row ? mapJobRow(row) : undefined;
 }
@@ -1903,8 +2187,8 @@ export function createCompany(input: CompanyInput) {
   db.prepare(
     `INSERT INTO companies (
       slug, name, tagline, sector, industry_tags, size, location, logo, cover, website, profile_source_url, company_domain, about,
-      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      wikipedia_summary, wikipedia_source_url, focus_areas, youth_offer, benefits, featured, verified, visible, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     slug,
     input.name,
@@ -1926,6 +2210,7 @@ export function createCompany(input: CompanyInput) {
     serializeList(input.benefits),
     input.featured ? 1 : 0,
     input.verified === false ? 0 : 1,
+    input.visible === false ? 0 : 1,
     createdAt,
     createdAt
   );
@@ -1952,7 +2237,7 @@ export function updateCompany(slug: string, input: CompanyInput) {
     `UPDATE companies
      SET name = ?, tagline = ?, sector = ?, industry_tags = ?, size = ?, location = ?, logo = ?, cover = ?,
          website = ?, profile_source_url = ?, company_domain = ?, about = ?, wikipedia_summary = ?, wikipedia_source_url = ?, focus_areas = ?, youth_offer = ?,
-         benefits = ?, featured = ?, verified = ?, updated_at = ?
+         benefits = ?, featured = ?, verified = ?, visible = ?, updated_at = ?
      WHERE slug = ?`
   ).run(
     input.name,
@@ -1974,6 +2259,7 @@ export function updateCompany(slug: string, input: CompanyInput) {
     serializeList(input.benefits),
     input.featured ? 1 : 0,
     input.verified === false ? 0 : 1,
+    input.visible === false ? 0 : 1,
     todayIsoDate(),
     slug
   );
@@ -2315,6 +2601,23 @@ export function updateCompanyVerified(slug: string, verified: boolean) {
      SET verified = ?, updated_at = ?
      WHERE slug = ?`
   ).run(verified ? 1 : 0, todayIsoDate(), slug);
+
+  return findCompanyBySlug(slug);
+}
+
+export function updateCompanyVisibility(slug: string, visible: boolean) {
+  const db = getDatabase();
+  const current = findCompanyBySlug(slug);
+
+  if (!current) {
+    return null;
+  }
+
+  db.prepare(
+    `UPDATE companies
+     SET visible = ?, updated_at = ?
+     WHERE slug = ?`
+  ).run(visible ? 1 : 0, todayIsoDate(), slug);
 
   return findCompanyBySlug(slug);
 }

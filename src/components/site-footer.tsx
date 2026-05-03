@@ -31,18 +31,20 @@ export function SiteFooter() {
           </div>
         </div>
 
-        {sections.map((section) => (
-          <div key={section.slug}>
-            <p className="site-footer__title">{translateFooterSection(locale, section.slug)}</p>
-            <div className="site-footer__links">
-              {section.pages.map((page) => (
-                <Link key={page.href} href={page.href}>
-                  {translateFooterPage(locale, page.href.split("/").pop() ?? page.label)}
-                </Link>
-              ))}
+        <div className="site-footer__sections">
+          {sections.map((section) => (
+            <div key={section.slug} className="site-footer__section">
+              <p className="site-footer__title">{translateFooterSection(locale, section.slug)}</p>
+              <div className="site-footer__links">
+                {section.pages.map((page) => (
+                  <Link key={page.href} href={page.href}>
+                    {translateFooterPage(locale, page.href.split("/").pop() ?? page.label)}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </footer>
   );

@@ -1,14 +1,12 @@
 import { JobsPageClient } from "@/components/jobs-page-client";
+import { getJobsPageData } from "@/lib/platform";
 import {
-  filterJobs,
-  getAvailableCities,
-  getCompanyBySlug,
-  getCompanyOpenRoleCount,
-  getFeaturedCompanies,
-  getJobs,
-  isYouthRole
-} from "@/lib/platform";
-import { isAllFilterValue, normalizeLocationName, normalizeRoleLevel } from "@/lib/ui-display";
+  getWorkModelDisplayValue,
+  isAllFilterValue,
+  normalizeLocationName,
+  normalizeRoleFilterValue,
+  normalizeWorkModelValue
+} from "@/lib/ui-display";
 
 type JobsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -25,27 +23,15 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   const rawCity = getStringValue(params.city);
   const rawLevel = getStringValue(params.level);
   const city = isAllFilterValue(rawCity) ? "Hamısı" : normalizeLocationName(rawCity) ?? "Hamısı";
-  const level = isAllFilterValue(rawLevel) ? "all" : normalizeRoleLevel(rawLevel);
-  const workModel = getStringValue(params.workModel) ?? "Hamısı";
+  const level = normalizeRoleFilterValue(rawLevel) ?? "all";
+  const workModel = getWorkModelDisplayValue(normalizeWorkModelValue(getStringValue(params.workModel))) ?? "Hamısı";
 
-  const jobs = filterJobs({ query, city, level, workModel });
-  const availableCities = getAvailableCities();
-  const jobItems = jobs.map((job) => ({
-    job,
-    company: getCompanyBySlug(job.companySlug) ?? null
-  }));
-  const featuredEmployers = getFeaturedCompanies().map((company) => ({
-    company,
-    openRoles: getCompanyOpenRoleCount(company.slug)
-  }));
-  const newestInternships = getJobs()
-    .filter((job) => isYouthRole(job))
-    .slice(0, 8)
-    .map((job) => {
-      const company = getCompanyBySlug(job.companySlug);
-      return company ? { job, company } : null;
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const { jobItems, availableCities, featuredEmployers, newestInternships } = getJobsPageData({
+    query,
+    city,
+    level,
+    workModel
+  });
 
   return (
     <JobsPageClient

@@ -1,19 +1,25 @@
+import { cookies } from "next/headers";
+
 import { AccessGate } from "@/components/access-gate";
 import { DashboardClient } from "@/components/dashboard-client";
+import { localeCookieName, resolveLocale, translate } from "@/lib/i18n";
 import { getCompanies, getJobs } from "@/lib/platform";
 import { getSessionRole } from "@/lib/session";
 
 export default async function DashboardPage() {
   const role = await getSessionRole();
+  const cookieStore = await cookies();
+  const locale = resolveLocale(cookieStore.get(localeCookieName)?.value);
+  const t = (key: string) => translate(locale, key);
 
   if (!role) {
     return (
       <AccessGate
-        eyebrow="Müvəqqəti bağlıdır"
-        title="Namizəd paneli hazırda deaktivdir"
-        description="Namizəd giriş və qeydiyyat axını hələ açılmayıb. Hazırda yalnız açıq vakansiya və karyera resursları aktivdir."
+        eyebrow={t("dashboard.disabledEyebrow")}
+        title={t("dashboard.disabledTitle")}
+        description={t("dashboard.disabledCopy")}
         actionHref="/jobs"
-        actionLabel="Vakansiyalara bax"
+        actionLabel={t("actions.viewJobs")}
       />
     );
   }
@@ -21,11 +27,11 @@ export default async function DashboardPage() {
   if (role !== "candidate") {
     return (
       <AccessGate
-        eyebrow="Giriş rolu uyğun deyil"
-        title="Bu səhifə yalnız namizədlər üçündür"
-        description="Admin hesabı ilə daxil olmusan. Namizəd paneli hazırkı mərhələdə ictimai istifadə üçün açıq deyil."
+        eyebrow={t("dashboard.roleMismatchEyebrow")}
+        title={t("dashboard.roleMismatchTitle")}
+        description={t("dashboard.roleMismatchCopy")}
         actionHref="/jobs"
-        actionLabel="Vakansiyalara bax"
+        actionLabel={t("actions.viewJobs")}
       />
     );
   }
@@ -34,12 +40,9 @@ export default async function DashboardPage() {
     <main className="section">
       <div className="shell stack-lg">
         <div className="page-hero">
-          <p className="eyebrow">Namizəd paneli</p>
-          <h1>Yadda saxladıqlarını və müraciətlərini bir yerdə izlət</h1>
-          <p>
-            Bu MVP paneli local storage üzərində işləyir. Yadda saxladığın və müraciət etdiyin
-            vakansiyalar sessiyalar arasında saxlanılır.
-          </p>
+          <p className="eyebrow">{t("dashboard.eyebrow")}</p>
+          <h1>{t("dashboard.title")}</h1>
+          <p>{t("dashboard.copy")}</p>
         </div>
 
         <DashboardClient jobs={getJobs()} companies={getCompanies()} />

@@ -74,9 +74,11 @@ export function OutboundPageClient({
       <div className="outbound-shell">
         <section className="outbound-card">
           <div className="outbound-card__visual">
-            <div className="outbound-node outbound-node--platform" aria-label="CareerApple">
-              <span className="outbound-node__mark">CA</span>
-              <span className="outbound-node__label">CareerApple</span>
+            <div className="outbound-node outbound-node--platform" aria-label="Stradify">
+              <span className="outbound-node__mark outbound-node__mark--logo">
+                <img src="/stradify-logo.png" alt="" />
+              </span>
+              <span className="outbound-node__label">Stradify</span>
             </div>
 
             <div className="outbound-connector" aria-hidden="true">

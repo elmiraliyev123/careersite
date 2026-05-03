@@ -1,1 +1,1 @@
-"""CareerApple ingestion blueprint package."""
+"""Stradify ingestion blueprint package."""

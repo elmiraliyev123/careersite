@@ -20,6 +20,7 @@ import {
   getMeaningfulTaxonomyValue,
   getMeaningfulText,
   getPublicLocationLabel,
+  getReadablePublicText,
   isMeaningfulLevel
 } from "@/lib/ui-display";
 
@@ -49,7 +50,7 @@ export function FeaturedListingsCarousel({ items }: FeaturedListingsCarouselProp
               const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
               const workModelLabel = getMeaningfulText(translateWorkModel(locale, job.workModel));
               const sectorLabel = getMeaningfulTaxonomyValue(localizedCompany.sector);
-              const summary = getMeaningfulText(localizedJob.summary);
+              const summary = getReadablePublicText(localizedJob.summary);
               const cityLabel = getPublicLocationLabel(translateCity(locale, job.city));
               const categoryLabel = getMeaningfulTaxonomyValue(localizedJob.category);
               const sourceLabel = getDisplaySourceLabel(job);

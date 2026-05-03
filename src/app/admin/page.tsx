@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AdminPanelClient } from "@/components/admin-panel-client";
-import { getCompanies, getAllJobs } from "@/lib/platform";
+import { getAllCompanies, getAllJobs } from "@/lib/platform";
 import { getSessionRole } from "@/lib/session";
 
 export default async function AdminPage() {
@@ -13,7 +13,7 @@ export default async function AdminPage() {
 
   return (
     <main className="admin-console-page">
-      <AdminPanelClient companies={getCompanies()} jobs={getAllJobs()} />
+      <AdminPanelClient companies={getAllCompanies()} jobs={getAllJobs()} />
     </main>
   );
 }

@@ -78,7 +78,7 @@ export function buildOutboundHref({
 
   const searchParams = new URLSearchParams({
     url: normalizedTarget,
-    company: companyName?.trim() || getHostnameLabel(normalizedTarget) || "CareerApple"
+    company: companyName?.trim() || getHostnameLabel(normalizedTarget) || "Stradify"
   });
 
   if (logoUrl && isSafeExternalUrl(logoUrl)) {
@@ -97,7 +97,7 @@ export function parseOutboundSearchParams(params: Record<string, SearchParamValu
   const safeTargetUrl = isSafeExternalUrl(targetUrl) ? targetUrl : null;
   const hostnameLabel = safeTargetUrl ? getHostnameLabel(safeTargetUrl) : null;
   const companyName =
-    getStringValue(params.company)?.trim() || hostnameLabel || "CareerApple";
+    getStringValue(params.company)?.trim() || hostnameLabel || "Stradify";
   const sourceValue = getStringValue(params.source)?.trim();
   const logoValue = getStringValue(params.logo)?.trim() ?? "";
 

@@ -22,6 +22,7 @@ export type Company = {
   benefits: string[];
   featured?: boolean;
   verified?: boolean;
+  visible?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -44,8 +45,11 @@ export type Job = {
   companyName?: string;
   city: string;
   workModel: "Ofisdən" | "Hibrid" | "Uzaqdan";
+  workModelType?: "onsite" | "hybrid" | "remote" | "unknown";
   level: JobLevel;
   category: LocalizedContentValue;
+  categoryConfidence?: number;
+  categoryReason?: string;
   salary?: string;
   postedAt: string;
   deadline: string;
@@ -97,6 +101,15 @@ export type Job = {
   moderationNotes?: string;
   moderationUpdatedAt?: string;
   internshipConfidence?: number;
+  classificationConfidence?: number;
+  classificationReason?: string;
+  searchKeywords?: string[];
+  normalizedKeywords?: string[];
+  sourceLanguage?: string;
+  rawLocation?: string;
+  normalizedLocation?: string;
+  normalizedCity?: string;
+  locationSource?: "structured" | "title" | "description" | "url" | "company_default" | "unknown";
   locationConfidence?: number;
   duplicateRisk?: number;
   logoUrl?: string;
@@ -729,6 +742,6 @@ export const jobs: Job[] = [
   }
 ];
 
-export const jobLevels = ["all", "internship", "trainee", "junior", "new_graduate", "mid", "senior", "manager"] as const;
+export const jobLevels = ["all", "internship", "entry_level", "mid", "senior", "manager"] as const;
 export const workModels = ["Hamısı", "Ofisdən", "Hibrid", "Uzaqdan"] as const;
 export const cities = ["Hamısı", "Bakı"] as const;

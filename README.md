@@ -1,6 +1,6 @@
-# CareerApple
+# Stradify
 
-CareerApple is a youth-focused internships and junior jobs platform for the Azerbaijani market, built with Next.js and a server-backed admin workflow.
+Stradify is a youth-focused internships and junior jobs platform for the Azerbaijani market, built with Next.js and a server-backed admin workflow.
 
 ## What changed
 
@@ -58,7 +58,7 @@ ADMIN_LOGIN_PASSWORD="strong-password" ADMIN_SESSION_SECRET="strong-secret" npm 
 
 ## Storage
 
-- SQLite file: `data/careerapple.sqlite`
+- SQLite file: `data/stradify.sqlite`
 - Legacy JSON store: `data/platform-store.json`
   - This is imported once for migration compatibility.
   - New writes go to SQLite.

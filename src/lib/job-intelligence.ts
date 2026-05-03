@@ -9,7 +9,12 @@ import {
   type SupportedLocaleCode
 } from "@/lib/localized-content";
 import { sanitizeText } from "@/lib/text-sanitizer";
-import { getMeaningfulText, normalizeDisplayTags } from "@/lib/ui-display";
+import {
+  deriveLocationFromEvidence,
+  deriveWorkModelFromEvidence,
+  getMeaningfulText,
+  normalizeDisplayTags
+} from "@/lib/ui-display";
 
 export type ApplyLinkStatus = "valid" | "broken" | "uncertain";
 export type ApplyLinkKind =
@@ -263,7 +268,7 @@ const TRAINING_AD_PATTERNS = [
 
 const REMOTE_PATTERNS = [/\bremote\b/i, /\buzaqdan\b/i, /\bудален/i];
 const HYBRID_PATTERNS = [/\bhybrid\b/i, /\bhibrid\b/i, /\bгибрид/i];
-const ONSITE_PATTERNS = [/\bonsite\b/i, /\bon-site\b/i, /\bofisdən\b/i, /\bofis\b/i];
+const ONSITE_PATTERNS = [/\bonsite\b/i, /\bon-site\b/i, /\bofisdən\b/i, /\bofisdə\b/i, /\bofis\b/i, /\byerində\b/i, /\bfilial\b/i, /\bmağaza\b/i, /\banbar\b/i];
 const AZERBAIJAN_PATTERNS = [
   /\bazerbaijan\b/i,
   /\bazərbaycan\b/i,
@@ -279,10 +284,51 @@ const NON_BAKU_AZ_PATTERNS = [
   /\blankaran\b/i,
   /\blənkəran\b/i,
   /\bmingachevir\b/i,
-  /\bmingəçevir\b/i
+  /\bmingəçevir\b/i,
+  /\bmasallı\b/i,
+  /\bmasalli\b/i,
+  /\bsalyan\b/i,
+  /\bsabirabad\b/i,
+  /\bcəlilabad\b/i,
+  /\bcelilabad\b/i,
+  /\bşəki\b/i,
+  /\bseki\b/i,
+  /\bşəmkir\b/i,
+  /\bsemkir\b/i
 ];
 
 const LOCATION_PATTERNS: LocationPattern[] = [
+  { city: "Sumqayıt", country: "Azərbaycan", tokens: ["sumqayit", "sumqayıt"] },
+  { city: "Gəncə", country: "Azərbaycan", tokens: ["ganja", "gence", "gəncə", "kepez", "kepəz", "kapaz"] },
+  { city: "Lənkəran", country: "Azərbaycan", tokens: ["lankaran", "lenkeran", "lənkəran"] },
+  { city: "Masallı", country: "Azərbaycan", tokens: ["masalli", "masallı"] },
+  { city: "Salyan", country: "Azərbaycan", tokens: ["salyan"] },
+  { city: "Sabirabad", country: "Azərbaycan", tokens: ["sabirabad"] },
+  { city: "Cəlilabad", country: "Azərbaycan", tokens: ["celilabad", "cəlilabad", "jalilabad"] },
+  { city: "Şəki", country: "Azərbaycan", tokens: ["seki", "şəki", "shaki"] },
+  { city: "Şəmkir", country: "Azərbaycan", tokens: ["semkir", "şəmkir", "shamkir"] },
+  { city: "Mingəçevir", country: "Azərbaycan", tokens: ["mingachevir", "mingecevir", "mingəçevir"] },
+  { city: "Naxçıvan", country: "Azərbaycan", tokens: ["naxcivan", "naxçıvan", "nakhchivan"] },
+  { city: "Quba", country: "Azərbaycan", tokens: ["quba", "guba"] },
+  { city: "Qusar", country: "Azərbaycan", tokens: ["qusar", "gusar"] },
+  { city: "Xaçmaz", country: "Azərbaycan", tokens: ["xacmaz", "xaçmaz", "khachmaz"] },
+  { city: "Şirvan", country: "Azərbaycan", tokens: ["sirvan", "şirvan", "shirvan"] },
+  { city: "Bərdə", country: "Azərbaycan", tokens: ["berde", "bərdə", "barda"] },
+  { city: "Ağdaş", country: "Azərbaycan", tokens: ["agdas", "ağdaş", "agdash"] },
+  { city: "Ağcabədi", country: "Azərbaycan", tokens: ["agcabedi", "ağcabədi", "agjabadi"] },
+  { city: "Zaqatala", country: "Azərbaycan", tokens: ["zaqatala", "zagatala"] },
+  { city: "Qəbələ", country: "Azərbaycan", tokens: ["qebele", "qəbələ", "gabala"] },
+  { city: "İsmayıllı", country: "Azərbaycan", tokens: ["ismayilli", "ismayıllı", "ismailly"] },
+  { city: "Göyçay", country: "Azərbaycan", tokens: ["goycay", "göyçay", "goychay"] },
+  { city: "Tovuz", country: "Azərbaycan", tokens: ["tovuz"] },
+  { city: "Şamaxı", country: "Azərbaycan", tokens: ["samaxi", "şamaxı", "shamakhi"] },
+  { city: "Neftçala", country: "Azərbaycan", tokens: ["neftcala", "neftçala"] },
+  { city: "Biləsuvar", country: "Azərbaycan", tokens: ["bilesuvar", "biləsuvar"] },
+  { city: "Beyləqan", country: "Azərbaycan", tokens: ["beyleqan", "beyləqan"] },
+  { city: "Kürdəmir", country: "Azərbaycan", tokens: ["kurdemir", "kürdəmir"] },
+  { city: "Yevlax", country: "Azərbaycan", tokens: ["yevlax", "yevlakh"] },
+  { city: "Xırdalan", country: "Azərbaycan", tokens: ["xirdalan", "xırdalan", "khirdalan"] },
+  { city: "Abşeron", country: "Azərbaycan", tokens: ["abseron", "abşeron", "absheron"] },
   { city: "Bakı", country: "Azərbaycan", tokens: ["baku", "bakı", "baki", "baku economic zone"] },
   { city: "London", country: "Birləşmiş Krallıq", tokens: ["london", "londra"] },
   { city: "San Fransisko", country: "ABŞ", tokens: ["san francisco", "san fransisko"] },
@@ -361,6 +407,13 @@ export function normalizeComparableText(value: string | null | undefined) {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ə/g, "e")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ş/g, "s")
+    .replace(/ç/g, "c")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
     .replace(/[^a-z0-9\s]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -613,6 +666,15 @@ export function classifyInternshipCandidate(
 
 export function normalizeWorkMode(title: string, location: string | null | undefined, description: string) {
   const haystack = `${title}\n${location ?? ""}\n${description}`;
+  const derived = deriveWorkModelFromEvidence({
+    title,
+    description,
+    locationText: location
+  });
+
+  if (derived !== "unknown") {
+    return derived;
+  }
 
   if (REMOTE_PATTERNS.some((pattern) => pattern.test(haystack))) {
     return "remote" as const;
@@ -632,19 +694,36 @@ export function normalizeWorkMode(title: string, location: string | null | undef
 export function normalizeLocation(
   locationRaw: string | null | undefined,
   description: string,
-  companyLocationHint?: string | null
+  companyLocationHint?: string | null,
+  title?: string | null,
+  url?: string | null
 ): LocationNormalizationResult {
   const raw = sanitizeText(locationRaw ?? "");
-  const haystack = `${raw}\n${description}\n${companyLocationHint ?? ""}`;
+  const haystack = `${raw}\n${title ?? ""}\n${description}\n${url ?? ""}\n${companyLocationHint ?? ""}`;
   const folded = normalizeComparableText(haystack);
-  const workMode = normalizeWorkMode("", raw, description);
+  const locationEvidence = deriveLocationFromEvidence({
+    structuredLocation: raw,
+    title,
+    description,
+    url,
+    companyLocation: companyLocationHint
+  });
+  let workMode = normalizeWorkMode(title ?? "", raw, description);
   const debugFlags: string[] = [];
-  let city: string | null = null;
-  let country: string | null = null;
-  let locationConfidence = 0.2;
+  let city: string | null = locationEvidence.city;
+  let country: string | null = city ? "Azərbaycan" : null;
+  let locationConfidence = locationEvidence.confidence || 0.2;
 
-  for (const pattern of LOCATION_PATTERNS) {
-    if (pattern.tokens.some((token) => folded.includes(token))) {
+  if (locationEvidence.source !== "unknown") {
+    debugFlags.push(`location_source:${locationEvidence.source}`);
+  }
+
+  if (!city) {
+    for (const pattern of LOCATION_PATTERNS) {
+      if (!pattern.tokens.some((token) => folded.includes(token))) {
+        continue;
+      }
+
       city = pattern.city;
       country = pattern.country;
       locationConfidence = raw ? 0.94 : 0.74;
@@ -667,6 +746,11 @@ export function normalizeLocation(
       locationConfidence = 0.46;
       debugFlags.push("company_location_fallback");
     }
+  }
+
+  if (workMode === "unknown" && city && city !== "Azərbaycan") {
+    workMode = "onsite";
+    debugFlags.push("work_mode:physical_location");
   }
 
   if (workMode === "remote" && !city && country) {
@@ -700,11 +784,8 @@ export function normalizeLocation(
 }
 
 function inferCategoryLabel(title: string, description: string, isInternship = false) {
+  void isInternship;
   const haystack = normalizeComparableText(`${title} ${description}`);
-
-  if (isInternship || /\b(intern(?:ship)?|trainee|staj|təcrübə(?:çi)?|təcrübə proqramı|staj proqramı|yeni məzun)\b/.test(haystack)) {
-    return createLocalizedText("Təcrübə", "Internship", "Стажировка");
-  }
 
   if (/\b(data|analyst|analytics|insight|sql|bi|reporting|analitik|hesabat)\b/.test(haystack)) {
     return createLocalizedText("Data və analitika", "Data & Analytics", "Данные и аналитика");
@@ -718,7 +799,7 @@ function inferCategoryLabel(title: string, description: string, isInternship = f
     return createLocalizedText("Marketinq", "Marketing", "Маркетинг");
   }
 
-  if (/\b(frontend|backend|engineer|developer|software|software engineer|software developer|qa|platform|devops|it\b|sistem administrator|proqram(?:çı|ci| muhendis| mühəndisi)|informasiya texnologiyaları)\b/.test(haystack)) {
+  if (/\b(frontend|backend|engineer|developer|software|computer|komputer|kompyuter|komputer|qa|platform|devops|it\b|helpdesk|technical support|texniki destek|sistem administrator|system administrator|network|sebeke|hardware|proqram teminati|proqram(?:ci| muhendis| muhendisi)|informasiya texnologiyalari)\b/.test(haystack)) {
     return createLocalizedText("İT / Proqram təminatı", "IT / Software", "ИТ / Разработка");
   }
 

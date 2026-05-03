@@ -16,6 +16,9 @@ export type NormalizedRoleLevel =
   | "senior"
   | "manager"
   | "unknown";
+export type PublicJobLevel = "internship" | "entry_level" | "mid" | "senior" | "manager" | "unknown";
+export type NormalizedWorkModel = "onsite" | "hybrid" | "remote" | "unknown";
+export type LocationSource = "structured" | "title" | "description" | "url" | "company_default" | "unknown";
 
 const UNKNOWN_LABELS = new Set([
   "naməlum",
@@ -60,11 +63,13 @@ const TAG_STOPWORDS = new Set([
 
 const BROKEN_DISPLAY_PATTERNS = [
   /&(?:[a-z][a-z0-9]+);?/i,
+  /^ştəri\b/i,
   /^[a-z]\s+(?:performans|dostu|kitabxana|komanda|test|nəzarət|nezaret)\b/i,
+  /\b(?:gələn|gelen|olan|edən|eden|üçün|ucun|üzrə|uzre)\s+[a-zəıöüğçş]$/i,
   /^(?:g[oö]rəcəyiniz işlər|rəcəyiniz işlər|goreceyiniz isler|receyiniz isler|tələblər|telebler|requirements|responsibilities|vəzifələr|vezifeler):?$/i
 ];
 
-function normalizeComparableValue(value: string) {
+export function normalizeComparableValue(value: string) {
   return value
     .toLowerCase()
     .normalize("NFKD")
@@ -81,8 +86,95 @@ function normalizeComparableValue(value: string) {
     .trim();
 }
 
+const AZERBAIJAN_LOCATION_PATTERNS: Array<{
+  city: string;
+  tokens: string[];
+}> = [
+  { city: "Sumqayıt", tokens: ["sumqayit", "sumqayıt"] },
+  { city: "Gəncə", tokens: ["gence", "gəncə", "ganja", "kepəz", "kepez", "kapaz"] },
+  { city: "Lənkəran", tokens: ["lenkeran", "lənkəran", "lankaran"] },
+  { city: "Masallı", tokens: ["masalli", "masallı"] },
+  { city: "Salyan", tokens: ["salyan"] },
+  { city: "Sabirabad", tokens: ["sabirabad"] },
+  { city: "Cəlilabad", tokens: ["celilabad", "cəlilabad", "jalilabad"] },
+  { city: "Şəki", tokens: ["seki", "şəki", "shaki"] },
+  { city: "Şəmkir", tokens: ["semkir", "şəmkir", "shamkir"] },
+  { city: "Mingəçevir", tokens: ["mingecevir", "mingəçevir", "mingachevir"] },
+  { city: "Naxçıvan", tokens: ["naxcivan", "naxçıvan", "nakhchivan"] },
+  { city: "Quba", tokens: ["quba", "guba"] },
+  { city: "Qusar", tokens: ["qusar", "gusar"] },
+  { city: "Xaçmaz", tokens: ["xacmaz", "xaçmaz", "khachmaz"] },
+  { city: "Şirvan", tokens: ["sirvan", "şirvan", "shirvan"] },
+  { city: "Bərdə", tokens: ["berde", "bərdə", "barda"] },
+  { city: "Ağdaş", tokens: ["agdas", "ağdaş", "agdash"] },
+  { city: "Ağcabədi", tokens: ["agcabedi", "ağcabədi", "agjabadi"] },
+  { city: "Zaqatala", tokens: ["zaqatala", "zagatala"] },
+  { city: "Qəbələ", tokens: ["qebele", "qəbələ", "gabala"] },
+  { city: "İsmayıllı", tokens: ["ismayilli", "ismayıllı", "ismailly"] },
+  { city: "Göyçay", tokens: ["goycay", "göyçay", "goychay"] },
+  { city: "Tovuz", tokens: ["tovuz"] },
+  { city: "Şamaxı", tokens: ["samaxi", "şamaxı", "shamakhi"] },
+  { city: "Neftçala", tokens: ["neftcala", "neftçala"] },
+  { city: "Biləsuvar", tokens: ["bilesuvar", "biləsuvar"] },
+  { city: "Beyləqan", tokens: ["beyleqan", "beyləqan"] },
+  { city: "Kürdəmir", tokens: ["kurdemir", "kürdəmir"] },
+  { city: "Yevlax", tokens: ["yevlax", "yevlakh"] },
+  { city: "Xırdalan", tokens: ["xirdalan", "xırdalan", "khirdalan"] },
+  { city: "Abşeron", tokens: ["abseron", "abşeron", "absheron"] },
+  { city: "Bakı", tokens: ["baki", "bakı", "baku", "baki seheri", "bakı şəhəri"] },
+  { city: "Azərbaycan", tokens: ["azerbaycan", "azərbaycan", "azerbaijan", "regional", "regionlar", "regions", "multiple locations"] }
+];
+
+const LOCATION_CONTEXT_WORDS = [
+  "filial",
+  "filiali",
+  "filialı",
+  "magaza",
+  "mağaza",
+  "magazasi",
+  "mağazası",
+  "branch",
+  "office",
+  "ofis",
+  "anbar",
+  "warehouse",
+  "sobe",
+  "şöbə"
+];
+
+function findLocationInComparableText(comparable: string) {
+  if (!comparable) {
+    return null;
+  }
+
+  for (const location of AZERBAIJAN_LOCATION_PATTERNS) {
+    if (
+      location.tokens.some((token) => {
+        const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return new RegExp(`(?:^|\\s|[(/-])${escaped}(?:$|\\s|[)/,-])`, "i").test(comparable);
+      })
+    ) {
+      return location.city;
+    }
+  }
+
+  return null;
+}
+
+function findLocationInText(value: string | null | undefined) {
+  return findLocationInComparableText(normalizeComparableValue(value ?? ""));
+}
+
+function safeDecodeURIComponent(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 const ROLE_LEVEL_DISPLAY_LABELS: Record<
-  Exclude<NormalizedRoleLevel, "unknown">,
+  Exclude<NormalizedRoleLevel | PublicJobLevel, "unknown">,
   Record<DisplayLocale, string>
 > = {
   internship: {
@@ -91,29 +183,29 @@ const ROLE_LEVEL_DISPLAY_LABELS: Record<
     ru: "Стажировка"
   },
   trainee: {
-    az: "Təcrübəçi",
-    en: "Trainee",
-    ru: "Стажер"
+    az: "Təcrübə",
+    en: "Internship",
+    ru: "Стажировка"
   },
   junior: {
-    az: "Junior",
-    en: "Junior",
-    ru: "Junior"
+    az: "Giriş səviyyəsi",
+    en: "Entry level",
+    ru: "Начальный уровень"
   },
   entry_level: {
-    az: "Başlanğıc səviyyə",
+    az: "Giriş səviyyəsi",
     en: "Entry level",
     ru: "Начальный уровень"
   },
   new_graduate: {
-    az: "Yeni məzun",
-    en: "New graduate",
-    ru: "Выпускник"
+    az: "Giriş səviyyəsi",
+    en: "Entry level",
+    ru: "Начальный уровень"
   },
   mid: {
-    az: "Mid",
-    en: "Mid",
-    ru: "Mid"
+    az: "Mütəxəssis",
+    en: "Specialist",
+    ru: "Специалист"
   },
   senior: {
     az: "Senior",
@@ -191,7 +283,7 @@ export function normalizeRoleLevel(value: string | null | undefined): Normalized
   }
 
   if (
-    /\b(intern|internship|staj|tecrube|tecrubeci|tecrube proqrami|staj proqrami|стажировка|стажер)\b/i.test(
+    /\b(intern|internship|staj|tecrube\w*|tecrubeci\w*|tecrube proqrami|staj proqrami|стажировка|стажер)\b/i.test(
       comparable
     )
   ) {
@@ -210,15 +302,19 @@ export function normalizeRoleLevel(value: string | null | undefined): Normalized
     return "junior";
   }
 
-  if (/\bmanager\b|\bmenecer\b|\brəhbər\b|\brehber\b/.test(comparable)) {
+  if (/\bmanager\b|\bmenecer\b|\brəhbər\b|\brehber\b|\bmudir\b|\bmüdir\b|\bdirector\b|\bhead\b/.test(comparable)) {
     return "manager";
   }
 
-  if (/\bsenior\b/.test(comparable)) {
+  if (/\bsenior\b|\baparici\b|\baparıcı\b|\bbas mutexessis\b|\bbaş mütəxəssis\b|\blead\b/.test(comparable)) {
     return "senior";
   }
 
   if (/\b(mid|middle)\b/.test(comparable)) {
+    return "mid";
+  }
+
+  if (/\bmutexessis\b|\bmütəxəssis\b|\bspecialist\b/.test(comparable)) {
     return "mid";
   }
 
@@ -227,6 +323,72 @@ export function normalizeRoleLevel(value: string | null | undefined): Normalized
   }
 
   return "unknown";
+}
+
+export function normalizeJobLevel(
+  title?: string | null,
+  description?: string | null,
+  rawLevel?: string | null
+): PublicJobLevel {
+  const comparable = normalizeComparableValue(
+    [rawLevel, title, description]
+      .map((value) => getMeaningfulText(value))
+      .filter(Boolean)
+      .join(" ")
+  );
+
+  if (!comparable || UNKNOWN_LABELS.has(comparable) || /\bunknown\b|\bnamelum\b/.test(comparable)) {
+    return "unknown";
+  }
+
+  if (/\b(manager|menecer|rehber|mudir|director|head)\b/.test(comparable)) {
+    return "manager";
+  }
+
+  if (/\b(senior|lead|aparici|bas mutexessis)\b/.test(comparable)) {
+    return "senior";
+  }
+
+  if (/\b(intern|internship|staj|tecrube\w*|tecrubeci\w*|tecrube proqrami|staj proqrami|trainee|стажировка|стажер)\b/.test(comparable)) {
+    return "internship";
+  }
+
+  if (/\b(junior|entry level|entrylevel|giris seviyy[eə]si|baslangic seviyy[eə]|yeni mezun|new graduate|new grad|graduate|graduate program|graduate scheme|genc mutexessis|kicik mutexessis)\b/.test(comparable)) {
+    return "entry_level";
+  }
+
+  if (/\b(specialist|mutexessis|ekspert|expert|officer|associate|mid|middle)\b/.test(comparable)) {
+    return "mid";
+  }
+
+  const internalLevel = normalizeRoleLevel(rawLevel ?? comparable);
+  if (internalLevel === "trainee" || internalLevel === "internship") {
+    return "internship";
+  }
+
+  if (internalLevel === "junior" || internalLevel === "entry_level" || internalLevel === "new_graduate") {
+    return "entry_level";
+  }
+
+  if (internalLevel === "mid" || internalLevel === "senior" || internalLevel === "manager") {
+    return internalLevel;
+  }
+
+  return "unknown";
+}
+
+export function normalizeRoleFilterValue(value: string | null | undefined): PublicJobLevel | null {
+  if (isAllFilterValue(value)) {
+    return null;
+  }
+
+  const comparable = normalizeComparableValue(value ?? "");
+
+  if (!comparable) {
+    return null;
+  }
+
+  return normalizeJobLevel(null, null, value);
 }
 
 export function isAllFilterValue(value: string | null | undefined) {
@@ -238,8 +400,50 @@ export function getRoleLevelDisplayLabel(
   value: string | null | undefined,
   locale: DisplayLocale
 ) {
-  const level = normalizeRoleLevel(value);
+  const level = normalizeJobLevel(null, null, value);
   return level === "unknown" ? null : ROLE_LEVEL_DISPLAY_LABELS[level]?.[locale] ?? null;
+}
+
+export function normalizeWorkModelValue(value: string | null | undefined): NormalizedWorkModel | null {
+  if (isAllFilterValue(value)) {
+    return null;
+  }
+
+  const comparable = normalizeComparableValue(value ?? "");
+
+  if (!comparable) {
+    return null;
+  }
+
+  if (/\b(remote|uzaqdan|udalen|udalenn)\b/.test(comparable)) {
+    return "remote";
+  }
+
+  if (/\b(hybrid|hibrid|gibrid)\b/.test(comparable)) {
+    return "hybrid";
+  }
+
+  if (/\b(onsite|on site|ofisden|ofisde|office|yerinde|yerində|fiziki)\b/.test(comparable)) {
+    return "onsite";
+  }
+
+  return comparable === "unknown" || comparable === "namelum" ? "unknown" : null;
+}
+
+export function getWorkModelDisplayValue(value: NormalizedWorkModel | null | undefined) {
+  if (value === "onsite") {
+    return "Ofisdən";
+  }
+
+  if (value === "hybrid") {
+    return "Hibrid";
+  }
+
+  if (value === "remote") {
+    return "Uzaqdan";
+  }
+
+  return null;
 }
 
 export function getMeaningfulText(
@@ -252,6 +456,56 @@ export function getMeaningfulText(
   }
 
   return sanitized || null;
+}
+
+export function getReadablePublicText(
+  value: string | null | undefined,
+  options: TextOptions = {}
+) {
+  const text = getMeaningfulText(value, options);
+
+  if (!text) {
+    return null;
+  }
+
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const comparable = normalizeComparableValue(text);
+
+  if (
+    wordCount < 3 ||
+    text.length < 18 ||
+    /[:;,/-]$/.test(text) ||
+    (/[a-zəıöüğçş]$/i.test(text) && /\b(?:gelen|olan|eden|ucun|uzre)\s+[a-z]$/.test(comparable)) ||
+    (/^[a-zəıöüğçş]/.test(text) && !/^(?:it|hr|ux|ui|sql|crm|smm)\b/i.test(text))
+  ) {
+    return null;
+  }
+
+  return text;
+}
+
+export function dedupeReadablePublicTextList(
+  values: string[] | null | undefined,
+  options: TextOptions = {}
+) {
+  const seen = new Set<string>();
+
+  return (values ?? []).flatMap((value) => {
+    const text = getReadablePublicText(value, options);
+
+    if (!text) {
+      return [];
+    }
+
+    const comparable = normalizeComparableValue(text);
+
+    if (!comparable || seen.has(comparable)) {
+      return [];
+    }
+
+    seen.add(comparable);
+    return [text];
+  });
 }
 
 export function dedupeDisplayTextList(
@@ -369,7 +623,7 @@ function isNoiseTag(value: string, comparable: string) {
 }
 
 export function isMeaningfulLevel(value: string | null | undefined) {
-  return normalizeRoleLevel(value) !== "unknown";
+  return normalizeJobLevel(null, null, value) !== "unknown";
 }
 
 export function getDisplayDomain(value: string | null | undefined) {
@@ -378,7 +632,7 @@ export function getDisplayDomain(value: string | null | undefined) {
 }
 
 function normalizeTagKey(value: string, comparable: string) {
-  const roleLevel = normalizeRoleLevel(value);
+  const roleLevel = normalizeJobLevel(null, null, value);
 
   if (roleLevel !== "unknown") {
     return roleLevel;
@@ -441,6 +695,11 @@ export function normalizeLocationName(value: string | null | undefined) {
   }
 
   const comparable = normalizeComparableValue(text);
+  const city = findLocationInComparableText(comparable);
+
+  if (city) {
+    return city;
+  }
 
   if (/\b(baki|baku)\b/.test(comparable) || comparable === "baki seheri") {
     return "Bakı";
@@ -451,6 +710,103 @@ export function normalizeLocationName(value: string | null | undefined) {
   }
 
   return text;
+}
+
+export function deriveLocationFromEvidence(input: {
+  structuredLocation?: string | null;
+  title?: string | null;
+  description?: string | null;
+  url?: string | null;
+  companyLocation?: string | null;
+}) {
+  const structuredCity = normalizeLocationName(input.structuredLocation);
+  const titleCity = findLocationInText(input.title);
+  const descriptionCity = findLocationInText(input.description);
+  const urlCity = findLocationInText(input.url ? safeDecodeURIComponent(input.url) : "");
+  const companyCity = normalizeLocationName(input.companyLocation);
+  const nonBakuTitleCity = titleCity && titleCity !== "Bakı" ? titleCity : null;
+
+  if (
+    structuredCity &&
+    !((structuredCity === "Bakı" || structuredCity === "Azərbaycan") && nonBakuTitleCity)
+  ) {
+    return {
+      city: structuredCity,
+      source: "structured" as LocationSource,
+      confidence: 0.94
+    };
+  }
+
+  if (titleCity) {
+    return {
+      city: titleCity,
+      source: "title" as LocationSource,
+      confidence: 0.88
+    };
+  }
+
+  if (descriptionCity) {
+    return {
+      city: descriptionCity,
+      source: "description" as LocationSource,
+      confidence: 0.76
+    };
+  }
+
+  if (urlCity) {
+    return {
+      city: urlCity,
+      source: "url" as LocationSource,
+      confidence: 0.7
+    };
+  }
+
+  if (companyCity) {
+    return {
+      city: companyCity,
+      source: "company_default" as LocationSource,
+      confidence: 0.45
+    };
+  }
+
+  return {
+    city: null,
+    source: "unknown" as LocationSource,
+    confidence: 0
+  };
+}
+
+export function deriveWorkModelFromEvidence(input: {
+  workModel?: string | null;
+  title?: string | null;
+  description?: string | null;
+  city?: string | null;
+  locationText?: string | null;
+}) {
+  const context = normalizeComparableValue(
+    [input.title, input.description, input.locationText].filter(Boolean).join(" ")
+  );
+  const explicitWorkModel = normalizeWorkModelValue(input.workModel);
+
+  if (/\b(remote|uzaqdan|udalen|udalenn)\b/.test(context) || explicitWorkModel === "remote") {
+    return "remote" as NormalizedWorkModel;
+  }
+
+  if (/\b(hybrid|hibrid|gibrid)\b/.test(context)) {
+    return "hybrid" as NormalizedWorkModel;
+  }
+
+  if (
+    /\b(onsite|on site|ofisden|ofisde|office|yerinde|fiziki|filial|magaza|mağaza|anbar|warehouse|sobe|şöbə|branch)\b/.test(
+      context
+    ) ||
+    LOCATION_CONTEXT_WORDS.some((word) => context.includes(word)) ||
+    Boolean(input.city && input.city !== "Azərbaycan")
+  ) {
+    return "onsite" as NormalizedWorkModel;
+  }
+
+  return explicitWorkModel ?? "unknown";
 }
 
 export function getPublicLocationLabel(value: string | null | undefined) {

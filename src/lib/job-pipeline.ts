@@ -1076,7 +1076,9 @@ function buildCandidateRecord(params: {
   const location = normalizeLocation(
     params.input.locationRaw,
     descriptionClean ?? "",
-    params.company?.location ?? null
+    params.company?.location ?? null,
+    params.input.title,
+    [params.input.jobDetailUrl, params.input.sourceListingUrl, params.input.applyActionUrl].filter(Boolean).join(" ")
   );
   const normalizedTitle = normalizeTitle(params.input.title);
   const canonicalJobId = buildCanonicalJobId(
@@ -1324,7 +1326,9 @@ async function analyzeRawJob(
   const locationHint = normalizeLocation(
     input.locationRaw,
     input.descriptionRaw ?? "",
-    company?.location ?? null
+    company?.location ?? null,
+    input.title,
+    [input.jobDetailUrl, input.sourceListingUrl, input.applyActionUrl].filter(Boolean).join(" ")
   );
   const applySelection = await selectBestApplyLink(db, {
     company,

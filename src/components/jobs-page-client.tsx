@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { JobCard } from "@/components/job-card";
 import { FeaturedEmployersCloud } from "@/components/featured-employers-cloud";
 import { useI18n } from "@/components/i18n-provider";
@@ -124,6 +125,9 @@ export function JobsPageClient({
           <div className="empty-state empty-state--large">
             <h3>{t("jobsPage.emptyTitle")}</h3>
             <p>{t("jobsPage.emptyCopy")}</p>
+            <Link href="/jobs" className="button button--ghost">
+              {t("actions.resetFilters")}
+            </Link>
           </div>
         ) : (
           <>

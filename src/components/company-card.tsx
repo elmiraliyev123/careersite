@@ -30,12 +30,13 @@ function CompanyCardComponent({ company, openRoles, priority = false }: CompanyC
   const { locale, t } = useI18n();
   const localizedCompany = getLocalizedCompany(company, locale);
   const sectorLabel = getMeaningfulTaxonomyValue(localizedCompany.sector);
-  const websiteDomain = getDisplayDomain(company.website);
+  const sourceTarget = company.website || company.profileSourceUrl || "";
+  const websiteDomain = getDisplayDomain(sourceTarget);
   const sizeLabel = getMeaningfulMetadataValue(company.size);
   const locationLabel = getPublicLocationLabel(localizedCompany.location);
   const tagline = getMeaningfulText(localizedCompany.tagline);
   const outboundWebsiteHref = buildOutboundHref({
-    targetUrl: company.website,
+    targetUrl: sourceTarget,
     companyName: localizedCompany.name,
     logoUrl: company.logo,
     sourcePath: "/companies",
@@ -100,9 +101,11 @@ function CompanyCardComponent({ company, openRoles, priority = false }: CompanyC
           </div>
         ) : null}
 
-        <Link href={outboundWebsiteHref} prefetch={false} className="company-card__link">
-          {primaryLinkLabel}
-        </Link>
+        {sourceTarget ? (
+          <Link href={outboundWebsiteHref} prefetch={false} className="company-card__link">
+            {primaryLinkLabel}
+          </Link>
+        ) : null}
       </div>
     </article>
   );

@@ -165,6 +165,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
   const website = requiredString(record.website, "Website");
   if (typeof website !== "string") return { ok: false, message: website };
   const companyDomain = getTrimmedString(record.companyDomain) || undefined;
+  const profileSourceUrl = getTrimmedString(record.profileSourceUrl) || undefined;
 
   const about = requiredString(record.about, "Haqqında");
   if (typeof about !== "string") return { ok: false, message: about };
@@ -183,6 +184,10 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
     return { ok: false, message: "Logo və cover üçün URL və ya lokal fayl yolu, website üçün isə keçərli URL daxil edilməlidir." };
   }
 
+  if (profileSourceUrl && !isHttpUrl(profileSourceUrl)) {
+    return { ok: false, message: "Mənbə linki keçərli URL olmalıdır." };
+  }
+
   if (wikipediaSourceUrl && !isHttpUrl(wikipediaSourceUrl)) {
     return { ok: false, message: "Wikipedia mənbə linki keçərli URL olmalıdır." };
   }
@@ -198,6 +203,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
       logo,
       cover,
       website,
+      profileSourceUrl,
       companyDomain,
       about,
       wikipediaSummary,
@@ -208,6 +214,7 @@ export function validateCompanyInput(payload: unknown): ValidationResult<Company
       industryTags: industryTags.length > 0 ? industryTags : [sector],
       featured: Boolean(record.featured),
       verified: record.verified === undefined ? true : Boolean(record.verified),
+      visible: record.visible === undefined ? true : Boolean(record.visible),
       createdAt: normalizedCreatedAt(record.createdAt)
     }
   };

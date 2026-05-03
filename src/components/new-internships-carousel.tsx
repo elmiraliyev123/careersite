@@ -10,7 +10,7 @@ import { useI18n } from "@/components/i18n-provider";
 import type { Company, Job } from "@/data/platform";
 import { formatLocalizedDate, translateLevel, translateWorkModel } from "@/lib/i18n";
 import { getLocalizedCompany, getLocalizedJob } from "@/lib/platform-localization";
-import { getMeaningfulText, isMeaningfulLevel } from "@/lib/ui-display";
+import { getMeaningfulText, getReadablePublicText, isMeaningfulLevel } from "@/lib/ui-display";
 
 type NewInternshipsCarouselProps = {
   items: Array<{ job: Job; company: Company }>;
@@ -66,7 +66,7 @@ export function NewInternshipsCarousel({ items }: NewInternshipsCarouselProps) {
         const localizedCompany = getLocalizedCompany(company, locale);
         const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
         const workModelLabel = getMeaningfulText(translateWorkModel(locale, job.workModel));
-        const summary = getMeaningfulText(localizedJob.summary);
+        const summary = getReadablePublicText(localizedJob.summary);
         const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
         const companyTagline = getMeaningfulText(localizedCompany.tagline);
 

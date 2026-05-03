@@ -8,7 +8,6 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SessionActions } from "@/components/session-actions";
-import { InlineText } from "@/components/cms/inline-text";
 import { InlineImage } from "@/components/cms/inline-image";
 import { InlineList } from "@/components/cms/inline-list";
 import { useCms } from "@/components/cms-provider";
@@ -106,9 +105,8 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
 
           <div className="focused-header__context">
             <p>{t(focusedHeader.eyebrowKey)}</p>
-            <Link href="/" className="focused-header__brand">
-              <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={24} height={24} />
-              <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
+            <Link href="/" className="focused-header__brand" aria-label="Stradify">
+              <InlineImage contentKey="site.logo" defaultSrc="/stradify-logo.png" className="brand__logo-img" width={64} height={36} />
             </Link>
           </div>
         </div>
@@ -131,9 +129,8 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
     <>
       <header className="mobile-header">
         <div className="shell mobile-header__inner">
-          <Link href="/" className="brand brand--refined">
-            <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={24} height={24} />
-            <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
+          <Link href="/" className="brand brand--refined" aria-label="Stradify">
+            <InlineImage contentKey="site.logo" defaultSrc="/stradify-logo.png" className="brand__logo-img" width={64} height={36} />
           </Link>
 
           <button
@@ -173,9 +170,9 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
                 href="/"
                 className="brand brand--refined mobile-drawer__brand"
                 onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Stradify"
               >
-                <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={24} height={24} />
-                <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
+                <InlineImage contentKey="site.logo" defaultSrc="/stradify-logo.png" className="brand__logo-img" width={64} height={36} />
               </Link>
               <button
                 type="button"
@@ -215,9 +212,8 @@ export function SiteHeader({ role, companyCategories }: SiteHeaderProps) {
 
       <header className="site-header site-header--refined">
         <div className="shell site-header__inner">
-          <Link href="/" className="brand brand--refined">
-            <InlineImage contentKey="site.logo" defaultSrc="/brand-mark.svg" className="brand__logo-img" width={32} height={32} />
-            <InlineText contentKey="site.brandName" defaultValue="CareerApple" as="span" className="brand__text" />
+          <Link href="/" className="brand brand--refined" aria-label="Stradify">
+            <InlineImage contentKey="site.logo" defaultSrc="/stradify-logo.png" className="brand__logo-img" width={64} height={36} />
           </Link>
 
           <InlineList

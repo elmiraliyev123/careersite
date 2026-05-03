@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 import wikipediaapi
 
-WIKIPEDIA_USER_AGENT = "CareerAppleIngestion/1.0 (ops@careerapple.local)"
+WIKIPEDIA_USER_AGENT = "StradifyIngestion/1.0 (ops@stradify.local)"
 
 KNOWN_COMPANY_DOMAINS = {
     "figma": "figma.com",

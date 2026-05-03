@@ -9,13 +9,13 @@ import {
   Code2,
   Coffee,
   Database,
-  Figma,
   Globe2,
   House,
   KanbanSquare,
   Laptop,
   MessageSquare,
   Orbit,
+  PenTool,
   ShieldCheck,
   Sparkles,
   Workflow
@@ -30,7 +30,7 @@ import {
 } from "@/lib/company-vibes";
 
 const techIcons: Record<CompanyTechIconKey, LucideIcon> = {
-  figma: Figma,
+  figma: PenTool,
   board: KanbanSquare,
   react: Orbit,
   message: MessageSquare,

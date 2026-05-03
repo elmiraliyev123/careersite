@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Target, TriangleAlert, type LucideIcon } from "lucide-react";
+import { Target, TriangleAlert, UserCheck, type LucideIcon } from "lucide-react";
 
 import { useI18n } from "@/components/i18n-provider";
 import { sanitizeText } from "@/lib/text-sanitizer";
@@ -12,19 +12,54 @@ type AiJobSummaryCardProps = {
   responsibilities: string[];
 };
 
-function firstMeaningfulLine(values: string[]) {
-  return values.map((value) => sanitizeText(value, { multiline: true })).find(Boolean) ?? "";
-}
+const LOW_VALUE_SUMMARY_PATTERNS = [
+  /^(?:company|function|working schedule|deadline|son müraciət|paylaşılıb|mənbə)\s*:/i,
+  /^ştəri\b/i,
+  /\b(?:gələn|gelen|olan|edən|eden|üçün|ucun|üzrə|uzre)\s+[a-zəıöüğçş]$/i,
+  /\b(?:understand the role|culture vibe|team vibe|salary|benefit package)\b/i,
+  /(?:^|\s)(?:null|undefined|\{\}|\[object object\])(?:\s|$)/i,
+  /&[a-z][a-z0-9]+;?/i
+];
 
-function firstSentence(value: string) {
-  const sanitized = sanitizeText(value, { multiline: true });
+function cleanSupportedPoint(value: string) {
+  const sanitized = sanitizeText(value, { multiline: true })
+    .replace(/\b(?:Company|Function|Working schedule|Deadline to apply|Deadline|Posted|Listed via)\s*:\s*[^.。\n]+/gi, " ")
+    .replace(/\b(?:Şirkət|Funksiya|İş qrafiki|Son müraciət|Paylaşılıb|Mənbə)\s*:\s*[^.。\n]+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  if (!sanitized) {
+  if (!sanitized || LOW_VALUE_SUMMARY_PATTERNS.some((pattern) => pattern.test(sanitized))) {
     return "";
   }
 
-  const sentence = sanitized.split(/(?<=[.!?])\s+/)[0]?.trim();
-  return sentence || sanitized;
+  const sentence = sanitized.split(/(?<=[.!?])\s+/)[0]?.trim() || sanitized;
+  const wordCount = sentence.split(/\s+/).filter(Boolean).length;
+
+  if (
+    wordCount < 4 ||
+    sentence.length < 24 ||
+    sentence.length > 220 ||
+    /[:;,/-]$/.test(sentence) ||
+    /^[a-z]/.test(sentence)
+  ) {
+    return "";
+  }
+
+  return sentence;
+}
+
+function firstMeaningfulLine(values: string[], used = new Set<string>()) {
+  for (const value of values) {
+    const point = cleanSupportedPoint(value);
+    const key = point.toLocaleLowerCase("az");
+
+    if (point && !used.has(key)) {
+      used.add(key);
+      return point;
+    }
+  }
+
+  return "";
 }
 
 export function AiJobSummaryCard({
@@ -34,10 +69,12 @@ export function AiJobSummaryCard({
   responsibilities
 }: AiJobSummaryCardProps) {
   const { t } = useI18n();
+  void benefits;
+  const usedPoints = new Set<string>();
 
-  const mission = firstSentence(summary) || firstMeaningfulLine(responsibilities);
-  const dealbreaker = firstMeaningfulLine(requirements);
-  const cultureVibe = firstMeaningfulLine(benefits);
+  const mission = firstMeaningfulLine(responsibilities, usedPoints) || firstMeaningfulLine([summary], usedPoints);
+  const keySkill = firstMeaningfulLine(requirements, usedPoints);
+  const suitableCandidate = firstMeaningfulLine(requirements.slice(1), usedPoints);
 
   const points = [
     mission
@@ -47,18 +84,18 @@ export function AiJobSummaryCard({
           copy: mission
         }
       : null,
-    dealbreaker
+    keySkill
       ? {
           Icon: TriangleAlert,
           title: t("jobDetail.aiSummaryDealbreaker"),
-          copy: dealbreaker
+          copy: keySkill
         }
       : null,
-    cultureVibe
+    suitableCandidate
       ? {
-          Icon: Sparkles,
+          Icon: UserCheck,
           title: t("jobDetail.aiSummaryCulture"),
-          copy: cultureVibe
+          copy: suitableCandidate
         }
       : null
   ].filter((point): point is { Icon: LucideIcon; title: string; copy: string } => Boolean(point));

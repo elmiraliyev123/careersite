@@ -22,6 +22,7 @@ import {
   getMeaningfulTaxonomyValue,
   getMeaningfulText,
   getPublicLocationLabel,
+  getReadablePublicText,
   isMeaningfulLevel
 } from "@/lib/ui-display";
 
@@ -29,6 +30,7 @@ type JobCardProps = {
   job: Job;
   company?: Company | null;
   sourcePath?: string;
+  maxTags?: number;
 };
 
 function setSpotlightPosition(event: MouseEvent<HTMLElement>) {
@@ -37,21 +39,23 @@ function setSpotlightPosition(event: MouseEvent<HTMLElement>) {
   event.currentTarget.style.setProperty("--pointer-y", `${event.clientY - bounds.top}px`);
 }
 
-function JobCardComponent({ job, company }: JobCardProps) {
+function JobCardComponent({ job, company, maxTags = 3 }: JobCardProps) {
   const { locale, t } = useI18n();
   const localizedJob = getLocalizedJob(job, locale);
   const localizedCompany = company ? getLocalizedCompany(company, locale) : null;
   const companyLinkRef = useRef<HTMLAnchorElement | null>(null);
   const levelLabel = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
   const workModelLabel = getMeaningfulText(translateWorkModel(locale, job.workModel));
-  const visibleTags = (localizedJob.tags.length > 0
-    ? localizedJob.tags
-    : [levelLabel, workModelLabel].filter((value): value is string => Boolean(value))
-  ).slice(0, 3);
+  const allTags =
+    localizedJob.tags.length > 0
+      ? localizedJob.tags
+      : [levelLabel, workModelLabel].filter((value): value is string => Boolean(value));
+  const visibleTags = allTags.slice(0, maxTags);
+  const hiddenTagCount = Math.max(allTags.length - visibleTags.length, 0);
   const companySector = localizedCompany
     ? getMeaningfulTaxonomyValue(localizedCompany.sector)
     : null;
-  const summary = getMeaningfulText(localizedJob.summary);
+  const summary = getReadablePublicText(localizedJob.summary);
   const cityLabel = getPublicLocationLabel(translateCity(locale, job.city));
   const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
   const hasMeta = Boolean(cityLabel || workModelLabel || deadlineLabel);
@@ -75,6 +79,9 @@ function JobCardComponent({ job, company }: JobCardProps) {
                 {tag}
               </span>
             ))}
+            {hiddenTagCount > 0 ? (
+              <span className="job-card__tag job-card__tag--count">+{hiddenTagCount}</span>
+            ) : null}
           </div>
         ) : (
           <span aria-hidden="true" />

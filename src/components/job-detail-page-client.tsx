@@ -24,6 +24,8 @@ import {
   getMeaningfulTaxonomyValue,
   getMeaningfulText,
   getPublicLocationLabel,
+  getReadablePublicText,
+  dedupeReadablePublicTextList,
   isMeaningfulLevel,
   normalizeDisplayTags
 } from "@/lib/ui-display";
@@ -46,12 +48,18 @@ export function JobDetailPageClient({
   const levelChip = isMeaningfulLevel(job.level) ? translateLevel(locale, job.level) : null;
   const workModelChip = getMeaningfulText(translateWorkModel(locale, job.workModel));
   const categoryChip = getMeaningfulTaxonomyValue(localizedJob.category);
-  const summary = getMeaningfulText(localizedJob.summary);
+  const summary = getReadablePublicText(localizedJob.summary);
   const cityLabel = getPublicLocationLabel(translateCity(locale, job.city));
   const deadlineLabel = getMeaningfulText(formatLocalizedDate(job.deadline, locale));
   const postedLabel = getMeaningfulText(formatLocalizedDate(job.postedAt, locale));
   const sourceLabel = getDisplaySourceLabel(job);
-  const matchingTags = localizedJob.tags;
+  const responsibilities = dedupeReadablePublicTextList(localizedJob.responsibilities, { multiline: true });
+  const requirements = dedupeReadablePublicTextList(localizedJob.requirements, { multiline: true });
+  const benefits = dedupeReadablePublicTextList(localizedJob.benefits, { multiline: true });
+  const displayedResponsibilities =
+    responsibilities.length > 0 ? responsibilities : [t("jobDetail.responsibilitiesFallback")];
+  const displayedRequirements = requirements.length > 0 ? requirements : [t("jobDetail.requirementsFallback")];
+  const matchingTags = normalizeDisplayTags(localizedJob.tags, locale);
   const heroChips = normalizeDisplayTags(
     [levelChip, workModelChip, categoryChip].filter((value): value is string => Boolean(value)),
     locale
@@ -155,43 +163,43 @@ export function JobDetailPageClient({
         </section>
 
         <AiJobSummaryCard
-          summary={localizedJob.summary}
-          requirements={localizedJob.requirements}
-          benefits={localizedJob.benefits}
-          responsibilities={localizedJob.responsibilities}
+          summary={summary ?? t("jobDetail.mainRoleFallback")}
+          requirements={requirements}
+          benefits={benefits}
+          responsibilities={responsibilities.length > 0 ? responsibilities : [t("jobDetail.mainRoleFallback")]}
         />
 
         <div className="detail-grid">
-          {localizedJob.responsibilities.length > 0 ? (
+          {displayedResponsibilities.length > 0 ? (
             <section className="detail-panel">
               <p className="eyebrow">{t("labels.responsibilities")}</p>
               <h2>{t("jobDetail.whatYouWillDo")}</h2>
               <ul className="bullet-list">
-                {localizedJob.responsibilities.map((item) => (
+                {displayedResponsibilities.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </section>
           ) : null}
 
-          {localizedJob.requirements.length > 0 ? (
+          {displayedRequirements.length > 0 ? (
             <section className="detail-panel">
               <p className="eyebrow">{t("labels.requirements")}</p>
               <h2>{t("jobDetail.whatIsExpected")}</h2>
               <ul className="bullet-list">
-                {localizedJob.requirements.map((item) => (
+                {displayedRequirements.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </section>
           ) : null}
 
-          {localizedJob.benefits.length > 0 ? (
+          {benefits.length > 0 ? (
             <section className="detail-panel">
               <p className="eyebrow">{t("labels.benefits")}</p>
               <h2>{t("jobDetail.whatYouGain")}</h2>
               <ul className="bullet-list">
-                {localizedJob.benefits.map((item) => (
+                {benefits.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { JobDetailPageClient } from "@/components/job-detail-page-client";
-import { getCompanyBySlug, getJobBySlug, getRecommendedJobs } from "@/lib/platform";
+import { getJobDetailPageData } from "@/lib/platform";
 
 type JobDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -9,17 +9,11 @@ type JobDetailPageProps = {
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { slug } = await params;
-  const job = getJobBySlug(slug);
+  const data = getJobDetailPageData(slug);
 
-  if (!job) {
+  if (!data) {
     notFound();
   }
 
-  const company = getCompanyBySlug(job.companySlug);
-  const recommendations = getRecommendedJobs(job).map((item) => ({
-    job: item,
-    company: getCompanyBySlug(item.companySlug) ?? null
-  }));
-
-  return <JobDetailPageClient job={job} company={company} recommendations={recommendations} />;
+  return <JobDetailPageClient job={data.job} company={data.company} recommendations={data.recommendations} />;
 }

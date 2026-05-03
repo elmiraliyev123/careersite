@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { CompanyDetailPageClient } from "@/components/company-detail-page-client";
-import { getCompanyBySlug, getCompanyJobs } from "@/lib/platform";
+import { findCompanyBySlug } from "@/lib/platform-database";
+import { getCompanyDetailPageData } from "@/lib/platform";
 
 type CompanyDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -10,27 +11,31 @@ type CompanyDetailPageProps = {
 
 export async function generateMetadata({ params }: CompanyDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const company = getCompanyBySlug(slug);
+  const company = findCompanyBySlug(slug);
 
   if (!company) {
     return {};
   }
 
   return {
-    title: `${company.name} | CareerApple`,
+    title: `${company.name} | Stradify`,
     description: company.about
   };
 }
 
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   const { slug } = await params;
-  const company = getCompanyBySlug(slug);
+  const data = getCompanyDetailPageData(slug);
 
-  if (!company) {
+  if (!data) {
     notFound();
   }
 
-  const jobs = getCompanyJobs(company.slug);
-
-  return <CompanyDetailPageClient company={company} jobs={jobs} />;
+  return (
+    <CompanyDetailPageClient
+      company={data.company}
+      jobs={data.jobs}
+      openRoleCount={data.openRoleCount}
+    />
+  );
 }

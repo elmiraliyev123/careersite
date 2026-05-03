@@ -1,5 +1,5 @@
 import { CompaniesPageClient } from "@/components/companies-page-client";
-import { getCompanies, getCompanyOpenRoleCount } from "@/lib/platform";
+import { getCompaniesPageData } from "@/lib/platform";
 
 type CompaniesPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -12,12 +12,7 @@ function getStringValue(value: string | string[] | undefined) {
 export default async function CompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
   const selectedCategory = getStringValue(params.category) ?? "";
-  const companies = getCompanies()
-    .filter((company) => !selectedCategory || company.sector === selectedCategory)
-    .map((company) => ({
-    company,
-    openRoles: getCompanyOpenRoleCount(company.slug)
-  }));
+  const companies = getCompaniesPageData(selectedCategory);
 
   return <CompaniesPageClient companies={companies} selectedCategory={selectedCategory} />;
 }

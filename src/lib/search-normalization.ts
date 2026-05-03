@@ -13,13 +13,31 @@ const SYNONYM_GROUPS = [
   ],
   ["junior", "kiçik mütəxəssis", "gənc mütəxəssis", "entry level", "entry-level", "младший специалист"],
   ["new graduate", "graduate", "yeni məzun", "выпускник", "graduate program", "graduate scheme"],
-  ["finance", "financial", "maliyyə"],
+  ["finance", "financial", "maliyyə", "kredit", "bank"],
   ["accountant", "accounting", "mühasib", "mühasibat", "бухгалтер", "бухгалтерия"],
   [
     "software engineer",
     "software developer",
     "developer",
     "engineer",
+    "computer",
+    "kompüter",
+    "kompyuter",
+    "komputer",
+    "informasiya texnologiyaları",
+    "texniki dəstək",
+    "texniki destek",
+    "texniki yardım",
+    "texniki yardim",
+    "helpdesk",
+    "technical support",
+    "sistem administratoru",
+    "system administrator",
+    "network",
+    "şəbəkə",
+    "shebeke",
+    "hardware",
+    "proqram təminatı",
     "proqram mühəndisi",
     "proqramçı",
     "it",
@@ -39,9 +57,10 @@ const SYNONYM_GROUPS = [
     "колл-центр"
   ],
   ["marketing", "marketinq"],
-  ["sales", "satış"],
+  ["sales", "satış", "retail", "pərakəndə", "perakende", "mağaza", "magaza", "kassir"],
   ["hr", "human resources", "recruiting", "işə qəbul", "insan resursları", "hr", "рекрутинг"],
-  ["legal", "lawyer", "jurist", "hüquq", "hüquqşünas", "юрист", "юридический"],
+  ["legal", "lawyer", "jurist", "hüquq", "huquq", "hüquqşünas", "compliance", "uyğunluq", "uygunluq", "юрист", "юридический"],
+  ["logistics", "logistika", "anbar", "çatdırılma", "catdirilma", "warehouse", "supply chain"],
   ["data", "analytics", "analyst", "analitika", "analitik", "данные", "аналитика", "аналитик"],
   ["product", "məhsul", "продукт"]
 ];
@@ -171,7 +190,14 @@ function normalizeValue(value: string) {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\u0259\s]+/g, " ")
+    .replace(/ə/g, "e")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ş/g, "s")
+    .replace(/ç/g, "c")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
+    .replace(/[^a-z0-9\s]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -208,7 +234,12 @@ export function expandSearchQuery(query: string) {
   const expanded = new Set<string>([normalizedQuery]);
   for (const entry of synonymIndex.entries()) {
     const [term, siblings] = entry;
-    if (normalizedQuery.includes(term) || term.includes(normalizedQuery)) {
+    const matchesTerm =
+      normalizedQuery.length <= 2
+        ? term === normalizedQuery
+        : normalizedQuery.includes(term) || term.includes(normalizedQuery);
+
+    if (matchesTerm) {
       siblings.forEach((sibling) => expanded.add(sibling));
     }
   }
@@ -222,7 +253,14 @@ export function matchesExpandedQuery(haystack: string, query: string) {
     return false;
   }
 
-  return expandSearchQuery(query).some((term) => normalizedHaystack.includes(term));
+  return expandSearchQuery(query).some((term) => {
+    if (term.length <= 2 || ["intern", "staj", "trainee"].includes(term)) {
+      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`(?:^|\\s)${escaped}(?:$|\\s)`, "i").test(normalizedHaystack);
+    }
+
+    return normalizedHaystack.includes(term);
+  });
 }
 
 function replaceDisplayTerms(value: string, replacements: Array<[string, string]>) {

@@ -8,7 +8,7 @@ type OutboundPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Secure Redirect | CareerApple",
+  title: "Secure Redirect | Stradify",
   robots: {
     index: false,
     follow: false

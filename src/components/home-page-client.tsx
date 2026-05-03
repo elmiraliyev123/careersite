@@ -33,6 +33,7 @@ import {
   getMeaningfulTaxonomyValue,
   getMeaningfulText,
   getPublicLocationLabel,
+  getReadablePublicText,
   isMeaningfulLevel,
   normalizeDisplayTags
 } from "@/lib/ui-display";
@@ -73,13 +74,13 @@ const copyByLocale: Record<"az" | "en" | "ru", LocaleCopy> = {
     heroEyebrow: "Vakansiyalar",
     heroTitle: ["Uyğun vakansiyanı", "tap və", "müraciət et"],
     heroCopy:
-      "İş, təcrübə, junior və peşəkar rolları etibarlı mənbələrdən bir yerdə axtar, filtrlə və müqayisə et.",
+      "Təcrübə, giriş səviyyəsi və mütəxəssis vakansiyalarını etibarlı mənbələrdən bir yerdə axtar, filtrlə və müqayisə et.",
     searchPlaceholder: "Məsələn: staj, dizayner, analitik",
     jobsEyebrow: "Seçilmiş vakansiyalar",
     jobsTitle: "Gənclər üçün təcrübə elanları",
     companiesEyebrow: "Seçilmiş şirkətlər",
     companiesTitle: "Təsdiqlənmiş işəgötürənlər və seçilmiş komandalar",
-    whyEyebrow: "Niyə CareerApple",
+    whyEyebrow: "Niyə Stradify",
     whyTitle: "Axtarış daha aydın, seçim daha dəqiq olsun",
     featureCards: [
       {
@@ -96,13 +97,13 @@ const copyByLocale: Record<"az" | "en" | "ru", LocaleCopy> = {
       },
       {
         title: "Şirkət konteksti",
-        copy: "Vakansiyaya keçməzdən əvvəl şirkəti, sahəni və açıq rol sayını görürsən."
+        copy: "Vakansiyaya keçməzdən əvvəl şirkəti, sahəni və açıq vakansiya sayını görürsən."
       }
     ],
     jobSourceLabel: "Mənbə",
     deadlineLabel: "Son müraciət",
     companyVacanciesSuffix: "aktiv vakansiya",
-    emptyJobs: "Hazırda bu görünüş üçün uyğun vakansiya yoxdur."
+    emptyJobs: "Bu filtrlərə uyğun vakansiya tapılmadı."
   },
   en: {
     heroEyebrow: "Vacancies",
@@ -114,7 +115,7 @@ const copyByLocale: Record<"az" | "en" | "ru", LocaleCopy> = {
     jobsTitle: "Internship opportunities for young talent",
     companiesEyebrow: "Selected companies",
     companiesTitle: "Verified employers and curated teams",
-    whyEyebrow: "Why CareerApple",
+    whyEyebrow: "Why Stradify",
     whyTitle: "Make search clearer and selection more precise",
     featureCards: [
       {
@@ -149,7 +150,7 @@ const copyByLocale: Record<"az" | "en" | "ru", LocaleCopy> = {
     jobsTitle: "Стажировки для молодых специалистов",
     companiesEyebrow: "Выбранные компании",
     companiesTitle: "Проверенные работодатели и выбранные команды",
-    whyEyebrow: "Почему CareerApple",
+    whyEyebrow: "Почему Stradify",
     whyTitle: "Чтобы поиск был понятнее, а выбор точнее",
     featureCards: [
       {
@@ -186,7 +187,7 @@ export function HomePageClient({
   const { locale, t } = useI18n();
   const { isEditMode, draftData } = useCms();
   const copy = copyByLocale[locale];
-  const heroJobs = featuredJobItems.slice(0, 8);
+  const heroJobs = featuredJobItems;
   const highlightedCompanies = featuredCompanies.slice(0, 10);
 
   const cmsCities = draftData?.filters?.cities ?? availableCities;
@@ -316,7 +317,7 @@ export function HomePageClient({
                 );
                 const visibleTags = normalizeDisplayTags(roleTags, locale).slice(0, 3);
                 const companySector = getMeaningfulTaxonomyValue(localizedCompany.sector);
-                const summary = getMeaningfulText(localizedJob.summary);
+                const summary = getReadablePublicText(localizedJob.summary);
                 const cityLabel = getPublicLocationLabel(translateCity(locale, localizedJob.city));
                 const categoryLabel = getMeaningfulTaxonomyValue(localizedJob.category);
                 const sourceLabel = getDisplaySourceLabel(job);

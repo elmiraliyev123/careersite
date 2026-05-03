@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: InfoPageProps): Promise<Metad
   }
 
   return {
-    title: `${page.label} | CareerApple`,
+    title: `${page.label} | Stradify`,
     description: page.description
   };
 }

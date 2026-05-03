@@ -1,22 +1,28 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function LoginPage() {
+import { localeCookieName, resolveLocale, translate } from "@/lib/i18n";
+
+export default async function LoginPage() {
+  const cookieStore = await cookies();
+  const locale = resolveLocale(cookieStore.get(localeCookieName)?.value);
+  const t = (key: string) => translate(locale, key);
+
   return (
     <main className="section">
       <div className="shell">
         <div className="empty-state empty-state--large">
-          <p className="eyebrow">Müvəqqəti bağlıdır</p>
-          <h1>Login və signup hazırda söndürülüb</h1>
+          <p className="eyebrow">{t("login.disabledEyebrow")}</p>
+          <h1>{t("login.disabledTitle")}</h1>
           <p>
-            İctimai namizəd giriş və qeydiyyat axını bu mərhələdə aktiv deyil. Admin hissəsi üçün
-            ayrıca keçid istifadə olunur.
+            {t("login.disabledCopy")}
           </p>
           <div className="hero-actions">
             <Link href="/jobs" className="button button--primary">
-              Vakansiyalara bax
+              {t("actions.viewJobs")}
             </Link>
             <Link href="/admin/login" className="button button--ghost">
-              Admin keçidinə get
+              {t("login.adminLink")}
             </Link>
           </div>
         </div>

@@ -29,9 +29,10 @@ const ROLES_BATCH = 3;
 type CompanyDetailPageClientProps = {
   company: Company;
   jobs: Job[];
+  openRoleCount?: number;
 };
 
-export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClientProps) {
+export function CompanyDetailPageClient({ company, jobs, openRoleCount = jobs.length }: CompanyDetailPageClientProps) {
   const { locale, t } = useI18n();
   const [visibleRoleCount, setVisibleRoleCount] = useState(INITIAL_ROLES);
 
@@ -57,6 +58,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
   const sizeLabel = getMeaningfulMetadataValue(company.size);
   const locationLabel = getPublicLocationLabel(localizedCompany.location);
   const tagline = getMeaningfulText(localizedCompany.tagline);
+  const openRoleLabel = t("labels.openRoles", { count: openRoleCount });
 
   const visibleJobs = jobs.slice(0, visibleRoleCount);
   const hasMoreJobs = visibleRoleCount < jobs.length;
@@ -102,6 +104,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
                   className="company-profile__title"
                 />
                 {tagline ? <p className="detail-hero__summary">{tagline}</p> : null}
+                <p className="company-open-count-inline">{openRoleLabel}</p>
               </div>
             </div>
 
@@ -139,9 +142,8 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
               </Link>
             </div>
 
-            {/* Role count + sector chips — centered on mobile */}
+            {/* Sector chips — centered on mobile */}
             <div className="chip-row company-detail__hero-tags hide-scrollbar company-detail__chips-centered">
-              <span className="chip chip--accent">{t("labels.openRoles", { count: jobs.length })}</span>
               {sectorLabel ? <span className="chip">{translateSector(locale, sectorLabel)}</span> : null}
               {evidenceTags.map((item) => (
                 <span key={item} className="chip">
@@ -153,7 +155,6 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
             {/* Wikipedia short note — appears directly below actions/chips */}
             {hasSourceBackedSummary ? (
               <div className="company-detail__short-note">
-                <p className="eyebrow">{t("jobDetail.companyOverview")}</p>
                 <p className="info-copy company-detail__short-note-text">
                   {localizedCompany.wikipediaSummary}
                 </p>
@@ -193,6 +194,7 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
                     job={job}
                     company={company}
                     sourcePath={`/companies/${company.slug}`}
+                    maxTags={2}
                   />
                 ))}
               </div>
@@ -215,13 +217,10 @@ export function CompanyDetailPageClient({ company, jobs }: CompanyDetailPageClie
         {/* SIDEBAR INFO PANEL (desktop) */}
         <div className="detail-grid company-detail-info-grid">
           <aside className="detail-panel detail-panel--sticky company-detail__role-summary">
-            <p className="eyebrow">
-              {localizedCompany.verified === false ? t("labels.source") : t("companyPage.openRolesEyebrow")}
-            </p>
-            <h2>{t("labels.openRoles", { count: jobs.length })}</h2>
+            <p className="company-open-count-inline company-open-count-inline--sidebar">{openRoleLabel}</p>
             <div className="chip-row company-detail__sidebar-chips">
               {sectorLabel ? (
-                <span className="chip chip--accent">{translateSector(locale, sectorLabel)}</span>
+                <span className="chip">{translateSector(locale, sectorLabel)}</span>
               ) : null}
               {evidenceTags.map((item) => (
                 <span key={item} className="chip">

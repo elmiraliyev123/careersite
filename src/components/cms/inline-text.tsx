@@ -12,6 +12,13 @@ type InlineTextProps = {
   multiline?: boolean;
 };
 
+function normalizeVisibleBrandText(value: string) {
+  return value
+    .replace(/\bCareerApple\b/g, "Stradify")
+    .replace(/\bCareerapple\b/g, "Stradify")
+    .replace(/\bcareerapple\b/g, "stradify");
+}
+
 export function InlineText({ contentKey, defaultValue, as: Component = "span", className = "", multiline = false }: InlineTextProps) {
   const { isEditMode, draftData, setDraftDataValue } = useCms();
   const [isEditing, setIsEditing] = useState(false);
@@ -24,7 +31,7 @@ export function InlineText({ contentKey, defaultValue, as: Component = "span", c
   for (const part of parts) {
     if (currentValue) currentValue = currentValue[part];
   }
-  const displayValue = (typeof currentValue === "string" ? currentValue : defaultValue);
+  const displayValue = normalizeVisibleBrandText(typeof currentValue === "string" ? currentValue : defaultValue);
   const [localValue, setLocalValue] = useState(displayValue);
 
   // Sync display if external changes happen

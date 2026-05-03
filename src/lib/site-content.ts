@@ -7,6 +7,7 @@ export type InfoPage = {
   description: string;
   intro: string;
   highlights: string[];
+  usefulness?: string;
   ctaLabel: string;
   ctaHref: string;
 };
@@ -28,12 +29,14 @@ const infoSections: InfoSection[] = [
         title: "Təcrübə proqramlarını daha ağıllı müqayisə et",
         description: "Təcrübə və təcrübəçi elanlarını ilk karyera addımına uyğun şəkildə müqayisə etmək üçün qısa bələdçi.",
         intro:
-          "CareerApple tələbələrə sadəcə elan siyahısı vermir. Rol səviyyəsi, iş modeli, son müraciət tarixi və şirkət etibarı bir yerdə göründüyü üçün seçim daha tez və daha inamlı olur.",
+          "Stradify tələbələrə təcrübə proqramlarını səviyyə, iş modeli, son müraciət tarixi və mənbə etibarlılığına görə müqayisə etməyə kömək edir.",
         highlights: [
-          "Təcrübə, təcrübəçi və yeni məzun rolları daha aydın müqayisə olunur.",
-          "Yeni elanlar və yaxın tarixli müraciətlər daha tez seçilir.",
-          "Təsdiqlənmiş şirkətlər ayrıca yoxlanılır."
+          "Təcrübə, giriş səviyyəsi və yeni məzun vakansiyaları ayrı-ayrılıqda göstərilir.",
+          "Son müraciət tarixi yaxın olan elanlar daha rahat seçilir.",
+          "Təsdiqlənmiş şirkət və mənbələr ayrıca qeyd olunur."
         ],
+        usefulness:
+          "Uyğun vakansiyanı daha tez tapmağa, mənbəni yoxlamağa və müraciət qərarını daha inamlı verməyə kömək edir.",
         ctaLabel: "Vakansiyalara bax",
         ctaHref: "/jobs"
       },
@@ -41,14 +44,16 @@ const infoSections: InfoSection[] = [
         slug: "kim-ishe-goturur",
         label: "Kim işə qəbul edir",
         title: "Hazırda gəncləri kim işə qəbul edir",
-        description: "Platformada hansı sektorların aktiv olduğunu və hansı rolların daha çox açıldığını izah edən qısa xəritə.",
+        description: "Platformada hansı sektorların və şirkətlərin gənclər üçün daha aktiv vakansiya paylaşdığını göstərən qısa xəritə.",
         intro:
-          "Azərbaycan bazarında gənclər üçün ən aktiv komandalar adətən data, marketinq, müştəri təcrübəsi, satış dəstəyi və məhsul əməliyyatları istiqamətlərində görünür. CareerApple bu mənzərəni bir yerdə görməyi asanlaşdırır.",
+          "Bu səhifə gənclər üçün açıq vakansiya paylaşan şirkətləri və sahələri daha aydın görmək üçündür. Məqsəd bazardakı aktivliyi bir neçə mənbəni ayrıca gəzmədən izləməkdir.",
         highlights: [
-          "Bank, fintex, FMCG və SaaS komandaları daha çox entry-level rol açır.",
-          "Fərqli platformalarda yayımlanan elanları bir yerdə görmək daha asandır.",
+          "Bank, pərakəndə satış, texnologiya və xidmət sektorları aktiv olduqda önə çıxır.",
+          "Fərqli mənbələrdə yayımlanan elanları bir yerdə görmək daha asandır.",
           "Şirkət profili olan işəgötürənləri müqayisə etmək daha rahatdır."
         ],
+        usefulness:
+          "Hansı şirkətlərin hazırda işə qəbul etdiyini görməyə və vaxtını daha real fürsətlərə yönəltməyə kömək edir.",
         ctaLabel: "Yeni elanlara keç",
         ctaHref: "/jobs"
       },
@@ -61,24 +66,28 @@ const infoSections: InfoSection[] = [
           "Gənc namizədlər üçün əsas fərq illərin sayı deyil, özünü necə təqdim etdiyindir. Portfolio, mini layihələr, analitik düşüncə və yazılı təqdimat çox vaxt təcrübədən daha çox təsir edir.",
         highlights: [
           "CV-də kurs siyahısından çox nəticə göstərən layihələr önə çıxarılmalıdır.",
-          "Junior rollar üçün problem həlli və kommunikasiya nümunələri əlavə üstünlük yaradır.",
-          "Müraciət etdiyin hər rol üçün açar sözlərə uyğun qısa cover note hazırlamaq lazımdır."
+          "Giriş səviyyəsi vakansiyaları üçün problem həlli və kommunikasiya nümunələri əlavə üstünlük yaradır.",
+          "Müraciət etdiyin hər vakansiya üçün açar sözlərə uyğun qısa cover note hazırlamaq lazımdır."
         ],
-        ctaLabel: "Uyğun rolları filtrlə",
+        usefulness:
+          "Müraciət materiallarını daha aydın qurmağa və vakansiya tələblərinə uyğunlaşdırmağa kömək edir.",
+        ctaLabel: "Uyğun vakansiyaları filtrlə",
         ctaHref: "/jobs"
       },
       {
         slug: "careerapple-ai",
         label: "Uyğunluq dəstəyi",
-        title: "Uyğun rolları daha tez seçmək",
+        title: "Uyğun vakansiyaları daha tez seçmək",
         description: "Gələcək uyğunluq və CV dəstəyi barədə qısa baxış.",
         intro:
-          "Gələcək mərhələdə məqsəd uyğun rolları daha aydın göstərmək, CV-ni gücləndirmək və növbəti addımı seçməyi asanlaşdırmaqdır.",
+          "Uyğunluq dəstəyi vakansiyaları yalnız başlığa görə deyil, səviyyə, iş modeli, bacarıq siqnalları və mənbə məlumatına görə seçməyi hədəfləyir.",
         highlights: [
-          "Rol uyğunluğu üçün bacarıq əsaslı tövsiyələr veriləcək.",
+          "Vakansiya uyğunluğu üçün bacarıq əsaslı tövsiyələr veriləcək.",
           "CV-də boş qalan hissələr üçün redaktə təklifləri hazırlanacaq.",
           "Müraciətdə səni önə çıxaran güclü tərəflər daha aydın vurğulanacaq."
         ],
+        usefulness:
+          "Axtarış nəticələrini daraltmağa və müraciət etməyə dəyən elanları daha tez seçməyə kömək edəcək.",
         ctaLabel: "Ana səhifəyə bax",
         ctaHref: "/"
       },
@@ -86,14 +95,16 @@ const infoSections: InfoSection[] = [
         slug: "fellowship-proqrami",
         label: "Fellowship proqramı",
         title: "Fellowship proqramı ilə mentorlu keçid modeli",
-        description: "Gəncləri ilk roluna hazırlamaq üçün planlaşdırılan cohort və mentorluq proqramı.",
+        description: "Gəncləri ilk vakansiyasına hazırlamaq üçün planlaşdırılan cohort və mentorluq proqramı.",
         intro:
-          "Fellowship proqramı CareerApple-ın gələcək community qatıdır. Məqsəd yalnız vakansiya göstərmək deyil, seçilmiş namizədləri mentor, workshop və mini layihələrlə daha hazır vəziyyətə gətirməkdir.",
+          "Fellowship modeli seçilmiş namizədləri mentor görüşləri, praktik tapşırıqlar və qısa workshop-larla müraciət prosesinə hazırlamaq üçün düşünülüb.",
         highlights: [
-          "Seçilmiş cohort-lar üzrə mentor sessiyaları planlanır.",
+          "Seçilmiş qruplar üzrə mentor sessiyaları planlanır.",
           "Partnyor şirkətlər üçün hazır namizəd hovuzu formalaşdırılır.",
           "Tələbə klubları və karyera mərkəzləri ilə ortaq proqramlar nəzərdə tutulur."
         ],
+        usefulness:
+          "Tələbəyə real iş mühitinə daha hazırlıqlı keçməyə, şirkətə isə daha uyğun namizədlərlə tanış olmağa kömək edir.",
         ctaLabel: "İşəgötürən səhifəsini oxu",
         ctaHref: "/for-employers"
       },
@@ -101,14 +112,16 @@ const infoSections: InfoSection[] = [
         slug: "imkanlar",
         label: "İmkanlar",
         title: "İmkanlar bölməsində yalnız uyğun elanlar qalmalıdır",
-        description: "CareerApple-ın niyə təcrübə, junior və yeni məzun rollarına fokuslandığını izah edən qısa qeyd.",
+        description: "Stradify-ın niyə təcrübə, giriş səviyyəsi və yeni məzun vakansiyalarına fokuslandığını izah edən qısa qeyd.",
         intro:
-          "Gənclər üçün platformalarda əsas problem səs-küydür. Senior və əlaqəsiz elanlar ilk iş axtaran istifadəçini yorur. Buna görə CareerApple erkən karyera rollarını daha təmiz və fokuslu şəkildə göstərir.",
+          "Gənclər üçün platformalarda əsas problem səs-küydür. Senior, rəhbər və əlaqəsiz elanlar ilk iş axtaran istifadəçini yorur. Buna görə imkanlar bölməsində yalnız mənbə ilə dəstəklənən uyğun elanlar qalmalıdır.",
         highlights: [
           "Filtrlər gənclərə uyğun səviyyələri daha tez önə çıxarır.",
-          "Uyğun olmayan rollar əsas lentdə diqqəti dağıtmır.",
-          "Seçilmiş bannerlər daha relevant və etibarlı imkanları göstərir."
+          "Uyğun olmayan vakansiyalar əsas lentdə diqqəti dağıtmır.",
+          "Seçilmiş bloklar yalnız real və etibarlı imkanları göstərir."
         ],
+        usefulness:
+          "İstifadəçinin vaxtını qoruyur və ilk baxışdan müraciətə dəyən elanları seçməyi asanlaşdırır.",
         ctaLabel: "Seçilmiş elanlara bax",
         ctaHref: "/"
       }
@@ -122,11 +135,11 @@ const infoSections: InfoSection[] = [
         slug: "qiymetlendirme",
         label: "Qiymətləndirmə",
         title: "İşəgötürən üçün dəyər və nəticə çərçivəsi",
-        description: "CareerApple-ın işəgötürənə hansı üstünlükləri verdiyini göstərən qısa çərçivə.",
+        description: "Stradify-ın işəgötürənə hansı üstünlükləri verdiyini göstərən qısa çərçivə.",
         intro:
-          "Bu məhsul klassik job board kimi deyil. Məqsəd gənc auditoriya qarşısında daha güclü görünmək, daha uyğun namizədlər toplamaq və açıq rolları daha aydın təqdim etməkdir.",
+          "Bu məhsul klassik job board kimi deyil. Məqsəd gənc auditoriya qarşısında daha güclü görünmək, daha uyğun namizədlər toplamaq və açıq vakansiyaları daha aydın təqdim etməkdir.",
         highlights: [
-          "Seçilmiş yerləşdirmə erkən karyera rolları üçün daha güclü görünürlük yaradır.",
+          "Seçilmiş yerləşdirmə erkən karyera vakansiyaları üçün daha güclü görünürlük yaradır.",
           "Aydın şəhər, son tarix və müraciət keçidi namizəd qərarını sürətləndirir.",
           "Etibarlı və səliqəli profil daha keyfiyyətli ilk təəssürat yaradır."
         ],
@@ -136,14 +149,14 @@ const infoSections: InfoSection[] = [
       {
         slug: "demo-isteyi",
         label: "Demo istəyi",
-        title: "CareerApple demo istəyi və əməkdaşlıq çərçivəsi",
+        title: "Stradify demo istəyi və əməkdaşlıq çərçivəsi",
         description: "İşəgötürən komandalarının platformaya qoşulması üçün sadə və aydın başlanğıc.",
         intro:
-          "CareerApple şirkətlərə gənc auditoriya qarşısında daha aydın görünmək üçün qurulub. Demo mərhələsi komandanın ehtiyacını anlamaq və doğru rolları daha yaxşı göstərmək üçündür.",
+          "Stradify şirkətlərə gənc auditoriya qarşısında daha aydın görünmək üçün qurulub. Demo mərhələsi komandanın ehtiyacını anlamaq və uyğun vakansiyaları daha yaxşı göstərmək üçündür.",
         highlights: [
           "Şirkət təqdimatı daha aydın və etibarlı görünəcək şəkildə hazırlanır.",
           "Vakansiyalar gənc auditoriya üçün daha rahat kəşf olunan formaya salınır.",
-          "Demo mərhələsində əsas diqqət təcrübə və yeni məzun rollarına verilir."
+          "Demo mərhələsində əsas diqqət təcrübə və giriş səviyyəsi vakansiyalarına verilir."
         ],
         ctaLabel: "Əlaqə məlumatlarına bax",
         ctaHref: "/info/support/elaqe"
@@ -154,7 +167,7 @@ const infoSections: InfoSection[] = [
         title: "Universitet karyera mərkəzləri ilə əməkdaşlıq modeli",
         description: "Universitetlər və youth communities ilə işləmək üçün hazırlanmış ilkin istiqamətlər.",
         intro:
-          "CareerApple təkcə işəgötürənlə namizədi deyil, universitet karyera mərkəzlərini də bu təcrübəyə qoşmağı planlayır. Məqsəd tələbələrə daha tez və daha etibarlı imkanlar çatdırmaqdır.",
+          "Stradify təkcə işəgötürənlə namizədi deyil, universitet karyera mərkəzlərini də bu təcrübəyə qoşmağı planlayır. Məqsəd tələbələrə daha tez və daha etibarlı imkanlar çatdırmaqdır.",
         highlights: [
           "Karyera mərkəzləri üçün paylaşım dəstləri və seçilmiş vakansiya feed-ləri nəzərdə tutulur.",
           "Fellowship və tədbir proqramları universitet tərəfi ilə birgə qurula bilər.",
@@ -184,7 +197,7 @@ const infoSections: InfoSection[] = [
         title: "Şirkət profili və elanlarda etibar qaydaları",
         description: "Etibarlı profillər və rahat müraciət təcrübəsi üçün əsas prinsiplər.",
         intro:
-          "CareerApple-da məqsəd namizədə daha etibarlı təcrübə verməkdir. Şirkət məlumatlarının aydınlığı və düzgün keçidlər bu etibarı gücləndirir.",
+          "Stradify-da məqsəd namizədə daha etibarlı təcrübə verməkdir. Şirkət məlumatlarının aydınlığı və düzgün keçidlər bu etibarı gücləndirir.",
         highlights: [
           "Etibarlı şirkət təqdimatı namizəddə daha güclü ilk təəssürat yaradır.",
           "Müraciət linklərinin birbaşa və düzgün olması istifadəçi yolunu rahat saxlayır.",
@@ -203,9 +216,9 @@ const infoSections: InfoSection[] = [
         slug: "istifade-sertleri",
         label: "İstifadə şərtləri",
         title: "Platformadan istifadə üçün əsas şərtlər",
-        description: "CareerApple təcrübəsini aydın və etibarlı saxlayan əsas qaydalar.",
+        description: "Stradify təcrübəsini aydın və etibarlı saxlayan əsas qaydalar.",
         intro:
-          "CareerApple istifadəçi və şirkət təcrübəsini aydın qaydalarla qoruyur. Bu bölmə platformada görünən məlumatlardan və təqdim olunan imkanlardan necə istifadə olunduğunu izah edir.",
+          "Stradify istifadəçi və şirkət təcrübəsini aydın qaydalarla qoruyur. Bu bölmə platformada görünən məlumatlardan və təqdim olunan imkanlardan necə istifadə olunduğunu izah edir.",
         highlights: [
           "İstifadəçi açıq elanları və karyera resurslarını rahat şəkildə görə bilir.",
           "Şirkət təqdimatları etibarlı və aydın görünəcək şəkildə qorunur.",
@@ -217,10 +230,10 @@ const infoSections: InfoSection[] = [
       {
         slug: "maxfilik-siyaseti",
         label: "Məxfilik",
-        title: "CareerApple məxfilik siyasəti",
+        title: "Stradify məxfilik siyasəti",
         description: "Məlumatın qorunması və istifadəçi rahatlığı barədə qısa qeyd.",
         intro:
-          "CareerApple istifadəçi etibarını qorumağı vacib sayır. Məlumatın necə saxlanması və istifadəçi rahatlığının necə qorunması bu bölmədə sadə dillə izah olunur.",
+          "Stradify istifadəçi etibarını qorumağı vacib sayır. Məlumatın necə saxlanması və istifadəçi rahatlığının necə qorunması bu bölmədə sadə dillə izah olunur.",
         highlights: [
           "İstifadəçi məlumatları diqqətlə və ehtiyatla işlənir.",
           "Vacib seçimlər daha aydın və rahat görünəcək şəkildə saxlanılır.",
@@ -233,9 +246,9 @@ const infoSections: InfoSection[] = [
         slug: "menbe-siyaseti",
         label: "Etibar və elan siyasəti",
         title: "Elanlar üçün etibar və şəffaflıq siyasəti",
-        description: "CareerApple-da görünən elanların aydın və rahat təcrübə yaratması üçün əsas yanaşma.",
+        description: "Stradify-da görünən elanların aydın və rahat təcrübə yaratması üçün əsas yanaşma.",
         intro:
-          "CareerApple-da elanlar istifadəçiyə aydın, etibarlı və rahat görünməlidir. Məqsəd namizədi uyğun rola daha tez çatdırmaq və seçim anını sadələşdirməkdir.",
+          "Stradify-da elanlar istifadəçiyə aydın, etibarlı və rahat görünməlidir. Məqsəd namizədi uyğun vakansiyaya daha tez çatdırmaq və seçim anını sadələşdirməkdir.",
         highlights: [
           "Müraciət keçidi aydın və birbaşa saxlanılır.",
           "Erkən karyera auditoriyasına uyğun elanlar önə çıxarılır.",
@@ -250,7 +263,7 @@ const infoSections: InfoSection[] = [
         title: "Cookie seçimləri və rahatlıq",
         description: "Platformanın daha rahat işləməsi üçün əsas seçimlər barədə qısa izah.",
         intro:
-          "CareerApple-da cookie istifadəsi istifadəçi təcrübəsini rahat saxlamaq üçündür. Məqsəd sürətli baxış, yadda saxlanan seçimlər və daha sabit təcrübə təqdim etməkdir.",
+          "Stradify-da cookie istifadəsi istifadəçi təcrübəsini rahat saxlamaq üçündür. Məqsəd sürətli baxış, yadda saxlanan seçimlər və daha sabit təcrübə təqdim etməkdir.",
         highlights: [
           "Vacib seçimlər istifadəçi rahatlığı üçün saxlanıla bilər.",
           "Məxfilik balansı və rahatlıq birlikdə qorunur.",
@@ -268,13 +281,13 @@ const infoSections: InfoSection[] = [
       {
         slug: "haqqimizda",
         label: "Haqqımızda",
-        title: "CareerApple nə üçün yaradılıb",
+        title: "Stradify nə üçün yaradılıb",
         description: "Gənclər üçün təcrübə və ilk iş axtarışını daha təmiz və uyğun etmək məqsədi ilə qurulan məhsulun qısa hekayəsi.",
         intro:
-          "CareerApple-ın əsas ideyası sadədir: ilk iş axtaran istifadəçiyə ən vacib olanı daha tez göstərmək. Platforma buna görə təmiz görünüş, qısa copy və yüksək uyğunluq hissi üzərində qurulub.",
+          "Stradify-ın əsas ideyası sadədir: ilk iş axtaran istifadəçiyə ən vacib olanı daha tez göstərmək. Platforma buna görə təmiz görünüş, qısa copy və yüksək uyğunluq hissi üzərində qurulub.",
         highlights: [
           "Məhsul Azərbaycan bazarı və gənc auditoriya üçün lokallaşdırılır.",
-          "İlk mərhələdə diqqət təcrübə, təcrübəçi və junior rollarındadır.",
+          "İlk mərhələdə diqqət təcrübə, giriş səviyyəsi və mütəxəssis vakansiyalarındadır.",
           "Əsas fokus uyğun vakansiyanı daha tez tapdırmaqdır."
         ],
         ctaLabel: "Ana səhifəyə qayıt",
@@ -283,10 +296,10 @@ const infoSections: InfoSection[] = [
       {
         slug: "komandaya-qosul",
         label: "Komandaya qoşul",
-        title: "CareerApple komandasına necə qoşula bilərsən",
+        title: "Stradify komandasına necə qoşula bilərsən",
         description: "Məhsul, growth və community istiqamətində gələcək komanda genişlənməsi üçün qısa baxış.",
         intro:
-          "CareerApple böyüdükcə məhsul, growth və community istiqamətlərində güclü insanlara ehtiyac artacaq. Məqsəd gənclər üçün daha güclü karyera təcrübəsi qurmaqdır.",
+          "Stradify böyüdükcə məhsul, growth və community istiqamətlərində güclü insanlara ehtiyac artacaq. Məqsəd gənclər üçün daha güclü karyera təcrübəsi qurmaqdır.",
         highlights: [
           "Məhsul düşüncəsi, growth və dizayn keyfiyyəti əsas prioritetlərdəndir.",
           "University community və employer relations ayrıca istiqamət kimi formalaşacaq.",
@@ -299,9 +312,9 @@ const infoSections: InfoSection[] = [
         slug: "media",
         label: "Media",
         title: "Media və press üçün qısa məhsul məlumatı",
-        description: "CareerApple-ı təqdim etmək üçün istifadə oluna biləcək sadə məhsul mövqeləndirməsi.",
+        description: "Stradify-ı təqdim etmək üçün istifadə oluna biləcək sadə məhsul mövqeləndirməsi.",
         intro:
-          "CareerApple gənclər üçün təcrübə və ilk iş elanlarını təsdiqlənmiş işəgötürən profilləri ilə bir araya gətirən yerli karyera platformasıdır.",
+          "Stradify gənclər üçün təcrübə və ilk iş elanlarını təsdiqlənmiş işəgötürən profilləri ilə bir araya gətirən yerli karyera platformasıdır.",
         highlights: [
           "Məhsul dili qısa, yerli və müraciətə yönəlmiş saxlanılır.",
           "İstifadəçiyə görünən səhifələrdə sadə və aydın dil qorunur.",
@@ -314,9 +327,9 @@ const infoSections: InfoSection[] = [
         slug: "blog",
         label: "Blog",
         title: "Blog üçün mövzu xəritəsi",
-        description: "CareerApple blogunda hansı mövzuların prioritet olacağına dair qısa redaksiya istiqaməti.",
+        description: "Stradify blogunda hansı mövzuların prioritet olacağına dair qısa redaksiya istiqaməti.",
         intro:
-          "Blog CareerApple-ın etibarını və faydasını gücləndirən kontent qatıdır. İlk mərhələdə təcrübə bazarı, CV məsləhətləri, junior müsahibə hazırlığı və işəgötürən dünyası əsas mövzulardır.",
+          "Blog Stradify-ın etibarını və faydasını gücləndirən kontent qatıdır. İlk mərhələdə təcrübə bazarı, CV məsləhətləri, junior müsahibə hazırlığı və işəgötürən dünyası əsas mövzulardır.",
         highlights: [
           "Terminlər Azərbaycan dilində aydın lokallaşdırılmalıdır.",
           "Hər yazı məhsuldakı konkret istifadəçi addımı ilə bağlanmalıdır.",
@@ -328,14 +341,14 @@ const infoSections: InfoSection[] = [
       {
         slug: "brend-qaydalari",
         label: "Brend qaydaları",
-        title: "CareerApple brend qaydaları",
+        title: "Stradify brend qaydaları",
         description: "Vizual dil, ton və etibar hissi üçün istifadə olunan əsas qaydalar.",
         intro:
-          "CareerApple vizual dili tünd fon, soft blue vurğular və aydın spacing üzərində qurulub. Məhsul dili də eyni dərəcədə sadə, sürətli və gənc auditoriya üçün anlaşılır saxlanılır.",
+          "Stradify vizual dili ağ fon, bənövşəyi vurğular və aydın məsafələr üzərində qurulub. Məhsul dili sadə, konkret və gənc auditoriya üçün anlaşılır saxlanılır.",
         highlights: [
           "San Francisco əsas tipografiya kimi istifadə olunur.",
           "Bənövşəyi vurğu yalnız əsas hərəkət və seçilmiş vəziyyətlərdə işlədilir.",
-          "Kartlar və bannerlər sadə, sərt və yüksək kontrastlı saxlanılır."
+          "Kartlar və bannerlər sadə, oxunaqlı və məhsul məqsədinə uyğun saxlanılır."
         ],
         ctaLabel: "Ana səhifəni aç",
         ctaHref: "/"
@@ -352,7 +365,7 @@ const infoSections: InfoSection[] = [
         title: "Platformadan istifadə üçün yardım mərkəzi",
         description: "Vakansiya axtarışı, yadda saxlama və müraciət addımları ilə bağlı əsas sualların cavabları.",
         intro:
-          "CareerApple-da əsas məqsəd uyğun vakansiyanı tez tapmaq, yadda saxlamaq və rahat müraciət etməkdir. Yardım mərkəzi bu təcrübəni daha aydın göstərmək üçündür.",
+          "Stradify-da əsas məqsəd uyğun vakansiyanı tez tapmaq, yadda saxlamaq və rahat müraciət etməkdir. Yardım mərkəzi bu təcrübəni daha aydın göstərmək üçündür.",
         highlights: [
           "Axtarış və filtrlər bütün istifadəçilər üçün rahatdır.",
           "Namizəd login və signup hələ aktiv deyil.",
@@ -364,15 +377,17 @@ const infoSections: InfoSection[] = [
       {
         slug: "elaqe",
         label: "Əlaqə",
-        title: "CareerApple ilə əlaqə üçün əsas kanallar",
+        title: "Stradify ilə əlaqə üçün əsas kanallar",
         description: "Demo, partnership və məhsul əməkdaşlığı üçün əlaqə çərçivəsi.",
         intro:
-          "CareerApple ilə əməkdaşlıq, demo və media sorğuları üçün əlaqə qurmaq istəyirsənsə, ən rahat yol birbaşa e-poçtdur. Bütün əsas sorğular üçün vahid ünvan istifadə olunur: contact@trystradify.app.",
+          "Stradify ilə əməkdaşlıq, demo və media sorğuları üçün ən rahat əlaqə yolu birbaşa e-poçtdur. Sorğunun mövzusunu qısa yazmaq cavabı sürətləndirir.",
         highlights: [
           "Demo və işəgötürən əməkdaşlığı sorğuları prioritetlə cavablandırılır.",
-          "University partnership və fellowship maraqları ayrıca qeyd oluna bilər.",
+          "Universitet tərəfdaşlığı və fellowship maraqları ayrıca qeyd oluna bilər.",
           "Əlaqə ünvanı: contact@trystradify.app"
         ],
+        usefulness:
+          "Doğru mövzunu və əlaqə kanalını seçməyə, əməkdaşlıq sorğusunu daha aydın göndərməyə kömək edir.",
         ctaLabel: "İşəgötürən səhifəsinə bax",
         ctaHref: "/for-employers"
       },
@@ -382,7 +397,7 @@ const infoSections: InfoSection[] = [
         title: "Hüquq mərkəzi və etibar qeydləri",
         description: "Etibar, məxfilik və istifadə şərtləri arasında keçid nöqtəsi.",
         intro:
-          "CareerApple-da hüquqi təməl yalnız sənəd olmaq üçün deyil. Məqsəd istifadəçi və şirkət tərəfi üçün etibarlı, aydın və şəffaf təcrübə yaratmaqdır.",
+          "Stradify-da hüquqi təməl yalnız sənəd olmaq üçün deyil. Məqsəd istifadəçi və şirkət tərəfi üçün etibarlı, aydın və şəffaf təcrübə yaratmaqdır.",
         highlights: [
           "Şirkət təqdimatı və vakansiya məlumatı aydın saxlanmalıdır.",
           "Məxfilik və istifadə qaydaları bir-birini tamamlamalıdır.",
@@ -403,6 +418,8 @@ const infoSections: InfoSection[] = [
           "Gələcəkdə əlavə seçimlər daha aydın paneldə təqdim olunacaq.",
           "Məxfilik nəzarəti istifadəçi üçün tez tapılan yerdə qalmalıdır."
         ],
+        usefulness:
+          "Məxfilik seçimlərinin nə üçün lazım olduğunu və gələcəkdə necə idarə olunacağını sadə dillə göstərir.",
         ctaLabel: "Məxfilik siyasətinə bax",
         ctaHref: "/info/legal/maxfilik-siyaseti"
       }
