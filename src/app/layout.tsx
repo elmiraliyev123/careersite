@@ -19,8 +19,11 @@ export const metadata: Metadata = {
   description:
     "Azərbaycan bazarı üçün qurulan təcrübə, giriş səviyyəsi və mütəxəssis vakansiya platforması.",
   icons: {
-    icon: "/stradify-logo-icon.png",
-    apple: "/stradify-logo-icon.png"
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" }
+    ],
+    apple: "/apple-touch-icon.png"
   }
 };
 
@@ -30,8 +33,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const cookieStore = await cookies();
   const locale = resolveLocale(cookieStore.get(localeCookieName)?.value);
   const companyCategories = getCompanyCategories();
-  
-  const cmsDoc = getCmsDocument("site-content");
+
+  let cmsDoc: ReturnType<typeof getCmsDocument> = null;
+  try {
+    cmsDoc = getCmsDocument("site-content");
+  } catch (error) {
+    if (!isAdmin) {
+      console.warn("SQLite unavailable, using fallback public data.", error);
+    } else {
+      throw error;
+    }
+  }
+
   const publishedData = cmsDoc?.publishedData || {};
   const draftData = isAdmin ? (cmsDoc?.draftData || publishedData) : {};
 

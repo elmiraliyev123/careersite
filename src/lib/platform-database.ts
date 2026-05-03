@@ -186,9 +186,14 @@ export type ListJobsOptions = {
   category?: string;
 };
 
-const databaseDirectory = path.join(process.cwd(), "data");
-const databasePath = path.join(databaseDirectory, "careerapple.sqlite");
-const legacyStorePath = path.join(databaseDirectory, "platform-store.json");
+const bundledDatabaseDirectory = path.join(process.cwd(), "data");
+const bundledDatabasePath = path.join(bundledDatabaseDirectory, "careerapple.sqlite");
+const databasePath =
+  process.env.STRADIFY_SQLITE_PATH?.trim() ||
+  process.env.SQLITE_PATH?.trim() ||
+  (process.env.VERCEL ? path.join("/tmp", "stradify.sqlite") : bundledDatabasePath);
+const databaseDirectory = path.dirname(databasePath);
+const legacyStorePath = path.join(bundledDatabaseDirectory, "platform-store.json");
 
 let database: DatabaseSync | null = null;
 let initialized = false;
@@ -321,8 +326,26 @@ function ensureDatabaseDirectory() {
   }
 }
 
+function prepareRuntimeDatabaseFile() {
+  if (databasePath === bundledDatabasePath || fs.existsSync(databasePath) || !fs.existsSync(bundledDatabasePath)) {
+    return;
+  }
+
+  fs.copyFileSync(bundledDatabasePath, databasePath);
+
+  for (const suffix of ["-wal", "-shm"]) {
+    const source = `${bundledDatabasePath}${suffix}`;
+    const target = `${databasePath}${suffix}`;
+
+    if (fs.existsSync(source) && !fs.existsSync(target)) {
+      fs.copyFileSync(source, target);
+    }
+  }
+}
+
 function getDatabase() {
   ensureDatabaseDirectory();
+  prepareRuntimeDatabaseFile();
 
   if (!database) {
     database = new DatabaseSync(databasePath);

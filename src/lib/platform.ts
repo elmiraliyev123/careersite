@@ -56,6 +56,7 @@ const COMPANY_DETAIL_JOB_LIMIT = 5;
 
 let publicDataCache: { expiresAt: number; data: PlatformData } | null = null;
 let loggedRenderPipelineSkip = false;
+let loggedPublicDataFallback = false;
 
 const youthLevels = new Set<Job["level"]>([
   "internship",
@@ -157,6 +158,31 @@ function logRenderPipelineSkip() {
   console.info(
     "[perf:platform] public render path reads processed SQLite rows only; apply-url validation and enrichment run outside page render"
   );
+}
+
+function logPublicDataFallback(error: unknown) {
+  if (loggedPublicDataFallback) {
+    return;
+  }
+
+  loggedPublicDataFallback = true;
+  console.warn("SQLite unavailable, using fallback public data.", error);
+}
+
+function getEmptyPlatformData(): PlatformData {
+  return {
+    companies: [],
+    jobs: []
+  };
+}
+
+function withPublicDataFallback<T>(fallbackFactory: () => T, getValue: () => T): T {
+  try {
+    return getValue();
+  } catch (error) {
+    logPublicDataFallback(error);
+    return fallbackFactory();
+  }
 }
 
 function stripSalary(job: Job): Job {
@@ -614,37 +640,39 @@ function getFeaturedCompanyItems(limit = 12, publicJobs?: Job[]) {
 }
 
 function getPlatformData() {
-  logRenderPipelineSkip();
+  return withPublicDataFallback(getEmptyPlatformData, () => {
+    logRenderPipelineSkip();
 
-  if (publicDataCache && publicDataCache.expiresAt > Date.now()) {
-    return publicDataCache.data;
-  }
+    if (publicDataCache && publicDataCache.expiresAt > Date.now()) {
+      return publicDataCache.data;
+    }
 
-  const jobs = sortJobsByFreshness(
-    listJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })
-      .map(stripSalary)
-      .map(normalizeRuntimeJob)
-      .filter(isPublicJobForAzerbaijan)
-  );
-  const companies = hydrateCompanyVerification(filterPublicCompanies(listCompanies(), jobs), jobs);
+    const jobs = sortJobsByFreshness(
+      listJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })
+        .map(stripSalary)
+        .map(normalizeRuntimeJob)
+        .filter(isPublicJobForAzerbaijan)
+    );
+    const companies = hydrateCompanyVerification(filterPublicCompanies(listCompanies(), jobs), jobs);
 
-  const data = {
-    companies: sortByNewestDate(companies).sort((left, right) => {
-      if (left.featured === right.featured) {
-        return (right.createdAt ?? "").localeCompare(left.createdAt ?? "");
-      }
+    const data = {
+      companies: sortByNewestDate(companies).sort((left, right) => {
+        if (left.featured === right.featured) {
+          return (right.createdAt ?? "").localeCompare(left.createdAt ?? "");
+        }
 
-      return Number(Boolean(right.featured)) - Number(Boolean(left.featured));
-    }),
-    jobs
-  };
+        return Number(Boolean(right.featured)) - Number(Boolean(left.featured));
+      }),
+      jobs
+    };
 
-  publicDataCache = {
-    data,
-    expiresAt: Date.now() + PUBLIC_DATA_CACHE_TTL_MS
-  };
+    publicDataCache = {
+      data,
+      expiresAt: Date.now() + PUBLIC_DATA_CACHE_TTL_MS
+    };
 
-  return data;
+    return data;
+  });
 }
 
 function getPlatformAdminData() {
@@ -698,30 +726,32 @@ export function getAllCompanies(): Company[] {
 }
 
 export function getFeaturedCompanies(): Company[] {
-  return getFeaturedCompanyItems(12).map((item) => item.company);
+  return withPublicDataFallback(() => [], () => getFeaturedCompanyItems(12).map((item) => item.company));
 }
 
 export function getCompanyBySlug(slug: string): Company | undefined {
-  const company = findCompanyBySlug(slug);
+  return withPublicDataFallback(() => undefined, () => {
+    const company = findCompanyBySlug(slug);
 
-  if (!company) {
-    return undefined;
-  }
+    if (!company) {
+      return undefined;
+    }
 
-  if (company.visible === false) {
-    return undefined;
-  }
+    if (company.visible === false) {
+      return undefined;
+    }
 
-  if (!hasPublicJobForCompany(slug)) {
-    return undefined;
-  }
+    if (!hasPublicJobForCompany(slug)) {
+      return undefined;
+    }
 
-  const companyJobs = readPublicJobs({ companySlug: slug, limit: 24 });
+    const companyJobs = readPublicJobs({ companySlug: slug, limit: 24 });
 
-  return {
-    ...company,
-    verified: getEffectiveCompanyVerification(company, companyJobs)
-  };
+    return {
+      ...company,
+      verified: getEffectiveCompanyVerification(company, companyJobs)
+    };
+  });
 }
 
 export function getJobs(): Job[] {
@@ -753,35 +783,37 @@ export function getAnyJobBySlug(slug: string): Job | undefined {
 }
 
 export function getCompanyJobs(companySlug: string, limit = JOBS_PAGE_CANDIDATE_LIMIT): Job[] {
-  return readPublicJobs({ companySlug, limit });
+  return withPublicDataFallback(() => [], () => readPublicJobs({ companySlug, limit }));
 }
 
 export function getCompanyOpenRoleCount(companySlug: string): number {
-  return countPublicJobsByCompanySlugs([companySlug]).get(companySlug) ?? 0;
+  return withPublicDataFallback(() => 0, () => countPublicJobsByCompanySlugs([companySlug]).get(companySlug) ?? 0);
 }
 
 export function getCompanyCategories() {
-  const categoryMap = new Map<string, number>();
+  return withPublicDataFallback(() => [], () => {
+    const categoryMap = new Map<string, number>();
 
-  for (const company of getCompanies()) {
-    const sector = getMeaningfulMetadataValue(company.sector);
+    for (const company of getCompanies()) {
+      const sector = getMeaningfulMetadataValue(company.sector);
 
-    if (!sector) {
-      continue;
-    }
-
-    categoryMap.set(sector, (categoryMap.get(sector) ?? 0) + 1);
-  }
-
-  return Array.from(categoryMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((left, right) => {
-      if (right.count !== left.count) {
-        return right.count - left.count;
+      if (!sector) {
+        continue;
       }
 
-      return left.name.localeCompare(right.name);
-    });
+      categoryMap.set(sector, (categoryMap.get(sector) ?? 0) + 1);
+    }
+
+    return Array.from(categoryMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((left, right) => {
+        if (right.count !== left.count) {
+          return right.count - left.count;
+        }
+
+        return left.name.localeCompare(right.name);
+      });
+  });
 }
 
 export function filterJobs(
@@ -876,23 +908,34 @@ export function getRecommendedJobs(
 }
 
 export function getHomeStats() {
-  const allJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
-  const companiesBySlug = getCompanyMapForJobs(allJobs);
-  const internshipRoles = allJobs.filter((job) => isInternshipRole(job, companiesBySlug.get(job.companySlug))).length;
-  const traineeRoles = allJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length;
-  const remoteFriendly = allJobs.filter((job) => getCanonicalWorkModel(job) === "remote").length;
+  return withPublicDataFallback(
+    () => ({
+      totalJobs: 0,
+      internshipRoles: 0,
+      traineeRoles: 0,
+      remoteFriendly: 0,
+      partnerCompanies: 0
+    }),
+    () => {
+      const allJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
+      const companiesBySlug = getCompanyMapForJobs(allJobs);
+      const internshipRoles = allJobs.filter((job) => isInternshipRole(job, companiesBySlug.get(job.companySlug))).length;
+      const traineeRoles = allJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length;
+      const remoteFriendly = allJobs.filter((job) => getCanonicalWorkModel(job) === "remote").length;
 
-  return {
-    totalJobs: countPublicJobs(),
-    internshipRoles,
-    traineeRoles,
-    remoteFriendly,
-    partnerCompanies: countPublicCompanies()
-  };
+      return {
+        totalJobs: countPublicJobs(),
+        internshipRoles,
+        traineeRoles,
+        remoteFriendly,
+        partnerCompanies: countPublicCompanies()
+      };
+    }
+  );
 }
 
 export function getAvailableCities() {
-  return buildAvailableCitiesFromJobs(readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT }));
+  return withPublicDataFallback(() => ["Hamısı"], () => buildAvailableCitiesFromJobs(readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })));
 }
 
 export function getHeroCities() {
@@ -900,107 +943,140 @@ export function getHeroCities() {
 }
 
 export function getHomePageData() {
-  const startedAt = Date.now();
-  const statsJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
-  const statsCompaniesBySlug = getCompanyMapForJobs(statsJobs);
-  const internshipJobs = statsJobs.filter((job) => isInternshipRole(job, statsCompaniesBySlug.get(job.companySlug)));
-  const data = {
-    stats: {
-      totalJobs: countPublicJobs(),
-      internshipRoles: internshipJobs.length,
-      traineeRoles: statsJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length,
-      remoteFriendly: statsJobs.filter((job) => getCanonicalWorkModel(job) === "remote").length,
-      partnerCompanies: countPublicCompanies()
-    },
-    featuredJobItems: toJobItems(internshipJobs).filter((item) => Boolean(item.company)) as Array<{
-      job: Job;
-      company: Company;
-    }>,
-    featuredCompanies: getFeaturedCompanyItems(10, statsJobs),
-    heroCities: buildAvailableCitiesFromJobs(statsJobs).filter((city) => city !== "Hamısı").slice(0, 4),
-    availableCities: buildAvailableCitiesFromJobs(statsJobs)
-  };
-  logPlatformTiming("getHomePageData", startedAt);
+  return withPublicDataFallback(
+    () => ({
+      stats: {
+        totalJobs: 0,
+        internshipRoles: 0,
+        traineeRoles: 0,
+        remoteFriendly: 0,
+        partnerCompanies: 0
+      },
+      featuredJobItems: [] as Array<{ job: Job; company: Company }>,
+      featuredCompanies: [] as Array<{ company: Company; openRoles: number }>,
+      heroCities: [] as string[],
+      availableCities: ["Hamısı"] as string[]
+    }),
+    () => {
+      const startedAt = Date.now();
+      const statsJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
+      const statsCompaniesBySlug = getCompanyMapForJobs(statsJobs);
+      const internshipJobs = statsJobs.filter((job) => isInternshipRole(job, statsCompaniesBySlug.get(job.companySlug)));
+      const data = {
+        stats: {
+          totalJobs: countPublicJobs(),
+          internshipRoles: internshipJobs.length,
+          traineeRoles: statsJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length,
+          remoteFriendly: statsJobs.filter((job) => getCanonicalWorkModel(job) === "remote").length,
+          partnerCompanies: countPublicCompanies()
+        },
+        featuredJobItems: toJobItems(internshipJobs).filter((item) => Boolean(item.company)) as Array<{
+          job: Job;
+          company: Company;
+        }>,
+        featuredCompanies: getFeaturedCompanyItems(10, statsJobs),
+        heroCities: buildAvailableCitiesFromJobs(statsJobs).filter((city) => city !== "Hamısı").slice(0, 4),
+        availableCities: buildAvailableCitiesFromJobs(statsJobs)
+      };
+      logPlatformTiming("getHomePageData", startedAt);
 
-  return data;
+      return data;
+    }
+  );
 }
 
 export function getJobsPageData(filters: JobFilters) {
-  const startedAt = Date.now();
-  const jobs = filterJobs(filters, {
-    limit: JOBS_PAGE_INITIAL_LIMIT,
-    candidateLimit: JOBS_PAGE_CANDIDATE_LIMIT
-  });
-  const cityJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
-  const cityCompaniesBySlug = getCompanyMapForJobs(cityJobs);
-  const internships = cityJobs
-    .filter((job) => isInternshipRole(job, cityCompaniesBySlug.get(job.companySlug)));
-  const data = {
-    jobItems: toJobItems(jobs),
-    availableCities: buildAvailableCitiesFromJobs(cityJobs),
-    featuredEmployers: getFeaturedCompanyItems(12, cityJobs),
-    newestInternships: toJobItems(internships).filter((item) => Boolean(item.company)) as Array<{
-      job: Job;
-      company: Company;
-    }>
-  };
-  logPlatformTiming("getJobsPageData", startedAt, `jobs=${data.jobItems.length}`);
+  return withPublicDataFallback(
+    () => ({
+      jobItems: [] as Array<{ job: Job; company: Company | null }>,
+      availableCities: ["Hamısı"] as string[],
+      featuredEmployers: [] as Array<{ company: Company; openRoles: number }>,
+      newestInternships: [] as Array<{ job: Job; company: Company }>
+    }),
+    () => {
+      const startedAt = Date.now();
+      const jobs = filterJobs(filters, {
+        limit: JOBS_PAGE_INITIAL_LIMIT,
+        candidateLimit: JOBS_PAGE_CANDIDATE_LIMIT
+      });
+      const cityJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
+      const cityCompaniesBySlug = getCompanyMapForJobs(cityJobs);
+      const internships = cityJobs
+        .filter((job) => isInternshipRole(job, cityCompaniesBySlug.get(job.companySlug)));
+      const data = {
+        jobItems: toJobItems(jobs),
+        availableCities: buildAvailableCitiesFromJobs(cityJobs),
+        featuredEmployers: getFeaturedCompanyItems(12, cityJobs),
+        newestInternships: toJobItems(internships).filter((item) => Boolean(item.company)) as Array<{
+          job: Job;
+          company: Company;
+        }>
+      };
+      logPlatformTiming("getJobsPageData", startedAt, `jobs=${data.jobItems.length}`);
 
-  return data;
+      return data;
+    }
+  );
 }
 
 export function getJobDetailPageData(slug: string) {
-  const startedAt = Date.now();
-  const job = getJobBySlug(slug);
+  return withPublicDataFallback(() => undefined, () => {
+    const startedAt = Date.now();
+    const job = getJobBySlug(slug);
 
-  if (!job) {
-    return undefined;
-  }
+    if (!job) {
+      return undefined;
+    }
 
-  const company = getCompanyBySlug(job.companySlug) ?? null;
-  const recommendationJobs = getRecommendedJobs(job, {
-    limit: RELATED_JOB_LIMIT,
-    candidateLimit: RELATED_JOB_CANDIDATE_LIMIT
+    const company = getCompanyBySlug(job.companySlug) ?? null;
+    const recommendationJobs = getRecommendedJobs(job, {
+      limit: RELATED_JOB_LIMIT,
+      candidateLimit: RELATED_JOB_CANDIDATE_LIMIT
+    });
+    const data = {
+      job,
+      company,
+      recommendations: toJobItems(recommendationJobs)
+    };
+    logPlatformTiming("getJobDetailPageData", startedAt, `slug=${slug} related=${data.recommendations.length}`);
+
+    return data;
   });
-  const data = {
-    job,
-    company,
-    recommendations: toJobItems(recommendationJobs)
-  };
-  logPlatformTiming("getJobDetailPageData", startedAt, `slug=${slug} related=${data.recommendations.length}`);
-
-  return data;
 }
 
 export function getCompanyDetailPageData(slug: string) {
-  const startedAt = Date.now();
-  const company = getCompanyBySlug(slug);
+  return withPublicDataFallback(() => undefined, () => {
+    const startedAt = Date.now();
+    const company = getCompanyBySlug(slug);
 
-  if (!company) {
-    return undefined;
-  }
+    if (!company) {
+      return undefined;
+    }
 
-  const data = {
-    company,
-    jobs: getCompanyJobs(company.slug, COMPANY_DETAIL_JOB_LIMIT),
-    openRoleCount: getCompanyOpenRoleCount(company.slug)
-  };
-  logPlatformTiming("getCompanyDetailPageData", startedAt, `slug=${slug} jobs=${data.jobs.length}`);
+    const data = {
+      company,
+      jobs: getCompanyJobs(company.slug, COMPANY_DETAIL_JOB_LIMIT),
+      openRoleCount: getCompanyOpenRoleCount(company.slug)
+    };
+    logPlatformTiming("getCompanyDetailPageData", startedAt, `slug=${slug} jobs=${data.jobs.length}`);
 
-  return data;
+    return data;
+  });
 }
 
 export function getCompaniesPageData(selectedCategory = "") {
-  const startedAt = Date.now();
-  const companies = getCompanies().filter((company) => !selectedCategory || company.sector === selectedCategory);
-  const roleCounts = countPublicJobsByCompanySlugs(companies.map((company) => company.slug));
-  const data = companies.map((company) => ({
-    company,
-    openRoles: roleCounts.get(company.slug) ?? 0
-  }));
-  logPlatformTiming("getCompaniesPageData", startedAt, `companies=${data.length}`);
+  return withPublicDataFallback(() => [], () => {
+    const startedAt = Date.now();
+    const companies = getCompanies().filter((company) => !selectedCategory || company.sector === selectedCategory);
+    const roleCounts = countPublicJobsByCompanySlugs(companies.map((company) => company.slug));
+    const data = companies.map((company) => ({
+      company,
+      openRoles: roleCounts.get(company.slug) ?? 0
+    }));
+    logPlatformTiming("getCompaniesPageData", startedAt, `companies=${data.length}`);
 
-  return data;
+    return data;
+  });
 }
 
 export function formatAzerbaijaniDate(value: string) {
