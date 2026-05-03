@@ -26,7 +26,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   const level = normalizeRoleFilterValue(rawLevel) ?? "all";
   const workModel = getWorkModelDisplayValue(normalizeWorkModelValue(getStringValue(params.workModel))) ?? "Hamısı";
 
-  const { jobItems, availableCities, featuredEmployers, newestInternships } = getJobsPageData({
+  const { jobItems, availableCities, featuredEmployers, newestInternships } = await getJobsPageData({
     query,
     city,
     level,

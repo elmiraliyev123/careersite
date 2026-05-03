@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { updateJobModerationStatus } from "@/lib/platform-database";
+import { updateJobModerationStatus } from "@/lib/platform-database";;
 import { normalizeJobModerationStatus } from "@/lib/moderation";
 import { requireAdminMutation } from "@/lib/request-security";
 

@@ -8,6 +8,6 @@ export const metadata: Metadata = {
     "Interview, CV, portfolio, and outreach frameworks for early-career candidates in a bento-style playbook."
 };
 
-export default function PlaybookPage() {
+export default async function PlaybookPage() {
   return <PlaybookPageClient />;
 }

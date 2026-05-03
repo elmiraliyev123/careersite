@@ -8,6 +8,6 @@ export const metadata: Metadata = {
     "CV, interview, portfolio və outreach üçün Stradify-ın bento-stil Career Playbook səhifəsi."
 };
 
-export default function CareerTipsPage() {
+export default async function CareerTipsPage() {
   return <PlaybookPageClient />;
 }

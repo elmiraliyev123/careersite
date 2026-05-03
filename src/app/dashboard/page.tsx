@@ -45,7 +45,7 @@ export default async function DashboardPage() {
           <p>{t("dashboard.copy")}</p>
         </div>
 
-        <DashboardClient jobs={getJobs()} companies={getCompanies()} />
+        <DashboardClient jobs={await getJobs()} companies={await getCompanies()} />
       </div>
     </main>
   );

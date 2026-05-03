@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getPipelineMetrics, listRecentIngestionRuns } from "@/lib/job-pipeline";
-import { getPlatformStorageStatus } from "@/lib/platform-database";
+import { getPlatformStorageStatus } from "@/lib/platform-database";;
 import { isAdminAuthConfigured } from "@/lib/session";
 
 export const runtime = "nodejs";

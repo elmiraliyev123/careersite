@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { revalidatePublishedJobApplyUrls } from "@/lib/job-pipeline";
-import { createJob, listJobs } from "@/lib/platform-database";
+import { listJobs } from "@/lib/platform-database";
+import { createJob } from "@/lib/db";;
 import { getFeaturedCompanies } from "@/lib/platform";
 import { requireAdminMutation } from "@/lib/request-security";
 import { validateJobInput } from "@/lib/platform-validation";
@@ -20,7 +21,7 @@ export async function GET() {
   return NextResponse.json({
     total: jobs.length,
     items: jobs,
-    featuredCompanyTotal: getFeaturedCompanies().length
+    featuredCompanyTotal: (await getFeaturedCompanies()).length
   });
 }
 
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: payload.message }, { status: 400 });
   }
 
-  const job = createJob(payload.data);
+  const job = await createJob(payload.data);
 
   if (!job) {
     return NextResponse.json({ message: "Seçilən şirkət tapılmadı." }, { status: 404 });

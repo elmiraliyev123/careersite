@@ -2,7 +2,7 @@ import { HomePageClient } from "@/components/home-page-client";
 import { getHomePageData } from "@/lib/platform";
 
 export default async function HomePage() {
-  const { stats, featuredJobItems, featuredCompanies, heroCities, availableCities } = getHomePageData();
+  const { stats, featuredJobItems, featuredCompanies, heroCities, availableCities } = await getHomePageData();
 
   return (
     <HomePageClient

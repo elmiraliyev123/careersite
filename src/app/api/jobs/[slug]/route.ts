@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { revalidatePublishedJobApplyUrls } from "@/lib/job-pipeline";
-import { deleteJob, findJobBySlug, updateJob } from "@/lib/platform-database";
+import { deleteJob, findJobBySlug } from "@/lib/platform-database";
+import { updateJob } from "@/lib/db";;
 import { requireAdminMutation } from "@/lib/request-security";
 import { validateJobInput } from "@/lib/platform-validation";
 
@@ -39,7 +40,7 @@ export async function PUT(request: Request, context: RouteContext) {
     return NextResponse.json({ message: payload.message }, { status: 400 });
   }
 
-  const job = updateJob(slug, payload.data);
+  const job = await updateJob(slug, payload.data);
 
   if (!job) {
     return NextResponse.json({ message: "Vakansiya və ya bağlı şirkət tapılmadı." }, { status: 404 });

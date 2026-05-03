@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const isAdmin = role === "admin";
   const cookieStore = await cookies();
   const locale = resolveLocale(cookieStore.get(localeCookieName)?.value);
-  const companyCategories = getCompanyCategories();
+  const companyCategories = await getCompanyCategories();
 
   let cmsDoc: ReturnType<typeof getCmsDocument> = null;
   try {

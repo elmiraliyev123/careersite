@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { CompanyDetailPageClient } from "@/components/company-detail-page-client";
-import { findCompanyBySlug } from "@/lib/platform-database";
+import { getCompanyBySlug } from "@/lib/db";
 import { getCompanyDetailPageData } from "@/lib/platform";
 
 type CompanyDetailPageProps = {
@@ -11,7 +11,7 @@ type CompanyDetailPageProps = {
 
 export async function generateMetadata({ params }: CompanyDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const company = findCompanyBySlug(slug);
+  const company = await getCompanyBySlug(slug);
 
   if (!company) {
     return {};
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: CompanyDetailPageProps): Prom
 
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   const { slug } = await params;
-  const data = getCompanyDetailPageData(slug);
+  const data = await getCompanyDetailPageData(slug);
 
   if (!data) {
     notFound();

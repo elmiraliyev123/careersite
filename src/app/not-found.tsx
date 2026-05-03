@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { useI18n } from "@/components/i18n-provider";
 
-export default function NotFound() {
+export default async function NotFound() {
   const { t } = useI18n();
 
   return (

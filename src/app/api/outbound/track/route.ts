@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { recordOutboundEvent } from "@/lib/platform-database";
+import { recordOutboundEvent } from "@/lib/platform-database";;
 import { isSafeExternalUrl } from "@/lib/outbound";
 
 export const runtime = "nodejs";

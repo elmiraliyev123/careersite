@@ -1,5 +1,5 @@
 import { EmployersPageClient } from "@/components/employers-page-client";
 
-export default function EmployersPage() {
+export default async function EmployersPage() {
   return <EmployersPageClient />;
 }

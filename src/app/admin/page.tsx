@@ -13,7 +13,7 @@ export default async function AdminPage() {
 
   return (
     <main className="admin-console-page">
-      <AdminPanelClient companies={getAllCompanies()} jobs={getAllJobs()} />
+      <AdminPanelClient companies={await getAllCompanies()} jobs={await getAllJobs()} />
     </main>
   );
 }

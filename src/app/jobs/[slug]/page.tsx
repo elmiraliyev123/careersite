@@ -9,7 +9,7 @@ type JobDetailPageProps = {
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { slug } = await params;
-  const data = getJobDetailPageData(slug);
+  const data = await getJobDetailPageData(slug);
 
   if (!data) {
     notFound();

@@ -40,7 +40,7 @@ export async function PUT(request: Request, context: RouteContext) {
     return NextResponse.json({ message: payload.message }, { status: 400 });
   }
 
-  const company = updateCompany(slug, payload.data);
+  const company = await updateCompany(slug, payload.data);
 
   if (!company) {
     return NextResponse.json({ message: "Şirkət tapılmadı." }, { status: 404 });

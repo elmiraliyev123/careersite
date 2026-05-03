@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { updateCompanyVisibility } from "@/lib/platform-database";
+import { updateCompanyVisibility } from "@/lib/platform-database";;
 import { requireAdminMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";

@@ -31,7 +31,7 @@ function getStaticRoutes(): MetadataRoute.Sitemap {
   ];
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = getStaticRoutes();
 
   const infoRoutes: MetadataRoute.Sitemap = getInfoPages().map((page) => ({
@@ -40,7 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   try {
-    const jobRoutes: MetadataRoute.Sitemap = getJobs().map((job) => ({
+    const jobRoutes: MetadataRoute.Sitemap = (await getJobs()).map((job) => ({
       url: `${siteUrl}/jobs/${job.slug}`,
       lastModified: new Date(job.createdAt ?? job.postedAt)
     }));

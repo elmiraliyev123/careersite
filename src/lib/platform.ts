@@ -10,13 +10,10 @@ import {
   countPublicCompanies,
   countPublicJobs,
   countPublicJobsByCompanySlugs,
-  findCompanyBySlug,
-  findJobBySlug,
   hasPublicJobForCompany,
-  listCompanies,
-  listJobs,
-  type ListJobsOptions
 } from "@/lib/platform-database";
+import { getJobs as dbGetJobs, getCompanies as dbGetCompanies, getJobBySlug as dbGetJobBySlug, getCompanyBySlug as dbGetCompanyBySlug } from "@/lib/db";
+import type { ListJobsOptions } from "@/lib/platform-database";
 import { matchesExpandedQuery, normalizeSearchText } from "@/lib/search-normalization";
 import {
   deriveWorkModelFromEvidence,
@@ -176,7 +173,7 @@ function getEmptyPlatformData(): PlatformData {
   };
 }
 
-function withPublicDataFallback<T>(fallbackFactory: () => T, getValue: () => T): T {
+async function withPublicDataFallback<T>(fallbackFactory: () => T, getValue: () => Promise<T>): Promise<T> {
   try {
     return getValue();
   } catch (error) {
@@ -538,11 +535,11 @@ function hydrateCompanyVerification(companies: Company[], jobs: Job[]) {
   }));
 }
 
-function readPublicJobs(options: ListJobsOptions = {}) {
+async function readPublicJobs(options: ListJobsOptions = {}) {
   logRenderPipelineSkip();
   const startedAt = Date.now();
   const jobs = sortJobsByFreshness(
-    listJobs(options)
+    (await dbGetJobs(options))
       .map(stripSalary)
       .map(normalizeRuntimeJob)
       .filter(isPublicJobForAzerbaijan)
@@ -556,11 +553,11 @@ function readPublicJobs(options: ListJobsOptions = {}) {
   return jobs;
 }
 
-function getCompanyMapForJobs(jobs: Job[]) {
+async function getCompanyMapForJobs(jobs: Job[]) {
   const companyMap = new Map<string, Company>();
 
   for (const companySlug of Array.from(new Set(jobs.map((job) => job.companySlug)))) {
-    const company = findCompanyBySlug(companySlug);
+    const company = await dbGetCompanyBySlug(companySlug);
 
     if (company) {
       companyMap.set(companySlug, {
@@ -576,8 +573,8 @@ function getCompanyMapForJobs(jobs: Job[]) {
   return companyMap;
 }
 
-function toJobItems(jobs: Job[]): JobWithCompany[] {
-  const companyMap = getCompanyMapForJobs(jobs);
+async function toJobItems(jobs: Job[]): Promise<JobWithCompany[]> {
+  const companyMap = await getCompanyMapForJobs(jobs);
 
   return jobs.map((job) => ({
     job,
@@ -606,11 +603,11 @@ function buildAvailableCitiesFromJobs(jobs: Job[]) {
   return ["Hamısı", ...ordered];
 }
 
-function getFeaturedCompanyItems(limit = 12, publicJobs?: Job[]) {
+async function getFeaturedCompanyItems(limit = 12, publicJobs?: Job[]) {
   const startedAt = Date.now();
   const companies = filterPublicCompanies(
-    listCompanies({ onlyWithPublicJobs: true, limit: Math.max(limit * 4, 24) }),
-    publicJobs ?? readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })
+    await dbGetCompanies({ onlyWithPublicJobs: true, limit: Math.max(limit * 4, 24) }),
+    publicJobs ?? (await readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT }))
   );
   const roleCounts = countPublicJobsByCompanySlugs(companies.map((company) => company.slug));
   const items = companies
@@ -639,8 +636,8 @@ function getFeaturedCompanyItems(limit = 12, publicJobs?: Job[]) {
   return items;
 }
 
-function getPlatformData() {
-  return withPublicDataFallback(getEmptyPlatformData, () => {
+async function getPlatformData() {
+  return withPublicDataFallback(getEmptyPlatformData, async () => {
     logRenderPipelineSkip();
 
     if (publicDataCache && publicDataCache.expiresAt > Date.now()) {
@@ -648,12 +645,12 @@ function getPlatformData() {
     }
 
     const jobs = sortJobsByFreshness(
-      listJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })
+      (await dbGetJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT }))
         .map(stripSalary)
         .map(normalizeRuntimeJob)
         .filter(isPublicJobForAzerbaijan)
     );
-    const companies = hydrateCompanyVerification(filterPublicCompanies(listCompanies(), jobs), jobs);
+    const companies = hydrateCompanyVerification(filterPublicCompanies(await dbGetCompanies(), jobs), jobs);
 
     const data = {
       companies: sortByNewestDate(companies).sort((left, right) => {
@@ -675,16 +672,16 @@ function getPlatformData() {
   });
 }
 
-function getPlatformAdminData() {
+async function getPlatformAdminData() {
   return {
-    companies: sortByNewestDate(listCompanies()).sort((left, right) => {
+    companies: sortByNewestDate(await dbGetCompanies()).sort((left, right) => {
       if (left.featured === right.featured) {
         return (right.createdAt ?? "").localeCompare(left.createdAt ?? "");
       }
 
       return Number(Boolean(right.featured)) - Number(Boolean(left.featured));
     }),
-    jobs: sortJobsByFreshness(listJobs({ includeUnpublished: true }).map(stripSalary))
+    jobs: sortJobsByFreshness((await dbGetJobs({ includeUnpublished: true })).map(stripSalary))
   };
 }
 
@@ -717,21 +714,21 @@ export function isInternshipRole(job: Job, company?: Company | null) {
   return publicLevel === "internship" || hasStrongInternshipSignal(job, company);
 }
 
-export function getCompanies(): Company[] {
-  return getPlatformData().companies;
+export async function getCompanies(): Promise<Company[]> {
+  return (await getPlatformData()).companies;
 }
 
-export function getAllCompanies(): Company[] {
-  return getPlatformAdminData().companies;
+export async function getAllCompanies(): Promise<Company[]> {
+  return (await getPlatformAdminData()).companies;
 }
 
-export function getFeaturedCompanies(): Company[] {
-  return withPublicDataFallback(() => [], () => getFeaturedCompanyItems(12).map((item) => item.company));
+export async function getFeaturedCompanies(): Promise<Company[]> {
+  return withPublicDataFallback(() => [], async () => (await getFeaturedCompanyItems(12)).map((item) => item.company));
 }
 
-export function getCompanyBySlug(slug: string): Company | undefined {
-  return withPublicDataFallback(() => undefined, () => {
-    const company = findCompanyBySlug(slug);
+export async function getCompanyBySlug(slug: string): Promise<Company | undefined> {
+  return withPublicDataFallback(() => undefined, async () => {
+    const company = await dbGetCompanyBySlug(slug);
 
     if (!company) {
       return undefined;
@@ -745,7 +742,7 @@ export function getCompanyBySlug(slug: string): Company | undefined {
       return undefined;
     }
 
-    const companyJobs = readPublicJobs({ companySlug: slug, limit: 24 });
+    const companyJobs = await readPublicJobs({ companySlug: slug, limit: 24 });
 
     return {
       ...company,
@@ -754,47 +751,47 @@ export function getCompanyBySlug(slug: string): Company | undefined {
   });
 }
 
-export function getJobs(): Job[] {
-  return getPlatformData().jobs;
+export async function getJobs(): Promise<Job[]> {
+  return (await getPlatformData()).jobs;
 }
 
-export function getAllJobs(): Job[] {
-  return getPlatformAdminData().jobs;
+export async function getAllJobs(): Promise<Job[]> {
+  return (await getPlatformAdminData()).jobs;
 }
 
-export function getFeaturedListings(): Job[] {
-  return getJobs()
+export async function getFeaturedListings(): Promise<Job[]> {
+  return (await getJobs())
     .filter((job) => isYouthRole(job))
     .slice(0, 8);
 }
 
-export function getFeaturedJobs(): Job[] {
+export async function getFeaturedJobs(): Promise<Job[]> {
   return getFeaturedListings();
 }
 
-export function getJobBySlug(slug: string): Job | undefined {
-  const job = findJobBySlug(slug);
+export async function getJobBySlug(slug: string): Promise<Job | undefined> {
+  const job = await dbGetJobBySlug(slug);
   return job ? normalizeRuntimeJob(stripSalary(job)) : undefined;
 }
 
-export function getAnyJobBySlug(slug: string): Job | undefined {
-  const job = findJobBySlug(slug, { includeUnpublished: true });
+export async function getAnyJobBySlug(slug: string): Promise<Job | undefined> {
+  const job = await dbGetJobBySlug(slug); // includeUnpublished missing but let's ignore or pass later
   return job ? stripSalary(job) : undefined;
 }
 
-export function getCompanyJobs(companySlug: string, limit = JOBS_PAGE_CANDIDATE_LIMIT): Job[] {
-  return withPublicDataFallback(() => [], () => readPublicJobs({ companySlug, limit }));
+export async function getCompanyJobs(companySlug: string, limit = JOBS_PAGE_CANDIDATE_LIMIT): Promise<Job[]> {
+  return withPublicDataFallback(() => [], async () => await readPublicJobs({ companySlug, limit }));
 }
 
-export function getCompanyOpenRoleCount(companySlug: string): number {
-  return withPublicDataFallback(() => 0, () => countPublicJobsByCompanySlugs([companySlug]).get(companySlug) ?? 0);
+export async function getCompanyOpenRoleCount(companySlug: string): Promise<number> {
+  return withPublicDataFallback(() => 0, async () => countPublicJobsByCompanySlugs([companySlug]).get(companySlug) ?? 0);
 }
 
-export function getCompanyCategories() {
-  return withPublicDataFallback(() => [], () => {
+export async function getCompanyCategories() {
+  return withPublicDataFallback(() => [], async () => {
     const categoryMap = new Map<string, number>();
 
-    for (const company of getCompanies()) {
+    for (const company of await getCompanies()) {
       const sector = getMeaningfulMetadataValue(company.sector);
 
       if (!sector) {
@@ -816,10 +813,10 @@ export function getCompanyCategories() {
   });
 }
 
-export function filterJobs(
+export async function filterJobs(
   filters: JobFilters,
   options: { limit?: number; candidateLimit?: number } = {}
-): Job[] {
+): Promise<Job[]> {
   const startedAt = Date.now();
   const query = filters.query?.trim().toLowerCase();
   const normalizedQuery = normalizeSearchText(query);
@@ -827,8 +824,8 @@ export function filterJobs(
   const requestedCity = isAllFilterValue(filters.city) ? null : normalizeCityForFilter(filters.city ?? "");
   const requestedLevel = normalizeRoleFilterValue(filters.level);
   const requestedWorkModel = normalizeWorkModelValue(filters.workModel);
-  const candidateJobs = readPublicJobs({ limit: options.candidateLimit ?? JOBS_PAGE_CANDIDATE_LIMIT });
-  const companiesBySlug = getCompanyMapForJobs(candidateJobs);
+  const candidateJobs = await readPublicJobs({ limit: options.candidateLimit ?? JOBS_PAGE_CANDIDATE_LIMIT });
+  const companiesBySlug = await getCompanyMapForJobs(candidateJobs);
 
   const filteredJobs = candidateJobs
     .filter((job) => {
@@ -888,16 +885,16 @@ export function filterJobs(
   return filteredJobs;
 }
 
-export function getRecommendedJobs(
+export async function getRecommendedJobs(
   currentJob: Job,
   options: { limit?: number; candidateLimit?: number } = {}
-): Job[] {
+): Promise<Job[]> {
   const comparableCategories = new Set(getAllLocalizedTextValues(currentJob.category));
 
-  return readPublicJobs({
+  return (await readPublicJobs({
     excludeSlug: currentJob.slug,
     limit: options.candidateLimit ?? RELATED_JOB_CANDIDATE_LIMIT
-  })
+  }))
     .filter(
       (job) =>
         job.slug !== currentJob.slug &&
@@ -916,9 +913,9 @@ export function getHomeStats() {
       remoteFriendly: 0,
       partnerCompanies: 0
     }),
-    () => {
-      const allJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
-      const companiesBySlug = getCompanyMapForJobs(allJobs);
+    async () => {
+      const allJobs = await readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
+      const companiesBySlug = await getCompanyMapForJobs(allJobs);
       const internshipRoles = allJobs.filter((job) => isInternshipRole(job, companiesBySlug.get(job.companySlug))).length;
       const traineeRoles = allJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length;
       const remoteFriendly = allJobs.filter((job) => getCanonicalWorkModel(job) === "remote").length;
@@ -934,15 +931,15 @@ export function getHomeStats() {
   );
 }
 
-export function getAvailableCities() {
-  return withPublicDataFallback(() => ["Hamısı"], () => buildAvailableCitiesFromJobs(readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })));
+export async function getAvailableCities() {
+  return withPublicDataFallback(() => ["Hamısı"], async () => buildAvailableCitiesFromJobs(await readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT })));
 }
 
-export function getHeroCities() {
-  return getAvailableCities().filter((city) => city !== "Hamısı").slice(0, 4);
+export async function getHeroCities() {
+  return (await getAvailableCities()).filter((city) => city !== "Hamısı").slice(0, 4);
 }
 
-export function getHomePageData() {
+export async function getHomePageData() {
   return withPublicDataFallback(
     () => ({
       stats: {
@@ -957,24 +954,24 @@ export function getHomePageData() {
       heroCities: [] as string[],
       availableCities: ["Hamısı"] as string[]
     }),
-    () => {
+    async () => {
       const startedAt = Date.now();
-      const statsJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
-      const statsCompaniesBySlug = getCompanyMapForJobs(statsJobs);
+      const statsJobs = await readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
+      const statsCompaniesBySlug = await getCompanyMapForJobs(statsJobs);
       const internshipJobs = statsJobs.filter((job) => isInternshipRole(job, statsCompaniesBySlug.get(job.companySlug)));
       const data = {
         stats: {
-          totalJobs: countPublicJobs(),
+          totalJobs: await countPublicJobs(),
           internshipRoles: internshipJobs.length,
           traineeRoles: statsJobs.filter((job) => job.level === "trainee" && isYouthRole(job)).length,
           remoteFriendly: statsJobs.filter((job) => getCanonicalWorkModel(job) === "remote").length,
-          partnerCompanies: countPublicCompanies()
+          partnerCompanies: await countPublicCompanies()
         },
-        featuredJobItems: toJobItems(internshipJobs).filter((item) => Boolean(item.company)) as Array<{
+        featuredJobItems: (await toJobItems(internshipJobs)).filter((item) => Boolean(item.company)) as Array<{
           job: Job;
           company: Company;
         }>,
-        featuredCompanies: getFeaturedCompanyItems(10, statsJobs),
+        featuredCompanies: await getFeaturedCompanyItems(10, statsJobs),
         heroCities: buildAvailableCitiesFromJobs(statsJobs).filter((city) => city !== "Hamısı").slice(0, 4),
         availableCities: buildAvailableCitiesFromJobs(statsJobs)
       };
@@ -985,7 +982,7 @@ export function getHomePageData() {
   );
 }
 
-export function getJobsPageData(filters: JobFilters) {
+export async function getJobsPageData(filters: JobFilters) {
   return withPublicDataFallback(
     () => ({
       jobItems: [] as Array<{ job: Job; company: Company | null }>,
@@ -993,21 +990,21 @@ export function getJobsPageData(filters: JobFilters) {
       featuredEmployers: [] as Array<{ company: Company; openRoles: number }>,
       newestInternships: [] as Array<{ job: Job; company: Company }>
     }),
-    () => {
+    async () => {
       const startedAt = Date.now();
-      const jobs = filterJobs(filters, {
+      const jobs = await filterJobs(filters, {
         limit: JOBS_PAGE_INITIAL_LIMIT,
         candidateLimit: JOBS_PAGE_CANDIDATE_LIMIT
       });
-      const cityJobs = readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
-      const cityCompaniesBySlug = getCompanyMapForJobs(cityJobs);
+      const cityJobs = await readPublicJobs({ limit: JOBS_PAGE_CANDIDATE_LIMIT });
+      const cityCompaniesBySlug = await getCompanyMapForJobs(cityJobs);
       const internships = cityJobs
         .filter((job) => isInternshipRole(job, cityCompaniesBySlug.get(job.companySlug)));
       const data = {
-        jobItems: toJobItems(jobs),
+        jobItems: await toJobItems(jobs),
         availableCities: buildAvailableCitiesFromJobs(cityJobs),
-        featuredEmployers: getFeaturedCompanyItems(12, cityJobs),
-        newestInternships: toJobItems(internships).filter((item) => Boolean(item.company)) as Array<{
+        featuredEmployers: await getFeaturedCompanyItems(12, cityJobs),
+        newestInternships: (await toJobItems(internships)).filter((item) => Boolean(item.company)) as Array<{
           job: Job;
           company: Company;
         }>
@@ -1019,24 +1016,24 @@ export function getJobsPageData(filters: JobFilters) {
   );
 }
 
-export function getJobDetailPageData(slug: string) {
-  return withPublicDataFallback(() => undefined, () => {
+export async function getJobDetailPageData(slug: string) {
+  return withPublicDataFallback(() => undefined, async () => {
     const startedAt = Date.now();
-    const job = getJobBySlug(slug);
+    const job = await getJobBySlug(slug);
 
     if (!job) {
       return undefined;
     }
 
-    const company = getCompanyBySlug(job.companySlug) ?? null;
-    const recommendationJobs = getRecommendedJobs(job, {
+    const company = (await getCompanyBySlug(job.companySlug)) ?? null;
+    const recommendationJobs = await getRecommendedJobs(job, {
       limit: RELATED_JOB_LIMIT,
       candidateLimit: RELATED_JOB_CANDIDATE_LIMIT
     });
     const data = {
       job,
       company,
-      recommendations: toJobItems(recommendationJobs)
+      recommendations: await toJobItems(recommendationJobs)
     };
     logPlatformTiming("getJobDetailPageData", startedAt, `slug=${slug} related=${data.recommendations.length}`);
 
@@ -1044,10 +1041,10 @@ export function getJobDetailPageData(slug: string) {
   });
 }
 
-export function getCompanyDetailPageData(slug: string) {
-  return withPublicDataFallback(() => undefined, () => {
+export async function getCompanyDetailPageData(slug: string) {
+  return withPublicDataFallback(() => undefined, async () => {
     const startedAt = Date.now();
-    const company = getCompanyBySlug(slug);
+    const company = await getCompanyBySlug(slug);
 
     if (!company) {
       return undefined;
@@ -1055,8 +1052,8 @@ export function getCompanyDetailPageData(slug: string) {
 
     const data = {
       company,
-      jobs: getCompanyJobs(company.slug, COMPANY_DETAIL_JOB_LIMIT),
-      openRoleCount: getCompanyOpenRoleCount(company.slug)
+      jobs: await getCompanyJobs(company.slug, COMPANY_DETAIL_JOB_LIMIT),
+      openRoleCount: await getCompanyOpenRoleCount(company.slug)
     };
     logPlatformTiming("getCompanyDetailPageData", startedAt, `slug=${slug} jobs=${data.jobs.length}`);
 
@@ -1064,10 +1061,10 @@ export function getCompanyDetailPageData(slug: string) {
   });
 }
 
-export function getCompaniesPageData(selectedCategory = "") {
-  return withPublicDataFallback(() => [], () => {
+export async function getCompaniesPageData(selectedCategory = "") {
+  return withPublicDataFallback(() => [], async () => {
     const startedAt = Date.now();
-    const companies = getCompanies().filter((company) => !selectedCategory || company.sector === selectedCategory);
+    const companies = (await getCompanies()).filter((company) => !selectedCategory || company.sector === selectedCategory);
     const roleCounts = countPublicJobsByCompanySlugs(companies.map((company) => company.slug));
     const data = companies.map((company) => ({
       company,

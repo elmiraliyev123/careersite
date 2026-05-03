@@ -12,7 +12,7 @@ function getStringValue(value: string | string[] | undefined) {
 export default async function CompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
   const selectedCategory = getStringValue(params.category) ?? "";
-  const companies = getCompaniesPageData(selectedCategory);
+  const companies = await getCompaniesPageData(selectedCategory);
 
   return <CompaniesPageClient companies={companies} selectedCategory={selectedCategory} />;
 }
