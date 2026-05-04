@@ -35,6 +35,9 @@ import { normalizeJobModerationStatus } from "./moderation";
 
 function parseList(value: string | null | undefined): string[] {
   if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => typeof item === "string");
+  }
   try {
     const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed.filter(item => typeof item === "string") : [];
@@ -48,17 +51,17 @@ function mapPgCompanyRow(row: any): Company {
   return {
     slug: row.slug,
     name: row.name,
-    tagline: row.tagline,
+    tagline: row.tagline ?? "",
     sector,
     industryTags: row.industry_tags ? parseList(row.industry_tags) : sector ? [sector] : [],
-    size: row.size,
-    location: normalizeLocationName(row.location) ?? "",
-    logo: row.logo,
-    cover: row.cover,
-    website: row.website,
-    profileSourceUrl: row.profile_source_url ?? undefined,
-    companyDomain: row.company_domain ?? undefined,
-    about: row.about,
+    size: row.size ?? "",
+    location: normalizeLocationName(row.location ?? row.country_city) ?? "",
+    logo: row.logo ?? row.logo_url ?? "",
+    cover: row.cover ?? row.cover_image_url ?? "",
+    website: row.website ?? "",
+    profileSourceUrl: row.profile_source_url ?? row.source_url ?? undefined,
+    companyDomain: row.company_domain ?? row.domain ?? undefined,
+    about: row.about ?? row.description ?? "",
     wikipediaSummary: row.wikipedia_summary ?? undefined,
     wikipediaSourceUrl: row.wikipedia_source_url ?? undefined,
     focusAreas: parseList(row.focus_areas),
@@ -83,7 +86,7 @@ function mapPgJobRow(row: any): Job {
   const moderationStatus = normalizeJobModerationStatus(row.moderation_status, "published");
   const ctaDisabled = row.apply_cta_mode === "disabled" || row.apply_link_status === "broken" || !finalVerifiedUrl;
   const title = parseLocalizedText(row.title);
-  const summary = parseLocalizedText(row.summary);
+  const summary = parseLocalizedText(row.summary ?? row.description ?? row.ai_summary);
   const responsibilities = parseList(row.responsibilities);
   const requirements = parseList(row.requirements);
   const benefits = parseList(row.benefits);
@@ -96,7 +99,7 @@ function mapPgJobRow(row: any): Job {
   ].join(" ");
   const urlText = [row.source_url, row.source_listing_url, row.job_detail_url, row.apply_action_url, row.external_apply_url].filter(Boolean).join(" ");
   const location = deriveLocationFromEvidence({
-    structuredLocation: row.location_normalized ?? row.location_raw ?? row.city,
+    structuredLocation: row.location_normalized ?? row.location_raw ?? row.city ?? row.location,
     title: titleText,
     description: descriptionText,
     url: urlText
@@ -115,14 +118,14 @@ function mapPgJobRow(row: any): Job {
     title,
     companySlug: row.company_slug,
     companyName: row.company_name ?? undefined,
-    city: location.city ?? normalizeLocationName(row.city) ?? "",
+    city: location.city ?? normalizeLocationName(row.city ?? row.location) ?? "",
     workModel,
     workModelType,
-    level: normalizeRoleLevel(row.level),
+    level: normalizeRoleLevel(row.level ?? row.experience_level ?? row.ai_level),
     category: parseLocalizedText(row.category),
     categoryConfidence: typeof row.category_confidence === "number" ? row.category_confidence : undefined,
     categoryReason: row.category_reason ?? undefined,
-    postedAt: row.posted_at ? new Date(row.posted_at).toISOString() : "",
+    postedAt: (row.posted_at ?? row.published_at) ? new Date(row.posted_at ?? row.published_at).toISOString() : "",
     deadline: row.deadline ? new Date(row.deadline).toISOString() : "",
     summary,
     responsibilities,
@@ -132,7 +135,7 @@ function mapPgJobRow(row: any): Job {
     featured: Boolean(row.featured),
     sourceName: row.source_name ?? undefined,
     sourcePlatform: row.source_name ?? undefined,
-    sourceKind: row.source_kind ?? undefined,
+    sourceKind: row.source_kind ?? row.source_domain ?? undefined,
     sourceUrl: row.source_url ?? undefined,
     sourceReferenceUrl: row.source_listing_url ?? row.source_url ?? undefined,
     sourceListingUrl: row.source_listing_url ?? row.source_url ?? undefined,
@@ -156,7 +159,7 @@ function mapPgJobRow(row: any): Job {
     isExpired: Boolean(row.is_expired),
     trustBadges: row.trust_badges ? parseList(row.trust_badges) : [],
     trustScore: typeof row.trust_score === "number" ? row.trust_score : undefined,
-    publishable: row.publishable === null ? undefined : Boolean(row.publishable),
+    publishable: row.publishable === null || row.publishable === undefined ? undefined : Boolean(row.publishable),
     validationStatus:
       row.validation_status === "verified" ||
       row.validation_status === "unresolved" ||
@@ -197,18 +200,19 @@ export async function getJobs(options?: sqliteDb.ListJobsOptions): Promise<Job[]
     let query = "SELECT * FROM jobs WHERE 1=1";
     const params: any[] = [];
     let idx = 1;
+    const nextParam = () => "$" + idx++;
 
     if (!options?.includeUnpublished) {
-       query += " AND publishable = 1 AND is_expired = 0";
+       query += " AND COALESCE(publishable, 1) = 1 AND COALESCE(is_expired, 0) = 0";
     }
     if (options?.companySlug) {
-      query += ` AND company_slug = $\${idx++}`;
+      query += ` AND company_slug = ${nextParam()}`;
       params.push(options.companySlug);
     }
     
     query += " ORDER BY posted_at DESC";
     if (options?.limit) {
-       query += ` LIMIT $\${idx++}`;
+       query += ` LIMIT ${nextParam()}`;
        params.push(options.limit);
     }
 
